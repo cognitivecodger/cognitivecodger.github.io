@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>Ball Popper - By CogC (HTML5)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            background: #111;
+            color: #eee;
+            font-family: system-ui, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        .wrap {
+            display: grid;
+            place-items: center;
+            height: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+            width: 100%;
+        }
+
+        /* Make the canvas responsive: fill available width and keep aspect ratio */
+        canvas {
+            background: #000;
+            border: 1px solid #333;
+            image-rendering: pixelated;
+            width: 100%;
+            height: auto;
+            max-width: 100%;
+            display: block;
+        }
+
+        .hint {
+            position: fixed;
+            bottom: 10px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 12px;
+            color: #9aa;
+        }
+
+        /* Name input overlay (mobile friendly) */
+        .name-input {
+            position: fixed;
+            left: 50%;
+            transform: translateX(-50%);
+            top: 64%;
+            width: min(92%, 420px);
+            max-width: 92%;
+            font-size: 18px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            background: #121212;
+            color: #eef;
+            border: 1px solid #444;
+            text-align: center;
+            z-index: 2000;
+            box-sizing: border-box;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .name-input::placeholder { color: #666; }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <canvas id="game" width="640" height="480"></canvas>
+    </div>
+    <div class="hint">Left click to select/pop. Right click to decrement options in menus. High scores saved to localStorage.</div>
+    <script>
+        // ------------------------------------------------------------
+        // Ball Popper – HTML5 canvas remake of the Blitz Basic game
+        // by CogC. Ported by ChatGPT.
+        // Responsive: canvas will scale to fit container width (mobile friendly).
+        // Name entry uses an HTML input overlay so mobile OSK works correctly.
+        // High scores and personal best persist to localStorage; scoreboard + PB reset available.
+        // ------------------------------------------------------------
+        (function () {
+            const W = 640, H = 480;
+
+            // Utility: 2D array helper
+            function create2D(w, h, val) {
+                const arr = new Array(w + 1);
+                for (let x = 0; x <= w; x++) {
+                    arr[x] = new Array(h + 1);
+                    for (let y = 0; y <= h; y++) arr[x][y] = val;
+                }
+                return arr;
+            }
+
+            const canvas = document.getElementById('game');
+            const ctx = canvas.getContext('2d');
+            ctx.imageSmoothingEnabled = true;
+
+            // Responsive canvas: scale drawing to device pixel ratio, but allow CSS to scale to fit width.
+            function resizeCanvasToFitWidth() {
+                const dpr = Math.max(1, window.devicePixelRatio || 1);
+                // Use the parent's width (the .wrap) so the canvas fills available area
+                const parentWidth = canvas.parentElement ? canvas.parentElement.clientWidth : window.innerWidth;
+                const cssWidth = Math.max(160, parentWidth); // enforce a small minimum width
+                const cssHeight = Math.round(cssWidth * H / W);
+
+                // Set CSS size (what you see)
+                canvas.style.width = cssWidth + 'px';
+                canvas.style.height = cssHeight + 'px';
+
+                // Set backing store size (actual pixel buffer). Keep logical coordinate system at W x H,
+                // but multiply to dpr for crisp rendering on high-DPI displays.
+                canvas.width = Math.round(W * dpr);
+                canvas.height = Math.round(H * dpr);
+
+                // Map drawing operations to backing store. We keep a scale of `dpr` so drawing coordinates
+                // in code (0..W, 0..H) remain valid.
+                ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            }
+
+            // --- Simple sound system (WebAudio) ---
+            const Snd = (() => {
+                let actx = null;
+                function ctx() { if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)(); return actx; }
+                function resume() { try { if (ctx().state === 'suspended') ctx().resume(); } catch (e) { } }
+                function blip(freq = 440, dur = 0.08, type = 'sine', gain = 0.05, tOffset = 0) {
+                    const c = ctx(); const t = c.currentTime + (tOffset || 0);
+                    const o = c.createOscillator(); const g = c.createGain();
+                    o.type = type; o.frequency.setValueAtTime(freq, t);
+                    g.gain.setValueAtTime(gain, t);
+                    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+                    o.connect(g).connect(c.destination); o.start(t); o.stop(t + dur);
+                }
+                function hover(size = 2) { // soft tick; pitch reflects group size
+                    blip(300 + size * 15, 0.05, 'triangle', 0.03);
+                }
+                function popBurst(n = 5) { // quick rising pops; capped for sanity
+                    const count = Math.min(10, Math.max(1, Math.floor(Math.sqrt(n)) + 2));
+                    for (let i = 0; i < count; i++) blip(220 + i * 80, 0.10, 'sine', 0.06, i * 0.02);
+                }
+                function ui() { blip(700, 0.05, 'square', 0.02); }
+                return { resume, hover, popBurst, ui };
+            })();
+
+            // Enable audio on first gesture
+            canvas.addEventListener('mousedown', () => Snd.resume());
+            canvas.addEventListener('touchstart', () => Snd.resume(), { passive: true });
+
+            // Name input overlay (created once)
+            let nameInput = null;
+            function createNameInput() {
+                if (nameInput) return;
+                nameInput = document.createElement('input');
+                nameInput.type = 'text';
+                nameInput.maxLength = 20;
+                nameInput.placeholder = 'ENTER YOUR NAME';
+                nameInput.className = 'name-input';
+                nameInput.style.display = 'none';
+                // restrict to A-Z and space; force uppercase
+                nameInput.addEventListener('input', (e) => {
+                    const v = e.target.value.toUpperCase().replace(/[^A-Z ]/g, '');
+                    if (v !== e.target.value) e.target.value = v;
+                });
+                document.body.appendChild(nameInput);
+
+                // Commit on Enter in input
+                nameInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') { e.preventDefault(); commitName(); }
+                });
+                document.body.appendChild(nameInput);
+
+                // Commit on Enter in input
+                nameInput.addEventListener('touchend', (e) => {
+                    if (e.target === nameInput) { e.preventDefault(); commitName(); }
+                });
+            }
+            createNameInput();
+
+            function showNameInput(initial = '') {
+                createNameInput();
+                nameInput.value = (initial || '').toUpperCase().replace(/[^A-Z ]/g, '').slice(0, 20);
+                nameInput.style.display = 'block';
+                // small timeout to ensure element is visible before focus (helps mobile)
+                setTimeout(() => {
+                    nameInput.focus();
+                    // move caret to end
+                    const len = nameInput.value.length;
+                    nameInput.setSelectionRange(len, len);
+                }, 50);
+            }
+
+            function hideNameInput() {
+                if (!nameInput) return;
+                try { nameInput.blur(); } catch (e) { }
+                nameInput.style.display = 'none';
+            }
+
+            // --- Constants & Defaults ---
+            const MAX_GRID = 20, MIN_GRID = 7;
+            const MAX_COLS = 7, MIN_COLS = 3;
+
+            const STATE = { MENU: 0, SCOREBOARD: 1, PLAY: 2, GAMEOVER: 3, NAMEENTRY: 4 };
+            let state = STATE.MENU;
+
+            let gridSize = 11;
+            let colors = 5;
+
+            let ballSize = Math.floor(448 / gridSize);
+            let ballSpeed = Math.max(1, Math.floor(ballSize / 8));
+
+            let grid = create2D(MAX_GRID + 1, MAX_GRID + 1, 0);
+            let sel = create2D(MAX_GRID + 1, MAX_GRID + 1, 0);
+            let offX = create2D(MAX_GRID + 1, MAX_GRID + 1, 0);
+            let offY = create2D(MAX_GRID + 1, MAX_GRID + 1, 0);
+
+            let popped = [];
+
+            let totalScore = 0;
+            let selectedScore = 0;
+
+            const HS_N = 10;
+            let hiscores = loadScores();
+
+            // personal best management (persisted separately)
+            let personalBest = loadPersonalBest();
+
+            const backTile = document.createElement('canvas');
+            const bt = backTile.getContext('2d');
+            function makeBackTile() {
+                const s = ballSize * 2 || 40;
+                backTile.width = backTile.height = s;
+                bt.fillStyle = '#141414'; bt.fillRect(0, 0, s, s);
+                bt.fillStyle = '#1e1e1e'; bt.fillRect(0, 0, s / 2, s / 2); bt.fillRect(s / 2, s / 2, s / 2, s / 2);
+            }
+            makeBackTile();
+
+            let backX = 0, backY = 0;
+            let mvX = 0, mvY = 0, tgX = 0, tgY = 0;
+            let bgCount = 100, bgMax = 100, bgSpeed = 0.01, bgFastest = 3;
+
+            function centerText(y, text, big = false, boxed = false) {
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.font = big ? 'bold 24px Segoe UI, Arial' : '16px Segoe UI, Arial';
+                if (boxed) {
+                    const pad = 8; const m = ctx.measureText(text);
+                    const w = Math.ceil(m.width) + pad * 2, h = big ? 34 : 26;
+                    const x = W / 2 - w / 2;
+                    roundRect(ctx, x, y - h / 2, w, h, 6, '#222', '#444');
+                    ctx.fillStyle = '#eef';
+                } else {
+                    ctx.fillStyle = '#eef';
+                }
+                ctx.fillText(text, W / 2, y);
+            }
+            function button(y, text) {
+                const pad = 8; ctx.font = '16px Segoe UI, Arial';
+                const w = Math.ceil(ctx.measureText(text).width) + pad * 2, h = 26;
+                const x = W / 2 - w / 2;
+                roundRect(ctx, x, y - h / 2, w, h, 6, '#222', '#555');
+                ctx.fillStyle = '#eef'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                ctx.fillText(text, W / 2, y);
+                return { x1: x, y1: y - h / 2, x2: x + w, y2: y - h / 2 + h };
+            }
+            function within(mx, my, rect) { return mx >= rect.x1 && mx <= rect.x2 && my >= rect.y1 && my <= rect.y2; }
+
+            function roundRect(ctx, x, y, w, h, r, fill, stroke) {
+                if (w < 2 * r) r = w / 2; if (h < 2 * r) r = h / 2;
+                ctx.beginPath();
+                ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r);
+                ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+                if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+                if (stroke) { ctx.strokeStyle = stroke; ctx.stroke(); }
+            }
+
+            function colorOf(i) {
+                const palette = ['#000', '#ffd54d', '#ff6e6e', '#7de37d', '#6db6ff', '#c38aff', '#ff9fd6', '#a0ffff'];
+                return palette[i] || '#fff';
+            }
+
+            seedRandom();
+            // initial resize so canvas fills width on load
+            resizeCanvasToFitWidth();
+            newGrid();
+            popAllVisual();
+
+            let mouse = { x: 0, y: 0, down: false, rdown: false, click: false, rclick: false };
+            canvas.addEventListener('contextmenu', e => e.preventDefault());
+            canvas.addEventListener('mousemove', e => { const r = canvas.getBoundingClientRect(); mouse.x = (e.clientX - r.left) * W / r.width; mouse.y = (e.clientY - r.top) * H / r.height; });
+            canvas.addEventListener('mousedown', e => { Snd.resume(); if (e.button === 0) mouse.down = true; if (e.button === 2) mouse.rdown = true; });
+            canvas.addEventListener('mouseup', e => { if (e.button === 0) { mouse.down = false; mouse.click = true; } if (e.button === 2) { mouse.rdown = false; mouse.rclick = true; } });
+
+            // handle window resize / orientation change
+            window.addEventListener('resize', () => {
+                resizeCanvasToFitWidth();
+            }, { passive: true });
+            window.addEventListener('orientationchange', () => {
+                // give orientation a short moment to settle on some devices
+                setTimeout(resizeCanvasToFitWidth, 120);
+            });
+
+            function frame() {
+                update();
+                draw();
+                mouse.click = false; mouse.rclick = false;
+                requestAnimationFrame(frame);
+            }
+            requestAnimationFrame(frame);
+
+            function newGrid(fillCol = 0) {
+                ballSize = Math.floor(448 / gridSize);
+                ballSpeed = Math.max(1, Math.floor(ballSize / 8));
+                makeBackTile();
+                for (let y = 1; y <= gridSize; y++) {
+                    for (let x = 1; x <= gridSize; x++) {
+                        grid[x][y] = fillCol === 0 ? randInt(1, colors) : fillCol;
+                        sel[x][y] = 0; offX[x][y] = 0; offY[x][y] = -ballSize * gridSize;
+                    }
+                }
+                selectedScore = 0; totalScore = 0;
+            }
+
+            function selectBall(cx, cy) {
+                if (!inBoard(cx, cy)) return 0;
+                const col = grid[cx][cy]; if (col <= 0) return 0;
+                for (let y = 1; y <= gridSize; y++) for (let x = 1; x <= gridSize; x++) sel[x][y] = 0;
+                const stack = [[cx, cy]]; sel[cx][cy] = col; let total = 1;
+                while (stack.length) {
+                    const [x, y] = stack.pop();
+                    const nbs = [[x - 1, y], [x + 1, y], [x, y - 1], [x, y + 1]];
+                    for (const [nx, ny] of nbs) {
+                        if (inBoard(nx, ny) && grid[nx][ny] === col && sel[nx][ny] === 0) { sel[nx][ny] = col; stack.push([nx, ny]); total++; }
+                    }
+                }
+                if (total <= 1) { sel[cx][cy] = 0; selectedScore = 0; return 1; }
+                selectedScore = total * (total - 1);
+                return total;
+            }
+
+            function groupSizeAt(cx, cy) {
+                if (!inBoard(cx, cy)) return 0; const col = grid[cx][cy]; if (col <= 0) return 0;
+                const seen = new Set(); const key = (x, y) => x + ',' + y; let total = 0; const st = [[cx, cy]]; seen.add(key(cx, cy));
+                while (st.length) { const [x, y] = st.pop(); total++; const nbs = [[x - 1, y], [x + 1, y], [x, y - 1], [x, y + 1]]; for (const [nx, ny] of nbs) { if (inBoard(nx, ny) && grid[nx][ny] === col) { const k = key(nx, ny); if (!seen.has(k)) { seen.add(k); st.push([nx, ny]); } } } }
+                return total;
+            }
+
+            function popSelected() {
+                let count = 0;
+                const origin = gridOrigin();
+                for (let y = 1; y <= gridSize; y++) {
+                    for (let x = 1; x <= gridSize; x++) {
+                        if (sel[x][y] > 0) {
+                            const sx = origin.x + (x - 1) * ballSize;
+                            const sy = origin.y + (y - 1) * ballSize;
+                            popped.push({ x: sx, y: sy, dx: randFloat(-ballSize / 2, ballSize / 2), dy: -randFloat(ballSize * 0.25, ballSize * 0.75), ddy: 0.5, col: sel[x][y], age: 0 });
+                            grid[x][y] = 0; sel[x][y] = 0; count++;
+                        }
+                    }
+                }
+                totalScore += selectedScore; selectedScore = 0;
+                if (count > 0) { Snd.popBurst(count); packGrid(); }
+                return count;
+            }
+
+            function packGrid() {
+                // drop down
+                for (let x = 1; x <= gridSize; x++) {
+                    let write = gridSize;
+                    for (let y = gridSize; y >= 1; y--) {
+                        if (grid[x][y] > 0) {
+                            if (y !== write) {
+                                grid[x][write] = grid[x][y]; grid[x][y] = 0;
+                                offY[x][write] = offY[x][y] + (y - write) * ballSize;
+                                offX[x][write] = offX[x][y];
+                                offX[x][y] = offY[x][y] = 0;
+                            }
+                            write--;
+                        }
+                    }
+                }
+                // shift left
+                let write = 1;
+                for (let x = 1; x <= gridSize; x++) {
+                    let empty = true; for (let y = 1; y <= gridSize; y++) { if (grid[x][y] > 0) { empty = false; break; } }
+                    if (!empty) {
+                        if (x !== write) {
+                            for (let y = 1; y <= gridSize; y++) {
+                                grid[write][y] = grid[x][y]; grid[x][y] = 0;
+                                offX[write][y] = offX[x][y] + (x - write) * ballSize;
+                                offY[write][y] = offY[x][y];
+                                offX[x][y] = offY[x][y] = 0;
+                            }
+                        }
+                        write++;
+                    }
+                }
+                // refill from right
+                for (let x = write; x <= gridSize; x++) {
+                    for (let y = 1; y <= gridSize; y++) {
+                        grid[x][y] = randInt(1, colors);
+                        offX[x][y] = (gridSize - x + 1) * ballSize;
+                        offY[x][y] = -ballSize * gridSize * Math.random();
+                    }
+                }
+            }
+
+            function pairsExist() {
+                for (let y = 1; y <= gridSize; y++) {
+                    for (let x = 1; x <= gridSize; x++) {
+                        const c = grid[x][y]; if (c <= 0) continue;
+                        if (x > 1 && grid[x - 1][y] === c) return true;
+                        if (x < gridSize && grid[x + 1][y] === c) return true;
+                        if (y > 1 && grid[x][y - 1] === c) return true;
+                        if (y < gridSize && grid[x][y + 1] === c) return true;
+                    }
+                }
+                return false;
+            }
+
+            function updateBackground() {
+                let t1 = false, t2 = false;
+                if (tgX < 0) { if (mvX > tgX) mvX -= bgSpeed; else t1 = true; }
+                if (tgX > 0) { if (mvX < tgX) mvX += bgSpeed; else t1 = true; }
+                if (tgX === 0) t1 = true;
+                if (tgY < 0) { if (mvY > tgY) mvY -= bgSpeed; else t2 = true; }
+                if (tgY > 0) { if (mvY < tgY) mvY += bgSpeed; else t2 = true; }
+                if (tgY === 0) t2 = true;
+                if (t1 && t2) {
+                    bgCount++;
+                    if (bgCount > bgMax) { tgX = randFloat(-bgFastest / 2, bgFastest / 2); tgY = randFloat(-bgFastest / 2, bgFastest / 2); bgCount = 0; }
+                }
+                backX += mvX; backY += mvY;
+            }
+
+            let lastHoverMenu = '';
+            let lastHoverKey = '';
+
+            function update() {
+                updateBackground();
+                for (let y = 1; y <= gridSize; y++) {
+                    for (let x = 1; x <= gridSize; x++) {
+                        if (offX[x][y] !== 0) { const s = Math.sign(offX[x][y]); offX[x][y] -= s * ballSpeed; if (Math.sign(offX[x][y]) !== s) offX[x][y] = 0; }
+                        if (offY[x][y] !== 0) { const s = Math.sign(offY[x][y]); offY[x][y] -= s * ballSpeed; if (Math.sign(offY[x][y]) !== s) offY[x][y] = 0; }
+                    }
+                }
+                for (const p of popped) { p.dy += p.ddy; p.x += p.dx; p.y += p.dy; p.age++; }
+                popped = popped.filter(p => p.y < H + 100 && p.age < 600);
+
+                switch (state) {
+                    case STATE.MENU: handleMenu(); break;
+                    case STATE.SCOREBOARD: handleScoreboard(); break;
+                    case STATE.PLAY: handlePlay(); break;
+                    case STATE.GAMEOVER: handleGameover(); break;
+                    case STATE.NAMEENTRY: handleNameEntry(); break;
+                }
+            }
+
+            function draw() {
+                drawBackground();
+                switch (state) {
+                    case STATE.MENU: drawMenu(); break;
+                    case STATE.SCOREBOARD: drawScoreboard(); break;
+                    case STATE.PLAY: drawGrid(); drawPopped(); drawHUD(); break;
+                    case STATE.GAMEOVER: drawGrid(); drawPopped(); drawGameover(); break;
+                    case STATE.NAMEENTRY: drawGrid(); drawPopped(); drawNameEntry(); break;
+                }
+            }
+
+            function drawBackground() {
+                const s = backTile.width;
+                const ox = ((backX % s) + s) % s; const oy = ((backY % s) + s) % s;
+                for (let y = -s; y < H + s; y += s) { for (let x = -s; x < W + s; x += s) { ctx.drawImage(backTile, x - ox, y - oy); } }
+            }
+
+            function gridOrigin() { return { x: Math.floor(W / 2 - (gridSize * ballSize) / 2), y: Math.floor(H / 2 - (gridSize * ballSize) / 2 - 16) }; }
+
+            function drawGrid() {
+                const origin = gridOrigin();
+                for (let y = 1; y <= gridSize; y++) {
+                    for (let x = 1; x <= gridSize; x++) {
+                        const c = grid[x][y]; if (c <= 0) continue;
+                        const sx = origin.x + (x - 1) * ballSize + offX[x][y];
+                        const sy = origin.y + (y - 1) * ballSize + offY[x][y];
+                        ctx.globalAlpha = 0.35; ctx.fillStyle = '#000';
+                        ctx.beginPath(); ctx.ellipse(sx + ballSize * 0.5 + ballSize * 0.1, sy + ballSize * 0.5 + ballSize * 0.1, ballSize * 0.45, ballSize * 0.45, 0, 0, Math.PI * 2); ctx.fill();
+                        ctx.globalAlpha = 1;
+                        const g = ctx.createRadialGradient(sx + ballSize * 0.35, sy + ballSize * 0.35, ballSize * 0.1, sx + ballSize * 0.5, sy + ballSize * 0.5, ballSize * 0.48);
+                        const base = colorOf(c);
+                        g.addColorStop(0, lighten(base, 0.35)); g.addColorStop(1, darken(base, 0.25));
+                        ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(sx + ballSize * 0.5, sy + ballSize * 0.5, ballSize * 0.48, ballSize * 0.48, 0, 0, Math.PI * 2); ctx.fill();
+                        if (sel[x][y]) { ctx.lineWidth = Math.max(2, ballSize * 0.08); ctx.strokeStyle = '#fff8'; ctx.beginPath(); ctx.ellipse(sx + ballSize * 0.5, sy + ballSize * 0.5, ballSize * 0.48, ballSize * 0.48, 0, 0, Math.PI * 2); ctx.stroke(); }
+                    }
+                }
+                for (let i = 1; i <= colors; i++) {
+                    const sx = W - ballSize * 1.2; const sy = H / 2 - (colors * ballSize) / 2 + (i - 1) * ballSize;
+                    ctx.globalAlpha = 0.35; ctx.fillStyle = '#000';
+                    ctx.beginPath(); ctx.ellipse(sx + ballSize * 0.5 + ballSize * 0.1, sy + ballSize * 0.5 + ballSize * 0.1, ballSize * 0.45, ballSize * 0.45, 0, 0, Math.PI * 2); ctx.fill();
+                    ctx.globalAlpha = 1;
+                    const g = ctx.createRadialGradient(sx + ballSize * 0.35, sy + ballSize * 0.35, ballSize * 0.1, sx + ballSize * 0.5, sy + ballSize * 0.5, ballSize * 0.48);
+                    const base = colorOf(i);
+                    g.addColorStop(0, lighten(base, 0.35)); g.addColorStop(1, darken(base, 0.25));
+                    ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(sx + ballSize * 0.5, sy + ballSize * 0.5, ballSize * 0.48, ballSize * 0.48, 0, 0, Math.PI * 2); ctx.fill();
+                }
+            }
+
+            function drawPopped() {
+                for (const p of popped) {
+                    ctx.globalAlpha = 0.35; ctx.fillStyle = '#000';
+                    ctx.beginPath(); ctx.ellipse(p.x + ballSize * 0.1, p.y + ballSize * 0.1, ballSize * 0.45, ballSize * 0.45, 0, 0, Math.PI * 2); ctx.fill();
+                    ctx.globalAlpha = 1;
+                    const g = ctx.createRadialGradient(p.x + ballSize * 0.35, p.y + ballSize * 0.35, ballSize * 0.1, p.x + ballSize * 0.5, p.y + ballSize * 0.5, ballSize * 0.48);
+                    const base = colorOf(p.col);
+                    g.addColorStop(0, lighten(base, 0.35)); g.addColorStop(1, darken(base, 0.25));
+                    ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(p.x + ballSize * 0.5, p.y + ballSize * 0.5, ballSize * 0.48, ballSize * 0.48, 0, 0, Math.PI * 2); ctx.fill();
+                }
+            }
+
+            function drawHUD() {
+                centerText(16, '          BALL POPPER          ', true);
+                const s = `  SCORE:${pad(totalScore, 5)}  SELECTED:${pad(selectedScore, 4)}`;
+                centerText(464, s, false, true);
+
+                // Personal Best display top-right
+                ctx.font = '14px Segoe UI, Arial';
+                ctx.textAlign = 'right';
+                ctx.textBaseline = 'top';
+                ctx.fillStyle = '#9aa';
+                ctx.fillText(`PB: ${pad(personalBest || 0, 5)}`, W - 10, 8);
+
+                // restore defaults
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillStyle = '#eef';
+            }
+
+            function drawMenu() {
+                // Draw preview grid first, then overlay the title to keep it in front
+                drawGrid(); drawPopped();
+                centerText(16, '          BALL POPPER          ', true);
+
+                const a = button(100, `CHANGE GRID SIZE: ${pad(gridSize, 2)}`);
+                const b = button(140, `  CHANGE COLORS: ${pad(colors, 1)}  `);
+                const c = button(180, '   VIEW HISCORES   ');
+                const d = button(440, 'START GAME');
+
+                // Menu hover sound
+                let hoverId = '';
+                if (within(mouse.x, mouse.y, a)) hoverId = 'a';
+                else if (within(mouse.x, mouse.y, b)) hoverId = 'b';
+                else if (within(mouse.x, mouse.y, c)) hoverId = 'c';
+                else if (within(mouse.x, mouse.y, d)) hoverId = 'd';
+                if (hoverId && hoverId !== lastHoverMenu) { Snd.ui(); lastHoverMenu = hoverId; }
+                if (!hoverId) lastHoverMenu = '';
+
+                if (mouse.click || mouse.rclick) {
+                    const inc = mouse.click ? 1 : -1;
+                    if (within(mouse.x, mouse.y, a)) {
+                        gridSize += inc; if (gridSize < MIN_GRID) gridSize = MAX_GRID; if (gridSize > MAX_GRID) gridSize = MIN_GRID; newGrid(); popAllVisual();
+                    } else if (within(mouse.x, mouse.y, b)) {
+                        colors += inc; if (colors < MIN_COLS) colors = MAX_COLS; if (colors > MAX_COLS) colors = MIN_COLS; newGrid(); popAllVisual();
+                    } else if (within(mouse.x, mouse.y, c)) {
+                        state = STATE.SCOREBOARD;
+                    } else if (within(mouse.x, mouse.y, d)) {
+                        totalScore = 0; selectedScore = 0; newGrid(); state = STATE.PLAY;
+                    }
+                }
+            }
+
+            function handleMenu() { }
+
+            function drawScoreboard() {
+                centerText(16, '          BALL POPPER          ', true);
+                centerText(56, 'HISCORES', true);
+                ctx.font = '16px Segoe UI, Arial'; ctx.fillStyle = '#eef'; ctx.textAlign = 'center';
+                for (let i = 0; i < HS_N; i++) {
+                    const y = 80 + 28 * (i + 1);
+                    const rank = pad(i + 1, 2);
+                    const name = (hiscores[i]?.name || '').padEnd(20, ' ').slice(0, 20);
+                    const sc = pad(hiscores[i]?.score || 0, 7);
+                    const row = `${rank}  ${name}  ${sc}`;
+                    ctx.fillText(row, W / 2, y);
+                }
+
+                // Show RESET scoreboard and RETURN buttons only (removed RESET PERSONAL BEST to avoid obscuring table)
+                const r = button(400, 'RESET');
+                const back = button(440, 'RETURN TO MAIN MENU');
+
+                let hoverId = '';
+                if (within(mouse.x, mouse.y, r)) hoverId = 'r';
+                else if (within(mouse.x, mouse.y, back)) hoverId = 'back';
+                if (hoverId && hoverId !== lastHoverMenu) { Snd.ui(); lastHoverMenu = hoverId; }
+                if (!hoverId) lastHoverMenu = '';
+
+                if (mouse.click) {
+                    if (within(mouse.x, mouse.y, r)) { resetScores(); }
+                    if (within(mouse.x, mouse.y, back)) { state = STATE.MENU; }
+                }
+            }
+
+            function handleScoreboard() { }
+
+            function handlePlay() {
+                const origin = gridOrigin();
+                const gx = Math.floor((mouse.x - origin.x) / ballSize) + 1;
+                const gy = Math.floor((mouse.y - origin.y) / ballSize) + 1;
+                const moving = gridMoving();
+
+                // Hover sound when moving over a valid group (>1)
+                if (!moving && inBoard(gx, gy)) {
+                    const sz = groupSizeAt(gx, gy);
+                    const key = (sz > 1) ? (gx + ',' + gy + ':' + sz) : '';
+                    if (key && key !== lastHoverKey) { Snd.hover(sz); lastHoverKey = key; }
+                    if (!key) lastHoverKey = '';
+                } else { lastHoverKey = ''; }
+
+                if (!moving && mouse.click && inBoard(gx, gy)) {
+                    if (sel[gx][gy] > 0) { popSelected(); } else { const n = selectBall(gx, gy); if (n > 1) Snd.hover(n); }
+                }
+                if (!moving && !pairsExist()) { state = STATE.GAMEOVER; }
+            }
+
+            function drawGameover() {
+                centerText(30, 'GAMEOVER', true);
+                centerText(60, `YOUR SCORE: ${totalScore}`, true);
+                drawHiscoreList(100);
+                const cont = button(440, 'CONTINUE');
+                let hoverId = ''; if (within(mouse.x, mouse.y, cont)) hoverId = 'cont'; if (hoverId && hoverId !== lastHoverMenu) { Snd.ui(); lastHoverMenu = hoverId; } if (!hoverId) lastHoverMenu = '';
+                if (mouse.click && within(mouse.x, mouse.y, cont)) {
+                    const rank = hiscoreRank(totalScore);
+                    if (rank >= 0) { pendingRank = rank; state = STATE.NAMEENTRY; showNameInput(''); }
+                    else { state = STATE.MENU; }
+                }
+            }
+
+            function handleGameover() { }
+
+            function drawHiscoreList(startY) {
+                ctx.font = '16px Segoe UI, Arial'; ctx.fillStyle = '#eef'; ctx.textAlign = 'center';
+                for (let i = 0; i < HS_N; i++) {
+                    const y = startY + 28 * (i + 1);
+                    const rank = pad(i + 1, 2);
+                    const name = (hiscores[i]?.name || '').padEnd(20, ' ').slice(0, 20);
+                    const sc = pad(hiscores[i]?.score || 0, 7);
+                    const row = `${rank}  ${name}  ${sc}`;
+                    ctx.fillText(row, W / 2, y);
+                }
+            }
+
+            let pendingRank = -1, nameEntry = '';
+
+            // drawNameEntry now displays the prompt and Done button and uses the HTML input for actual text entry
+            function drawNameEntry() {
+                // ensure input visible and sync nameEntry for canvas display
+                if (nameInput && nameInput.style.display === 'none') showNameInput(nameEntry);
+                nameEntry = (nameInput && nameInput.value) ? nameInput.value : nameEntry;
+
+                centerText(30, 'GAMEOVER', true);
+                centerText(60, `YOUR SCORE: ${totalScore}`, true);
+                centerText(90, 'ENTER YOUR NAME:', true);
+
+                // show current entry in boxed HUD
+                centerText(380, nameEntry || ' ', true, true);
+
+                // Done button on canvas (kept for consistent UI)
+                const done = button(440, 'DONE');
+                let h = ''; if (within(mouse.x, mouse.y, done)) h = 'done'; if (h && h !== lastHoverMenu) { Snd.ui(); lastHoverMenu = h; } if (!h) lastHoverMenu = '';
+                if (mouse.click && within(mouse.x, mouse.y, done)) commitName();
+            }
+
+            function handleNameEntry() { }
+
+            function commitName() {
+                // read from input if available, fallback to nameEntry
+                let finalName = (nameInput && nameInput.value) ? nameInput.value : nameEntry;
+                finalName = (finalName || 'ANON').toUpperCase().slice(0, 20);
+                if (pendingRank < 0) { hideNameInput(); state = STATE.MENU; return; }
+                const insertScore = { name: finalName, score: totalScore };
+                hiscores.splice(pendingRank, 0, insertScore); hiscores = hiscores.slice(0, HS_N); saveScores();
+
+                // update personal best if needed
+                if (!personalBest || totalScore > personalBest) {
+                    personalBest = totalScore;
+                    savePersonalBest(personalBest);
+                }
+
+                pendingRank = -1;
+                nameEntry = '';
+                hideNameInput();
+                state = STATE.MENU;
+            }
+
+            function inBoard(x, y) { return x >= 1 && x <= gridSize && y >= 1 && y <= gridSize; }
+            function gridMoving() { for (let y = 1; y <= gridSize; y++) for (let x = 1; x <= gridSize; x++) if (offX[x][y] || offY[x][y]) return true; return false; }
+
+            function popAllVisual() {
+                const origin = gridOrigin();
+                for (let y = 1; y <= gridSize; y++) for (let x = 1; x <= gridSize; x++) {
+                    const sx = origin.x + (x - 1) * ballSize; const sy = origin.y + (y - 1) * ballSize;
+                    popped.push({ x: sx, y: sy, dx: randFloat(-ballSize / 2, ballSize / 2), dy: -randFloat(ballSize * 0.25, ballSize * 0.75), ddy: 0.5, col: grid[x][y], age: 0 });
+                    offY[x][y] = -ballSize * gridSize; grid[x][y] = randInt(1, colors);
+                }
+            }
+
+            function lighten(hex, amt) { return shade(hex, +amt); }
+            function darken(hex, amt) { return shade(hex, -amt); }
+            function shade(hex, amt) {
+                const c = parseInt(hex.slice(1), 16); let r = (c >> 16) & 255, g = (c >> 8) & 255, b = c & 255;
+                if (amt > 0) { r = r + (255 - r) * amt; g = g + (255 - g) * amt; b = b + (255 - b) * amt; } else { r = r * (1 + amt); g = g * (1 + amt); b = b * (1 + amt); }
+                r = Math.max(0, Math.min(255, Math.round(r))); g = Math.max(0, Math.min(255, Math.round(g))); b = Math.max(0, Math.min(255, Math.round(b)));
+                return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+            }
+
+            function pad(n, w) { const s = String(n); return s.length >= w ? s : '0'.repeat(w - s.length) + s; }
+            function randInt(a, b) { return (Math.random() * (b - a + 1) | 0) + a; }
+            function randFloat(a, b) { return a + Math.random() * (b - a); }
+            function seedRandom() { }
+
+            function defaultScores() {
+                return [
+                    { score: 1000, name: '    BALL POPPER     ' },
+                    { score: 900, name: '   BY COGNITIVEC    ' },
+                    { score: 800, name: '====================' },
+                    { score: 700, name: '    SMALL GAME      ' },
+                    { score: 600, name: '   SIMPLE RULES     ' },
+                    { score: 500, name: '   POP THE BALLS    ' },
+                    { score: 400, name: '  THE MORE YOU POP  ' },
+                    { score: 300, name: '  THE HIGHER YOUR   ' },
+                    { score: 200, name: '       SCORE        ' },
+                    { score: 100, name: '  GET ON THE BOARD  ' },
+                ];
+            }
+
+            function loadScores() {
+                try {
+                    const raw = localStorage.getItem('ball_popper_scores');
+                    if (!raw) return defaultScores();
+                    const arr = JSON.parse(raw);
+                    if (!Array.isArray(arr) || arr.length !== HS_N) return defaultScores();
+                    return arr;
+                } catch (e) { return defaultScores(); }
+            }
+
+            function saveScores() { try { localStorage.setItem('ball_popper_scores', JSON.stringify(hiscores)); } catch (e) { } }
+            function resetScores() { hiscores = defaultScores(); saveScores(); }
+
+            // Personal best persistence helpers
+            function loadPersonalBest() {
+                try {
+                    const raw = localStorage.getItem('ball_popper_personal_best');
+                    if (!raw) return 0;
+                    const v = parseInt(raw, 10);
+                    return isNaN(v) ? 0 : v;
+                } catch (e) { return 0; }
+            }
+            function savePersonalBest(val) { try { localStorage.setItem('ball_popper_personal_best', String(val)); } catch (e) { } }
+            function resetPersonalBest() { personalBest = 0; savePersonalBest(0); }
+
+            function hiscoreRank(score) { for (let i = 0; i < HS_N; i++) if (score > (hiscores[i]?.score || 0)) return i; return -1; }
+
+        })();
+    </script>
+</body>
+</html>
