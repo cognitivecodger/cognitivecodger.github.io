@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Sudoku — 4×4 / 6×6 / 9×9 (Single-File)</title>
+
+<!-- ========================= 1) CSS (visual styling) ========================= -->
+<style>
+  :root{
+    --bg: #0f1117;
+    --panel: #151926;
+    --ink: #e8ecf1;
+    --muted: #9aa4b2;
+    --accent: #6aa9ff;
+    --accent-2: #9bdbff;
+    --danger: #ff6b6b;
+    --given: #c7d2fe;
+    --cell-size: 54px;        /* default; adjusted in JS for 4/6/9 */
+    --gap: 3px; /* increased slightly so subgrid shadows have room to render continuously */
+    --subgrid-thick: 3px;
+    --subgrid-accent: #4a5a7a; /* brighter for more prominent boundaries */
+    --block-alt: rgba(255,255,255,0.035); /* alternating subgrid backgrounds */
+  }
+  *{ box-sizing: border-box; }
+  html, body{
+    height:100%;
+    margin:0;
+    background: radial-gradient(1200px 800px at 20% -10%, #13182a 0%, var(--bg) 45%) fixed;
+    color: var(--ink);
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
+  }
+  h1{
+    font-weight:600; font-size:20px; letter-spacing:.5px; margin:12px 0 6px;
+  }
+  .wrap{
+    max-width: min(1000px, 96vw);
+    margin: 20px auto 40px;
+    padding: 16px;
+    background: linear-gradient(180deg, #0f1322, #0c111b 30%, #0c111b);
+    border: 1px solid #1f2740;
+    border-radius: 14px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.45), inset 0 0 0 1px rgba(255,255,255,.02);
+  }
+  .controls{
+    display:flex; flex-wrap:wrap; gap:16px; align-items:center; justify-content:space-between;
+    background: var(--panel);
+    border: 1px solid #20263c;
+    border-radius: 12px;
+    padding: 12px;
+  }
+  .left, .right{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+  label{ font-size:14px; color:var(--muted); }
+  select, input[type="range"], button{
+    background:#0f1422; color:var(--ink); border:1px solid #2a3657;
+    border-radius: 10px; padding:8px 10px; outline:none;
+    transition: transform .06s ease, border-color .15s ease, background .15s ease, box-shadow .15s ease;
+  }
+  select:hover, input[type="range"]:hover, button:hover{
+    border-color:#3a4d80;
+    box-shadow: 0 0 0 3px rgba(106,169,255,.12);
+  }
+  button{ cursor:pointer; font-weight:600 }
+  button.primary{
+    background: linear-gradient(180deg, #1c2b55, #172447);
+    border-color:#305ad4;
+  }
+  button.primary:hover{
+    background: linear-gradient(180deg, #243369, #1a2a55);
+  }
+  .stat{
+    font-size:13px; color:var(--muted);
+    padding: 4px 8px; border:1px dashed #2a3657; border-radius: 8px;
+  }
+
+  .grid-wrap{
+    margin: 18px auto 10px;
+    display:flex; justify-content:center; align-items:center;
+    padding: 14px 10px;
+  }
+  .grid{
+    display:grid;
+    grid-gap: var(--gap);
+    background:#0e1422;
+    padding: var(--gap);
+    border-radius: 12px;
+    border: 1px solid #273250;
+    position: relative;
+    /* outline subgrid boundaries using gradient background trick (accent lines) */
+  }
+  .cell{
+    width: var(--cell-size);
+    height: var(--cell-size);
+    display:flex; align-items:center; justify-content:center;
+    font-size: calc(var(--cell-size) * .58);
+    line-height:1;
+    border-radius: 8px;
+    background: #11172a;
+    border: 1px solid #222c48;
+    color: var(--ink);
+    user-select: none;
+    position: relative;
+    transition: background .12s ease, transform .04s ease, border-color .12s ease, box-shadow .15s ease;
+  }
+  .cell:hover{
+    background: #141d34;
+  }
+  .cell.selected{
+    outline: 2px solid var(--accent);
+    z-index: 2;
+  }
+  .cell.same{
+    background: rgba(155, 255, 230, 0.514);
+    box-shadow: inset 0 0 0 1px rgba(155, 255, 177, 0.8);
+  }
+  .cell.given{
+    background: #141a30;
+    color: var(--given);
+    font-weight: 700;
+    border-color: #2d3a64;
+  }
+  .cell.conflict{
+    background: #2b0f16;
+    border-color: #782d39;
+    color: #ffb6b6;
+    box-shadow: inset 0 0 0 2px rgba(255,107,107,.35);
+  }
+  .cell .note{ /* small number (not used here but room for pencil marks later) */
+    position:absolute; bottom:4px; right:6px; font-size:11px; color:var(--muted);
+  }
+
+  /* Alternating subgrid background (applied to cells via .block-odd) */
+  .cell.block-odd{
+    background: linear-gradient(180deg, #111729, #0f1626);
+  }
+  .cell.block-odd.given{
+    background: linear-gradient(180deg, #141b30, #121a2d);
+  }
+
+  /* Extra-bold subgrid boundaries using per-cell thick borders on edges.
+    Offsets are calculated using the cell `--gap` so the shadows bridge the
+    spacing between cells and produce continuous lines even when `--gap` is increased. */
+  .thick-top   { box-shadow: 0 calc(-1px - var(--gap)) 0 0 var(--subgrid-accent), 0 calc(-2px - var(--gap)) 0 0 var(--subgrid-accent), 0 calc(-3px - var(--gap)) 0 0 var(--subgrid-accent); }
+  .thick-left  { box-shadow: calc(-1px - var(--gap)) 0 0 0 var(--subgrid-accent), calc(-2px - var(--gap)) 0 0 0 var(--subgrid-accent), calc(-3px - var(--gap)) 0 0 0 var(--subgrid-accent); }
+  .thick-right { box-shadow: calc(1px + var(--gap)) 0 0 0 var(--subgrid-accent), calc(2px + var(--gap)) 0 0 0 var(--subgrid-accent), calc(3px + var(--gap)) 0 0 0 var(--subgrid-accent); }
+  .thick-btm   { box-shadow: 0 calc(1px + var(--gap)) 0 0 var(--subgrid-accent), 0 calc(2px + var(--gap)) 0 0 var(--subgrid-accent), 0 calc(3px + var(--gap)) 0 0 var(--subgrid-accent); }
+
+  .footer{
+    display:flex; gap:10px; align-items:center; justify-content:space-between; flex-wrap:wrap;
+    margin-top:8px; color:var(--muted); font-size:13px;
+  }
+
+  /* Right-click number palette */
+  .palette{
+    position: fixed;
+    z-index: 9999;
+    background: #0f1525;
+    border: 1px solid #2a3a64;
+    border-radius: 12px;
+    padding: 8px;
+    display: none; /* toggled by JS */
+    box-shadow: 0 10px 30px rgba(0,0,0,.45), 0 0 0 2px rgba(80,120,200,.15) inset;
+  }
+  .palette-grid{
+    display:grid;
+    gap:6px;
+  }
+  .palette button{
+    width: 36px; height: 36px; border-radius: 10px;
+    background:#111a33; border:1px solid #2a3a64; color:var(--ink);
+    font-weight:700; font-size:16px; cursor:pointer;
+  }
+  .palette button:hover{
+    border-color:#4b67b5; transform: translateY(-1px);
+  }
+  .palette .palette-row{
+    display:grid; grid-template-columns: repeat(3, 1fr); gap:6px;
+  }
+
+  /* Small helpers */
+  .kbd{
+    border:1px solid #2b375b; background:#0f1422; border-radius:6px; padding:2px 6px; font-size:12px; color: #bdc8d9;
+  }
+  .spacer{ flex:1 }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Sudoku</h1>
+  <div class="controls">
+    <div class="left">
+      <label for="sizeSel">Size</label>
+      <select id="sizeSel" title="Grid size">
+        <option value="4">4×4</option>
+        <option value="6">6×6</option>
+        <option value="9" selected>9×9</option>
+      </select>
+
+      <label for="diff">Difficulty</label>
+      <input id="diff" type="range" min="0" max="100" value="45" />
+      <span id="diffVal" class="stat">45</span>
+
+      <button id="newBtn" class="primary">New Game</button>
+      <button id="checkBtn">Check</button>
+      <button id="clearBtn">Clear</button>
+      <button id="discardSaveBtn" title="Discard the saved game and start fresh">Start Over</button>
+      <label style="display:flex; align-items:center; gap:8px; font-size:13px;">
+        <input id="solvToggle" type="checkbox" />
+        <span style="color:var(--muted);">Solvability check</span>
+      </label>
+    </div>
+    <div class="right">
+      <span class="stat" id="status">Ready</span>
+    </div>
+  </div>
+
+  <div class="grid-wrap">
+    <div id="grid" class="grid" aria-label="Sudoku grid" role="grid"></div>
+  </div>
+
+  <div class="footer">
+    <div>
+      <span class="kbd">Left-Click</span> select & type | 
+      <span class="kbd">Right-Click</span> palette |
+      <span class="kbd">Arrows</span> move | 
+      <span class="kbd">Backspace/Delete</span> clear
+    </div>
+    <div class="spacer"></div>
+    <div>Unique-solution generator • Real-time conflict highlight • Alternating block shading</div>
+  </div>
+</div>
+
+<!-- Right-click palette -->
+<div id="palette" class="palette" role="dialog" aria-modal="true"></div>
+
+<!-- ========== 2) CORE FUNCTIONS (generation, solving, rendering) ========== -->
+<script>
+/* ------------------------ Utility & Data Structures ------------------------ */
+const gridEl   = document.getElementById('grid');
+const sizeSel  = document.getElementById('sizeSel');
+const diffEl   = document.getElementById('diff');
+const diffVal  = document.getElementById('diffVal');
+const statusEl = document.getElementById('status');
+const newBtn   = document.getElementById('newBtn');
+const checkBtn = document.getElementById('checkBtn');
+const clearBtn = document.getElementById('clearBtn');
+const discardSaveBtn = document.getElementById('discardSaveBtn');
+const solvToggle = document.getElementById('solvToggle');
+const palette  = document.getElementById('palette');
+
+let N = 9;                     // grid size (4, 6, 9)
+let BR = 3, BC = 3;            // subgrid dimensions rows x cols
+let board = [];                // current numbers (0 for empty)
+let givens = new Set();        // set of linear indices that are prefilled
+let solution = [];             // solved grid
+let selected = -1;             // linear index currently selected
+let suppressValidate = false;  // small guard during generation
+let enforceSolvability = false; // toggle to check solvability after player moves
+
+// Subgrid shapes for supported sizes
+function subgridShape(n){
+  if(n === 4) return [2,2];
+  if(n === 6) return [2,3]; // 2x3 blocks
+  return [3,3];             // 9 -> 3x3
+}
+
+// Linear index helpers
+const idx = (r,c) => r*N + c;
+const rcFrom = i => [Math.floor(i / N), i % N];
+
+// Save/Load to/from localStorage
+function saveGame(){
+  const saveData = {
+    board,
+    givens: Array.from(givens), // convert Set to array for JSON serialization
+    solution,
+    N, BR, BC,
+    difficulty: parseInt(diffEl.value, 10),
+    enforceSolvability,
+    selected
+  };
+  try {
+    localStorage.setItem('sudokuSave', JSON.stringify(saveData));
+  } catch(e) {
+    console.warn('Failed to save game:', e);
+  }
+}
+function loadGame(){
+  try {
+    const data = localStorage.getItem('sudokuSave');
+    if (!data) return false;
+    const saveData = JSON.parse(data);
+    
+    // Restore state
+    N = saveData.N;
+    BR = saveData.BR;
+    BC = saveData.BC;
+    board = saveData.board;
+    givens = new Set(saveData.givens); // restore Set from array
+    solution = saveData.solution;
+    selected = saveData.selected;
+    enforceSolvability = saveData.enforceSolvability || false;
+    
+    // Restore UI state
+    sizeSel.value = N;
+    diffEl.value = saveData.difficulty;
+    diffVal.textContent = saveData.difficulty;
+    solvToggle.checked = enforceSolvability;
+    
+    // Re-render grid with restored state
+    renderGrid();
+    statusEl.textContent = "Game restored";
+    return true;
+  } catch(e) {
+    console.warn('Failed to load game:', e);
+    return false;
+  }
+}
+function clearSave(){
+  try {
+    localStorage.removeItem('sudokuSave');
+    statusEl.textContent = "Save cleared";
+  } catch(e) {
+    console.warn('Failed to clear save:', e);
+  }
+}
+
+// Random helpers
+const randInt = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
+function shuffled(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+/* ------------------------ Solver (with uniqueness count) ------------------- */
+function findEmpty(b){
+  for(let i=0;i<b.length;i++) if(b[i]===0) return i;
+  return -1;
+}
+function validAt(b, pos, val){
+  const [r,c] = rcFrom(pos);
+  // Row / Col
+  for(let k=0;k<N;k++){
+    if(b[idx(r,k)]===val) return false;
+    if(b[idx(k,c)]===val) return false;
+  }
+  // Block
+  const r0 = Math.floor(r/BR)*BR;
+  const c0 = Math.floor(c/BC)*BC;
+  for(let rr=r0; rr<r0+BR; rr++){
+    for(let cc=c0; cc<c0+BC; cc++){
+      if(b[idx(rr,cc)]===val) return false;
+    }
+  }
+  return true;
+}
+function solveBacktrack(b){
+  const pos = findEmpty(b);
+  if(pos===-1) return true;
+  const nums = shuffled([...Array(N).keys()].map(x=>x+1));
+  for(const v of nums){
+    if(validAt(b,pos,v)){
+      b[pos]=v;
+      if(solveBacktrack(b)) return true;
+      b[pos]=0;
+    }
+  }
+  return false;
+}
+// Count number of solutions up to 2 (for uniqueness)
+function countSolutions(b, limit=2){
+  const pos = findEmpty(b);
+  if(pos===-1) return 1;
+  let count=0;
+  for(let v=1; v<=N; v++){
+    if(validAt(b,pos,v)){
+      b[pos]=v;
+      count += countSolutions(b, limit);
+      if(count>=limit){ b[pos]=0; return count; }
+      b[pos]=0;
+    }
+  }
+  return count;
+}
+
+/* ------------------------ Generator --------------------------------------- */
+// Create a randomized full valid grid
+function makeFullSolution(){
+  const b = Array(N*N).fill(0);
+  // Seed first row with random permutation to diversify solutions
+  const firstRow = shuffled([...Array(N).keys()].map(x=>x+1));
+  for(let c=0;c<N;c++) b[idx(0,c)] = firstRow[c];
+  solveBacktrack(b);
+  return b;
+}
+// Remove clues according to difficulty while preserving uniqueness
+function digHoles(base, difficulty0to100){
+  const b = base.slice();
+  // maximum removable based on size; scale with difficulty
+  const total = N*N;
+  const minClues = Math.max(
+    // keep at least a baseline number of clues (varies by size)
+    N===9 ? 24 : N===6 ? 12 : 6,
+    Math.floor(total * (0.18 + (1 - difficulty0to100/100)*0.52)) // between ~18% and ~70% clues
+  );
+  let toRemove = total - minClues;
+
+  // Candidate positions in random order, optionally remove in symmetric pairs for aesthetics
+  let cells = shuffled([...Array(total).keys()]);
+  while(cells.length && toRemove>0){
+    const i = cells.pop();
+    const saved = b[i];
+    if(saved===0) continue;
+    // try remove (and optionally its symmetric counterpart)
+    b[i]=0;
+
+    // symmetry partner
+    const j = (total-1) - i; // 180° rotational symmetry
+    let paired = false, savedJ=0;
+    if(j!==i && b[j]!==0){
+      savedJ = b[j];
+      b[j]=0; paired=true;
+    }
+
+    // uniqueness check
+    const tmp = b.slice();
+    const count = countSolutions(tmp, 2);
+    if(count!==1){
+      // revert
+      b[i]=saved;
+      if(paired) b[j]=savedJ;
+    }else{
+      toRemove -= (paired?2:1);
+    }
+  }
+  return b;
+}
+
+/* ------------------------ Rendering & Validation --------------------------- */
+function setCellSize(){
+  // Keep the grid roughly within viewport width
+  const maxCell = 64, minCell = 36;
+  let size = 56;
+  if(N===9) size = 52;
+  if(N===6) size = 60;
+  if(N===4) size = 72;
+  // Clamp for small screens
+  const vw = Math.min(window.innerWidth, 1000);
+  const target = Math.floor(Math.min(size, Math.max(minCell, (vw-120)/N)));
+  document.documentElement.style.setProperty('--cell-size', target+'px');
+}
+function renderGrid(){
+  setCellSize();
+  gridEl.innerHTML = '';
+  gridEl.style.gridTemplateColumns = `repeat(${N}, var(--cell-size))`;
+  // for palette sizing later:
+  palette.dataset.n = N;
+
+  for(let r=0;r<N;r++){
+    for(let c=0;c<N;c++){
+      const i = idx(r,c);
+      const div = document.createElement('div');
+      div.className = 'cell';
+      div.setAttribute('role','gridcell');
+      div.setAttribute('data-i', i);
+      // Alternating block shading
+      const brI = Math.floor(r/BR), bcI = Math.floor(c/BC);
+      if(((brI + bcI) % 2)===1) div.classList.add('block-odd');
+
+      // NOTE: per-cell thick-edge classes were previously used to draw
+      // subgrid boundaries, but that approach can leave gaps at corners
+      // when grid gaps are present. We now draw continuous overlay lines
+      // in `drawSubgridLines()` after the cells are rendered.
+
+      const v = board[i];
+      if(v!==0) div.textContent = v;
+
+      if(givens.has(i)){
+        div.classList.add('given');
+        div.setAttribute('aria-readonly','true');
+      }else{
+        div.setAttribute('aria-readonly','false');
+      }
+      gridEl.appendChild(div);
+    }
+  }
+  applySelection(selected);
+  validateConflicts();
+  // draw continuous subgrid boundary lines on top of cells
+  drawSubgridLines();
+}
+
+// Draw continuous subgrid boundary lines (overlay) using absolute-positioned divs.
+// This avoids gaps at corners caused by per-cell shadows when `--gap` > 0.
+function drawSubgridLines(){
+  // remove existing overlay if present
+  const prev = gridEl.querySelector('.grid-lines');
+  if(prev) prev.remove();
+
+  const container = document.createElement('div');
+  container.className = 'grid-lines';
+  container.style.position = 'absolute';
+  container.style.left = '0'; container.style.top = '0';
+  container.style.right = '0'; container.style.bottom = '0';
+  container.style.pointerEvents = 'none';
+  container.style.zIndex = '3';
+
+  const thick = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--subgrid-thick')) || 3;
+  const accent = getComputedStyle(document.documentElement).getPropertyValue('--subgrid-accent') || '#4a5a7a';
+
+  // Vertical boundaries (between blocks) — use the top-row cell offsets for accurate alignment
+  for(let c=BC; c<N; c+=BC){
+    const cell = gridEl.querySelector(`.cell[data-i="${idx(0,c)}"]`);
+    if(!cell) continue;
+    const left = cell.offsetLeft - (thick/2);
+    const v = document.createElement('div');
+    v.className = 'grid-line v';
+    v.style.position = 'absolute';
+    v.style.top = '0'; v.style.bottom = '0';
+    v.style.left = left + 'px';
+    v.style.width = thick + 'px';
+    v.style.background = accent;
+    container.appendChild(v);
+  }
+
+  // Horizontal boundaries
+  for(let r=BR; r<N; r+=BR){
+    const cell = gridEl.querySelector(`.cell[data-i="${idx(r,0)}"]`);
+    if(!cell) continue;
+    const top = cell.offsetTop - (thick/2);
+    const h = document.createElement('div');
+    h.className = 'grid-line h';
+    h.style.position = 'absolute';
+    h.style.left = '0'; h.style.right = '0';
+    h.style.top = top + 'px';
+    h.style.height = thick + 'px';
+    h.style.background = accent;
+    container.appendChild(h);
+  }
+
+  gridEl.appendChild(container);
+}
+function applySelection(i){
+  // clear previous selection classes
+  [...gridEl.children].forEach(el => el.classList.remove('selected','same'));
+  if(i<0) return;
+  const el = gridEl.querySelector(`.cell[data-i="${i}"]`);
+  if(el) el.classList.add('selected');
+
+  // soft highlight of same numbers
+  const v = board[i];
+  if(v){
+    for(let k=0;k<N*N;k++){
+      if(board[k]===v){
+        const e = gridEl.querySelector(`.cell[data-i="${k}"]`);
+        if(e) e.classList.add('same');
+      }
+    }
+  }
+}
+function setCellValue(i, v){
+  if(i<0) return;
+  if(givens.has(i)) return;
+  if(v<0){ // clear
+    board[i]=0;
+  }else if(v>=1 && v<=N){
+    board[i]=v;
+  }
+  // update DOM cell
+  const el = gridEl.querySelector(`.cell[data-i="${i}"]`);
+  if(el) el.textContent = board[i] ? board[i] : '';
+  // First, update duplicate/conflict highlights
+  validateConflicts();
+
+  // If the solvability guard is enabled, run a quick solver check (limit=1).
+  // If there are zero solutions, highlight this cell as a conflict (same visual method)
+  // and notify the player, but do not revert the move.
+  if(enforceSolvability){
+    const sols = countSolutions(board.slice(), 1);
+    if(sols === 0){
+      // mark this single cell as a conflict (same styling)
+      const cel = gridEl.querySelector(`.cell[data-i="${i}"]`);
+      if(cel) cel.classList.add('conflict');
+      applySelection(i);
+      statusEl.textContent = "Move makes puzzle unsolvable";
+      return;
+    }
+  }
+
+  applySelection(i);
+  if(isComplete() && isSolved()){
+    statusEl.textContent = "Solved — well done!";
+  }else{
+    statusEl.textContent = "In progress";
+  }
+  // Auto-save after every move
+  saveGame();
+}
+function isComplete(){
+  return board.every(v=>v!==0);
+}
+function isSolved(){
+  // since we generated unique-solution puzzles from 'solution', compare
+  for(let i=0;i<N*N;i++) if(board[i]!==solution[i]) return false;
+  return true;
+}
+function validateConflicts(){
+  if(suppressValidate) return;
+  const conflictIdx = new Set();
+
+  // Row & Col
+  for(let r=0;r<N;r++){
+    const seenR = new Map();
+    for(let c=0;c<N;c++){
+      const i = idx(r,c), v = board[i];
+      if(!v) continue;
+      if(seenR.has(v)){
+        conflictIdx.add(i); conflictIdx.add(seenR.get(v));
+      }else seenR.set(v,i);
+    }
+  }
+  for(let c=0;c<N;c++){
+    const seenC = new Map();
+    for(let r=0;r<N;r++){
+      const i = idx(r,c), v = board[i];
+      if(!v) continue;
+      if(seenC.has(v)){
+        conflictIdx.add(i); conflictIdx.add(seenC.get(v));
+      }else seenC.set(v,i);
+    }
+  }
+  // Blocks
+  for(let r0=0;r0<N;r0+=BR){
+    for(let c0=0;c0<N;c0+=BC){
+      const seenB = new Map();
+      for(let r=r0;r<r0+BR;r++){
+        for(let c=c0;c<c0+BC;c++){
+          const i = idx(r,c), v = board[i];
+          if(!v) continue;
+          if(seenB.has(v)){
+            conflictIdx.add(i); conflictIdx.add(seenB.get(v));
+          }else seenB.set(v,i);
+        }
+      }
+    }
+  }
+  // apply classes
+  [...gridEl.children].forEach(el => el.classList.remove('conflict'));
+  for(const i of conflictIdx){
+    const el = gridEl.querySelector(`.cell[data-i="${i}"]`);
+    if(el) el.classList.add('conflict');
+  }
+}
+
+/* ------------------------ New Game / Check / Clear ------------------------- */
+function newGame(){
+  N = parseInt(sizeSel.value,10);
+  [BR,BC] = subgridShape(N);
+
+  // Generate
+  suppressValidate = true;
+  const full = makeFullSolution();
+  const holes = digHoles(full, parseInt(diffEl.value,10));
+  suppressValidate = false;
+
+  solution = full;
+  board = holes;
+  givens = new Set();
+  for(let i=0;i<N*N;i++) if(holes[i]!==0) givens.add(i);
+  selected = -1;
+  renderGrid();
+  statusEl.textContent = "New puzzle generated";
+}
+function checkAll(){
+  validateConflicts();
+  if(isComplete() && isSolved()){
+    statusEl.textContent = "All correct — solved!";
+  }else{
+    // Detect any immediate wrong entries (compare to solution where filled)
+    let wrong = 0;
+    for(let i=0;i<N*N;i++){
+      if(board[i]!==0 && board[i]!==solution[i]) wrong++;
+    }
+    statusEl.textContent = wrong ? `Check: ${wrong} wrong cell${wrong>1?'s':''}` : "Check: So far so good";
+  }
+}
+function clearNonPrefilled(){
+  for(let i=0;i<N*N;i++){
+    if(!givens.has(i)) board[i]=0;
+  }
+  renderGrid();
+  statusEl.textContent = "Cleared entries";
+}
+
+/* ------------------------ Palette (right-click popup) ---------------------- */
+function buildPalette(){
+  palette.innerHTML = '';
+  const g = document.createElement('div');
+  g.className = 'palette-grid';
+
+  // Layout as 3x3 blocks where possible
+  const cols = 3;
+  const rows = Math.ceil(N/cols);
+  g.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+
+  for(let v=1; v<=N; v++){
+    const b = document.createElement('button');
+    b.textContent = v;
+    b.addEventListener('click', ()=>{
+      if(selected>=0) setCellValue(selected, v);
+      hidePalette();
+    });
+    g.appendChild(b);
+  }
+  // Add a clear button
+  const clr = document.createElement('button');
+  clr.textContent = '⌫';
+  clr.title = 'Clear';
+  clr.addEventListener('click', ()=>{ if(selected>=0) setCellValue(selected, -1); hidePalette(); });
+  g.appendChild(clr);
+
+  palette.appendChild(g);
+}
+function showPalette(x,y){
+  buildPalette();
+  palette.style.display = 'block';
+  const rect = palette.getBoundingClientRect();
+  // keep on-screen
+  const px = Math.min(x, window.innerWidth - rect.width - 8);
+  const py = Math.min(y, window.innerHeight - rect.height - 8);
+  palette.style.left = px + 'px';
+  palette.style.top  = py + 'px';
+}
+function hidePalette(){
+  palette.style.display = 'none';
+}
+
+/* ------------------------ Selection & Navigation --------------------------- */
+function selectIndex(i){
+  if(i<0 || i>=N*N){ selected=-1; applySelection(-1); return; }
+  selected = i;
+  applySelection(i);
+}
+function moveSelection(dr,dc){
+  if(selected<0){ selectIndex(0); return; }
+  let [r,c] = rcFrom(selected);
+  r = (r+dr+N)%N;
+  c = (c+dc+N)%N;
+  selectIndex(idx(r,c));
+  // focus scroll into view (gentle)
+  const el = gridEl.querySelector(`.cell[data-i="${selected}"]`);
+  if(el) el.scrollIntoView({block:"nearest", inline:"nearest", behavior:"smooth"});
+}
+
+/* ========================= 3) EVENT LISTENERS (UI) ========================= */
+gridEl.addEventListener('click', (e)=>{
+  const cell = e.target.closest('.cell');
+  if(!cell) return;
+  const i = parseInt(cell.dataset.i,10);
+  selectIndex(i);
+  hidePalette();
+});
+
+gridEl.addEventListener('contextmenu', (e)=>{
+  e.preventDefault();
+  const cell = e.target.closest('.cell');
+  if(!cell) return;
+  const i = parseInt(cell.dataset.i,10);
+  if(givens.has(i)) return; // palette only for editable cells
+  selectIndex(i);
+  showPalette(e.clientX, e.clientY);
+});
+
+document.addEventListener('keydown', (e)=>{
+  // Dismiss palette
+  if(e.key === 'Escape'){ hidePalette(); return; }
+
+  // Arrows navigation
+  if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)){
+    e.preventDefault();
+    if(e.key==='ArrowUp') moveSelection(-1,0);
+    if(e.key==='ArrowDown') moveSelection(1,0);
+    if(e.key==='ArrowLeft') moveSelection(0,-1);
+    if(e.key==='ArrowRight') moveSelection(0,1);
+    return;
+  }
+
+  if(selected<0) return;
+
+  // Clear
+  if(e.key==='Backspace' || e.key==='Delete'){
+    e.preventDefault();
+    setCellValue(selected, -1);
+    return;
+  }
+
+  // Digits (1..N)
+  if(/^[0-9]$/.test(e.key)){
+    const v = parseInt(e.key,10);
+    if(v>=1 && v<=N){
+      e.preventDefault();
+      if(!givens.has(selected)) setCellValue(selected, v);
+    }
+  }
+});
+
+document.addEventListener('click', (e)=>{
+  // clicking outside palette closes it
+  if(palette.style.display==='block' && !palette.contains(e.target)){
+    if(!e.target.closest('.cell')) hidePalette();
+  }
+});
+
+window.addEventListener('resize', ()=>{
+  setCellSize();
+  // redraw overlay lines to follow layout changes
+  try{ drawSubgridLines(); }catch(e){}
+});
+
+sizeSel.addEventListener('change', ()=>{
+  newGame();
+});
+diffEl.addEventListener('input', ()=>{
+  diffVal.textContent = diffEl.value;
+});
+newBtn.addEventListener('click', newGame);
+checkBtn.addEventListener('click', checkAll);
+clearBtn.addEventListener('click', clearNonPrefilled);
+discardSaveBtn.addEventListener('click', ()=>{
+  clearSave();
+  newGame();
+});
+// Solvability toggle: enable/disable running the solver after each player move
+if(solvToggle){
+  solvToggle.addEventListener('change', ()=>{
+    enforceSolvability = !!solvToggle.checked;
+    // Optional: give immediate feedback
+    statusEl.textContent = enforceSolvability ? 'Solvability check ON' : 'Solvability check OFF';
+  });
+}
+
+// Click-to-type with mouse on palette not needed, handled above.
+
+/* ========================= 4) STARTUP (auto newGame or restore) ======================= */
+function startup(){
+  diffVal.textContent = diffEl.value;
+  
+  // Try to restore a previously saved game
+  const restored = loadGame();
+  if (!restored) {
+    // No saved game; start fresh
+    newGame();
+  }
+}
+startup();
+</script>
+</body>
+</html>
