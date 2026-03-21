@@ -195,8 +195,8 @@
   margin-bottom: 50px;
 }
 
-/* Optional scanline effect */
-body::after {
+/* Optional scanline effect (moved to html::after and added mix-blend-mode for reliable blending) */
+html::after {
   content: "";
   position: fixed;
   inset: 0;
@@ -204,12 +204,14 @@ body::after {
   z-index: 9999;
   background: repeating-linear-gradient(
     to bottom,
-    rgba(87, 255, 147, 0.05),
-    rgba(87, 255, 147, 0.05) 1px,
+    rgba(87, 255, 147, 0.06) 0px,
+    rgba(87, 255, 147, 0.06) 1px,
     transparent 1px,
-    transparent 3px
+    transparent 4px
   );
+  mix-blend-mode: overlay;
   opacity: 0.22;
+  will-change: opacity;
 }
   </style>
 </head>
