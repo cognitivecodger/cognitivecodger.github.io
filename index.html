@@ -39,18 +39,58 @@
       margin-bottom: 42px;
     }
 
-    .logo {
-  display: block;
-  width: 320px;
-  max-width: 82%;
-  height: auto;
-  margin: 0 auto 18px;
+    /* logo wrapper and scanline + glow styles */
+    .logo-wrap {
+      display: block;
+      width: 320px;
+      max-width: 82%;
+      margin: 0 auto 18px;
+      position: relative;
+      border-radius: 10px; /* helps rounded overlay on top of svg if needed */
+      will-change: transform, filter;
+    }
 
-  filter:
-    drop-shadow(0 0 6px rgba(87, 255, 147, 0.4))
-    drop-shadow(0 0 16px rgba(87, 255, 147, 0.25))
-    drop-shadow(0 0 32px rgba(87, 255, 147, 0.12));
-}
+    .logo {
+      display: block;
+      width: 100%;
+      height: auto;
+      position: relative;
+      z-index: 1;
+      filter:
+        drop-shadow(0 0 6px rgba(87, 255, 147, 0.4))
+        drop-shadow(0 0 16px rgba(87, 255, 147, 0.25))
+        drop-shadow(0 0 32px rgba(87, 255, 147, 0.12));
+      transition: transform 180ms ease, filter 180ms ease;
+      border-radius: inherit;
+    }
+
+    /* scanlines only over the logo */
+    .logo-wrap::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 2;
+      background: repeating-linear-gradient(
+        to bottom,
+        rgba(87, 255, 147, 0.10) 0px,
+        rgba(87, 255, 147, 0.10) 1px,
+        transparent 1px,
+        transparent 4px
+      );
+      mix-blend-mode: screen; /* blends the light scanlines with the svg */
+      opacity: 0.65;
+      border-radius: inherit;
+    }
+
+    /* subtle glow on hover / focus */
+    .logo-wrap:hover .logo,
+    .logo-wrap:focus-within .logo {
+      transform: translateY(-3px) scale(1.02);
+      filter:
+        drop-shadow(0 8px 36px rgba(87, 255, 147, 0.28))
+        drop-shadow(0 0 18px rgba(87, 255, 147, 0.20));
+    }
 
     .tagline {
       font-size: 1.2rem;
@@ -165,7 +205,7 @@
         padding: 28px 16px 46px;
       }
 
-      .logo {
+      .logo-wrap {
         width: 260px;
       }
 
@@ -181,45 +221,25 @@
         font-size: 1.45rem;
       }
     }
-    .logo {
-  filter: drop-shadow(0 0 10px rgba(87, 255, 147, 0.18));
-}
 
-.support a:hover {
-  background: var(--accent);
-  color: #0c120d;
-  box-shadow: 0 0 16px rgba(87, 255, 147, 0.25);
-}
+    .support a:hover {
+      background: var(--accent);
+      color: #0c120d;
+      box-shadow: 0 0 16px rgba(87, 255, 147, 0.25);
+    }
 
-.hero {
-  margin-bottom: 50px;
-}
-
-/* Optional scanline effect (moved to html::after and added mix-blend-mode for reliable blending) */
-html::after {
-  content: "";
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 9999;
-  background: repeating-linear-gradient(
-    to bottom,
-    rgba(87, 255, 147, 0.06) 0px,
-    rgba(87, 255, 147, 0.06) 1px,
-    transparent 1px,
-    transparent 4px
-  );
-  mix-blend-mode: overlay;
-  opacity: 0.22;
-  will-change: opacity;
-}
+    .hero {
+      margin-bottom: 50px;
+    }
   </style>
 </head>
 <body>
   <div class="container">
 
     <div class="hero">
-      <img src="./assets/CogCodLogo.svg" alt="Cognitive Codger logo" class="logo">
+      <div class="logo-wrap" aria-hidden="false">
+        <img src="./assets/CogCodLogo.svg" alt="Cognitive Codger logo" class="logo">
+      </div>
       <p class="tagline">Simple things, built for curiosity.</p>
       <p class="intro">
         Free browser games, experiments, and odd little projects. No logins, no registrations, no fuss — just click and play.
