@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Minefield Crossing</title>
+  <style>
+    :root {
+      --bg: #1b2a1f;
+      --panel: #233428;
+      --panel-2: #2a3d30;
+      --border: #4e6a54;
+      --text: #eef7ee;
+      --muted: #c5d5c6;
+      --safe: #3e6b45;
+      --grass-a: #4f8a4f;
+      --grass-b: #5b995b;
+      --player: #d8f05a;
+      --danger: #d95f5f;
+      --warn1: #f2f28c;
+      --warn2: #ffbf69;
+      --warn3: #ff7f6b;
+      --accent: #8fe388;
+      --shadow: rgba(0, 0, 0, 0.25);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: linear-gradient(180deg, #152118 0%, #1d2d22 100%);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: stretch;
+      overflow: hidden;
+      touch-action: manipulation;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 920px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 10px;
+    }
+
+    .topbar, .controls-panel, .message-panel {
+      background: var(--panel);
+      border: 2px solid var(--border);
+      border-radius: 14px;
+      box-shadow: 0 8px 20px var(--shadow);
+    }
+
+    .topbar {
+      display: grid;
+      grid-template-columns: 1fr auto auto auto;
+      gap: 10px;
+      align-items: center;
+      padding: 10px;
+    }
+
+    .title-block h1 {
+      margin: 0;
+      font-size: 1.25rem;
+      line-height: 1.1;
+    }
+
+    .title-block p {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .stat {
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 8px 10px;
+      min-width: 94px;
+      text-align: center;
+    }
+
+    .stat-label {
+      color: var(--muted);
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .stat-value {
+      margin-top: 2px;
+      font-size: 1.05rem;
+      font-weight: bold;
+    }
+
+    .board-wrap {
+      flex: 1;
+      min-height: 340px;
+      background: #162219;
+      border: 2px solid var(--border);
+      border-radius: 18px;
+      padding: 12px;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.03), 0 8px 20px var(--shadow);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .board {
+      display: grid;
+      gap: 2px;
+      width: 100%;
+      height: 100%;
+      max-height: 68vh;
+      aspect-ratio: 1 / 1.2;
+    }
+
+    .cell {
+      position: relative;
+      border-radius: 5px;
+      border: 1px solid rgba(0,0,0,0.08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      user-select: none;
+      overflow: hidden;
+      min-width: 0;
+      min-height: 0;
+    }
+
+    .cell.safe-zone {
+      background: repeating-linear-gradient(
+        45deg,
+        #587d5d,
+        #587d5d 8px,
+        #648a69 8px,
+        #648a69 16px
+      );
+      outline: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .cell.safe-zone::after {
+      content: "SAFE";
+      font-size: clamp(8px, 1.4vw, 14px);
+      color: rgba(255,255,255,0.9);
+      text-shadow: 0 1px 1px rgba(0,0,0,0.4);
+      letter-spacing: 0.06em;
+    }
+
+    .cell.grass {
+      background:
+        radial-gradient(circle at 30% 25%, rgba(255,255,255,0.10), transparent 18%),
+        linear-gradient(180deg, var(--grass-b), var(--grass-a));
+    }
+
+    .cell.grass:nth-child(odd) {
+      filter: brightness(0.98);
+    }
+
+    .cell.player {
+      outline: 3px solid rgba(255,255,255,0.35);
+      z-index: 2;
+    }
+
+    .tank {
+      font-size: clamp(14px, 2vw, 24px);
+      filter: drop-shadow(0 2px 2px rgba(0,0,0,0.35));
+      transform: translateY(-1px);
+    }
+
+    .hint {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 66%;
+      height: 66%;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: clamp(11px, 1.6vw, 18px);
+      text-shadow: 0 1px 2px rgba(0,0,0,0.45);
+      color: #172117;
+      font-weight: 900;
+      opacity: 0.95;
+    }
+
+    .hint.level-0 { display: none; }
+    .hint.level-1 { background: var(--warn1); }
+    .hint.level-2 { background: var(--warn2); }
+    .hint.level-3,
+    .hint.level-4,
+    .hint.level-5,
+    .hint.level-6,
+    .hint.level-7,
+    .hint.level-8 { background: var(--warn3); color: white; }
+
+    .cell.revealed-mine {
+      background: radial-gradient(circle at center, #3a1010 0%, #791d1d 70%);
+      animation: flashBoom 0.28s ease-in-out 2;
+    }
+
+    .cell.victory-mine {
+      background: radial-gradient(circle at center, #2b472f 0%, #3f6c45 75%);
+      animation: victoryPulse 1s ease-in-out infinite;
+    }
+
+    .cell.player-win {
+      outline: 3px solid rgba(255,255,255,0.55);
+      box-shadow: 0 0 0 2px rgba(143, 227, 136, 0.35), 0 0 18px rgba(143, 227, 136, 0.45);
+    }
+
+    .mine {
+      font-size: clamp(12px, 1.8vw, 22px);
+    }
+
+    @keyframes flashBoom {
+      0% { transform: scale(1); filter: brightness(1); }
+      50% { transform: scale(1.08); filter: brightness(1.4); }
+      100% { transform: scale(1); filter: brightness(1); }
+    }
+
+    @keyframes victoryPulse {
+      0% { transform: scale(1); filter: brightness(1); }
+      50% { transform: scale(1.05); filter: brightness(1.18); }
+      100% { transform: scale(1); filter: brightness(1); }
+    }
+
+    .message-panel {
+      padding: 10px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .message {
+      font-size: 1rem;
+      font-weight: bold;
+    }
+
+    .submessage {
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin-top: 3px;
+    }
+
+    .controls-panel {
+      padding: 10px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: stretch;
+    }
+
+    .settings {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .settings label {
+      font-size: 0.9rem;
+      color: var(--muted);
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    select, button {
+      border: 1px solid var(--border);
+      background: var(--panel-2);
+      color: var(--text);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 0.98rem;
+    }
+
+    button {
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    button:hover { filter: brightness(1.08); }
+    button:active { transform: translateY(1px); }
+
+    .dpad {
+      display: grid;
+      grid-template-columns: repeat(3, 58px);
+      grid-template-rows: repeat(2, 58px);
+      gap: 6px;
+      align-content: center;
+      justify-content: center;
+    }
+
+    .dpad button {
+      font-size: 1.35rem;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #35523a;
+      min-height: 58px;
+    }
+
+    .dpad .empty {
+      visibility: hidden;
+    }
+
+    .legend {
+      font-size: 0.82rem;
+      color: var(--muted);
+      line-height: 1.35;
+      width: 100%;
+      margin-top: 2px;
+    }
+
+    .win { color: #9af69a; }
+    .lose { color: #ff9a9a; }
+
+    @media (max-width: 760px) {
+      .topbar {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .controls-panel {
+        grid-template-columns: 1fr;
+      }
+
+      .dpad {
+        justify-self: center;
+      }
+
+      .board {
+        aspect-ratio: 1 / 1.15;
+        max-height: 54vh;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .app { padding: 8px; gap: 8px; }
+      .board-wrap { padding: 8px; }
+      .topbar { gap: 8px; }
+      .title-block h1 { font-size: 1.06rem; }
+      .title-block p { font-size: 0.84rem; }
+      .stat { min-width: 0; }
+      .dpad { grid-template-columns: repeat(3, 54px); grid-template-rows: repeat(2, 54px); }
+      .dpad button { min-height: 54px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="topbar">
+      <div class="title-block">
+        <h1>Tank Trek</h1>
+        <p>Cross the hidden field from the safe zone at the bottom to the safe zone at the top.</p>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Threat</div>
+        <div class="stat-value" id="threatValue">0</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Steps</div>
+        <div class="stat-value" id="stepsValue">0</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Best</div>
+        <div class="stat-value" id="bestValue">—</div>
+      </div>
+    </div>
+
+    <div class="board-wrap">
+      <div id="board" class="board" aria-label="Minefield board"></div>
+    </div>
+
+    <div class="message-panel">
+      <div>
+        <div id="message" class="message">Reach the top safe strip.</div>
+        <div id="submessage" class="submessage">The number shows how many mines are in the 8 surrounding squares around your tank.</div>
+      </div>
+      <button id="restartBtn" type="button">New Field</button>
+    </div>
+
+    <div class="controls-panel">
+      <div class="settings">
+        <label>
+          Difficulty
+          <select id="difficultySelect">
+            <option value="easy">Easy</option>
+            <option value="medium" selected>Medium</option>
+            <option value="hard">Hard</option>
+          </select>
+        </label>
+        <label>
+          Board Size
+          <select id="sizeSelect">
+            <option value="small">Small</option>
+            <option value="medium" selected>Medium</option>
+            <option value="large">Large</option>
+          </select>
+        </label>
+        <div class="legend">
+          Controls: arrow keys on keyboard, or the on-screen arrows below. You can move up, down, left, and right.
+        </div>
+      </div>
+
+      <div class="dpad" aria-label="Movement controls">
+        <div class="empty"></div>
+        <button data-dir="up" aria-label="Move up">▲</button>
+        <div class="empty"></div>
+        <button data-dir="left" aria-label="Move left">◀</button>
+        <button data-dir="down" aria-label="Move down">▼</button>
+        <button data-dir="right" aria-label="Move right">▶</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const boardEl = document.getElementById('board');
+    const messageEl = document.getElementById('message');
+    const submessageEl = document.getElementById('submessage');
+    const threatValueEl = document.getElementById('threatValue');
+    const stepsValueEl = document.getElementById('stepsValue');
+    const bestValueEl = document.getElementById('bestValue');
+    const restartBtn = document.getElementById('restartBtn');
+    const difficultySelect = document.getElementById('difficultySelect');
+    const sizeSelect = document.getElementById('sizeSelect');
+
+    const configs = {
+      small: { rows: 10, cols: 8 },
+      medium: { rows: 12, cols: 10 },
+      large: { rows: 16, cols: 12 }
+    };
+
+    const densities = {
+      easy: 0.11,
+      medium: 0.16,
+      hard: 0.21
+    };
+
+    let state = null;
+    let audioContext = null;
+    let audioUnlocked = false;
+
+    function randInt(max) {
+      return Math.floor(Math.random() * max);
+    }
+
+    function keyFor(r, c) {
+      return `${r},${c}`;
+    }
+
+    function inBounds(r, c, rows, cols) {
+      return r >= 0 && c >= 0 && r < rows && c < cols;
+    }
+
+    function createEmptyGrid(rows, cols) {
+      return Array.from({ length: rows }, () =>
+        Array.from({ length: cols }, () => ({ mine: false }))
+      );
+    }
+
+    function getStartCol(cols) {
+      return Math.floor(cols / 2);
+    }
+
+    function buildGuaranteedPath(rows, cols) {
+      const path = [];
+      let r = rows - 1;
+      let c = getStartCol(cols);
+      path.push([r, c]);
+
+      while (r > 0) {
+        const moves = [];
+        moves.push(['up', r - 1, c]);
+        if (c > 0) moves.push(['left', r, c - 1]);
+        if (c < cols - 1) moves.push(['right', r, c + 1]);
+
+        let next;
+        if (Math.random() < 0.62) {
+          next = moves.find(m => m[0] === 'up');
+        }
+        if (!next) next = moves[randInt(moves.length)];
+
+        r = next[1];
+        c = next[2];
+
+        if (!path.some(([pr, pc]) => pr === r && pc === c)) {
+          path.push([r, c]);
+        }
+
+        if (path.length > rows * cols) break;
+      }
+
+      if (!path.some(([pr]) => pr === 0)) {
+        path.push([0, c]);
+      }
+
+      return new Set(path.map(([pr, pc]) => keyFor(pr, pc)));
+    }
+
+    function createField() {
+      const size = configs[sizeSelect.value];
+      const density = densities[difficultySelect.value];
+      const rows = size.rows;
+      const cols = size.cols;
+      const grid = createEmptyGrid(rows, cols);
+      const safePath = buildGuaranteedPath(rows, cols);
+      const bottomSafeRow = rows - 1;
+      const topSafeRow = 0;
+      const revealed = new Set();
+      const flagged = new Set();
+
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const k = keyFor(r, c);
+          const isSafeZone = r === bottomSafeRow || r === topSafeRow;
+          if (isSafeZone || safePath.has(k)) continue;
+          grid[r][c].mine = Math.random() < density;
+        }
+      }
+
+      for (let c = 0; c < cols; c++) {
+        revealed.add(keyFor(bottomSafeRow, c));
+      }
+      
+      const player = { row: rows - 1, col: getStartCol(cols) };
+      return {
+        rows,
+        cols,
+        grid,
+        player,
+        steps: 0,
+        over: false,
+        won: false,
+        exploded: null,
+        visited: new Set([keyFor(player.row, player.col)]),
+        revealed,
+        flagged
+      };
+    }
+
+    function getThreatCount(row, col) {
+      let count = 0;
+      for (let dr = -1; dr <= 1; dr++) {
+        for (let dc = -1; dc <= 1; dc++) {
+          if (dr === 0 && dc === 0) continue;
+          const nr = row + dr;
+          const nc = col + dc;
+          if (inBounds(nr, nc, state.rows, state.cols) && state.grid[nr][nc].mine) {
+            count++;
+          }
+        }
+      }
+      return count;
+    }
+
+    function revealCurrentSquare(row, col) {
+      state.revealed.add(keyFor(row, col));
+    }
+
+    function saveBestIfNeeded() {
+      if (!state.won) return;
+      const key = `tank-trek-best-${difficultySelect.value}-${sizeSelect.value}`;
+      const existing = Number(localStorage.getItem(key) || '0');
+      if (!existing || state.steps < existing) {
+        localStorage.setItem(key, String(state.steps));
+      }
+    }
+
+    function loadBest() {
+      const key = `tank-trek-best-${difficultySelect.value}-${sizeSelect.value}`;
+      const best = Number(localStorage.getItem(key) || '0');
+      bestValueEl.textContent = best ? best : '—';
+    }
+
+    function updateHud() {
+      const threat = getThreatCount(state.player.row, state.player.col);
+      threatValueEl.textContent = String(threat);
+      stepsValueEl.textContent = String(state.steps);
+      loadBest();
+    }
+
+    function setMessage(text, sub = '', className = '') {
+      messageEl.textContent = text;
+      messageEl.className = `message ${className}`.trim();
+      submessageEl.textContent = sub;
+    }
+
+    function render() {
+      boardEl.innerHTML = '';
+      boardEl.style.gridTemplateColumns = `repeat(${state.cols}, 1fr)`;
+      boardEl.style.gridTemplateRows = `repeat(${state.rows}, 1fr)`;
+
+      const threatHere = getThreatCount(state.player.row, state.player.col);
+
+      for (let r = 0; r < state.rows; r++) {
+        for (let c = 0; c < state.cols; c++) {
+          const cell = document.createElement('div');
+          cell.className = 'cell';
+          cell.dataset.row = r;
+          cell.dataset.col = c;
+
+          const k = keyFor(r, c);
+          const isSafeZone = r === 0 || r === state.rows - 1;
+          const isPlayer = r === state.player.row && c === state.player.col;
+          const isExploded = state.exploded && state.exploded.row === r && state.exploded.col === c;
+          const isRevealed = state.revealed.has(k) || isPlayer || isExploded || state.over;
+          const isFlagged = state.flagged.has(k) && !isPlayer;
+
+          if (isSafeZone) {
+            cell.classList.add('safe-zone');
+          } else {
+            cell.classList.add('grass');
+          }
+
+          if (!isRevealed) {
+            cell.style.background = 'linear-gradient(180deg, #203126, #162219)';
+            cell.style.boxShadow = 'inset 0 0 0 9999px rgba(5, 8, 6, 0.42)';
+          }
+
+          if (state.won && state.grid[r][c].mine) {
+            cell.classList.add('victory-mine');
+            const mine = document.createElement('div');
+            mine.className = 'mine';
+            mine.textContent = '💣';
+            cell.appendChild(mine);
+          }
+
+          if (isFlagged && !state.over) {
+            const flag = document.createElement('div');
+            flag.className = 'mine';
+            flag.textContent = '🚩';
+            cell.appendChild(flag);
+          }
+
+          if (state.over && !state.won && state.grid[r][c].mine && !isExploded) {
+            const mine = document.createElement('div');
+            mine.className = 'mine';
+            mine.textContent = '💣';
+            cell.appendChild(mine);
+          }
+
+          if (isExploded) {
+            cell.classList.add('revealed-mine');
+            const mine = document.createElement('div');
+            mine.className = 'mine';
+            mine.textContent = '💥';
+            cell.appendChild(mine);
+          }
+
+          if (isPlayer) {
+            cell.classList.add('player');
+            if (state.won) {
+              cell.classList.add('player-win');
+            }
+            const tank = document.createElement('div');
+            tank.className = 'tank';
+            tank.textContent = state.won ? '🏆' : '🛡️';
+            cell.appendChild(tank);
+
+            if (!state.over) {
+              const hint = document.createElement('div');
+              hint.className = `hint level-${threatHere}`;
+              hint.textContent = threatHere > 0 ? threatHere : '';
+              cell.appendChild(hint);
+            }
+          }
+
+          cell.addEventListener('click', () => handleCellClick(r, c));
+          boardEl.appendChild(cell);
+        }
+      }
+
+      updateHud();
+    }
+
+    async function unlockAudio() {
+      try {
+        if (!audioContext) {
+          audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (audioContext.state === 'suspended') {
+          await audioContext.resume();
+        }
+        audioUnlocked = audioContext.state === 'running';
+      } catch (err) {
+        console.error('Audio unlock failed:', err);
+        audioUnlocked = false;
+      }
+    }
+
+    async function playVictoryFanfare() {
+      try {
+        await unlockAudio();
+        if (!audioContext || !audioUnlocked) return;
+
+        const now = audioContext.currentTime + 0.02;
+        const notes = [523.25, 659.25, 783.99, 1046.5];
+
+        notes.forEach((freq, index) => {
+          const osc = audioContext.createOscillator();
+          const gain = audioContext.createGain();
+          const startAt = now + index * 0.12;
+
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(freq, startAt);
+
+          gain.gain.setValueAtTime(0.0001, startAt);
+          gain.gain.exponentialRampToValueAtTime(0.12, startAt + 0.02);
+          gain.gain.exponentialRampToValueAtTime(0.0001, startAt + 0.22);
+
+          osc.connect(gain);
+          gain.connect(audioContext.destination);
+
+          osc.start(startAt);
+          osc.stop(startAt + 0.24);
+        });
+      } catch (err) {
+        console.error('Fanfare failed:', err);
+      }
+    }
+
+    function handleCellClick(r, c) {
+      unlockAudio();
+      if (state.over) return;
+      const k = keyFor(r, c);
+      const isPlayer = r === state.player.row && c === state.player.col;
+      const isRevealed = state.revealed.has(k) || isPlayer;
+      if (isRevealed) return;
+
+      if (state.flagged.has(k)) {
+        state.flagged.delete(k);
+        setMessage('Flag removed.', 'You can mark hidden squares you suspect are dangerous.');
+      } else {
+        state.flagged.add(k);
+        setMessage('Flag planted.', 'Marked as a suspected mine. Click it again to remove the flag.');
+      }
+      render();
+    }
+
+    function handleVictory() {
+      state.over = true;
+      state.won = true;
+
+      for (let rr = 0; rr < state.rows; rr++) {
+        for (let cc = 0; cc < state.cols; cc++) {
+          state.revealed.add(keyFor(rr, cc));
+        }
+      }
+
+      saveBestIfNeeded();
+      setMessage('Well done. You made it across.', 'All bombs are now revealed so you can see the field you beat.', 'win');
+      render();
+
+      setTimeout(() => {
+        playVictoryFanfare();
+      }, 30);
+    }
+
+    function movePlayer(dir) {
+      if (state.over) return;
+      unlockAudio();
+
+      const deltas = {
+        up: [-1, 0],
+        down: [1, 0],
+        left: [0, -1],
+        right: [0, 1]
+      };
+
+      const delta = deltas[dir];
+      if (!delta) return;
+
+      const nr = state.player.row + delta[0];
+      const nc = state.player.col + delta[1];
+
+      if (!inBounds(nr, nc, state.rows, state.cols)) return;
+      if (state.flagged.has(keyFor(nr, nc))) {
+        setMessage('Blocked by your flag.', 'Remove the flag first if you want to move onto that square.');
+        return;
+      }
+
+      state.player.row = nr;
+      state.player.col = nc;
+      state.steps++;
+      state.visited.add(keyFor(nr, nc));
+      revealCurrentSquare(nr, nc);
+
+      if (state.grid[nr][nc].mine) {
+        state.over = true;
+        state.won = false;
+        state.exploded = { row: nr, col: nc };
+        setMessage('Boom. You hit a mine.', 'All mines are now revealed. Start a new field and try a different route.', 'lose');
+        render();
+        return;
+      }
+
+      if (nr <= 0) {
+        handleVictory();
+        return;
+      }
+
+      const threat = getThreatCount(nr, nc);
+      if (threat === 0) {
+        setMessage('Clear for now.', 'No adjacent mines detected around your current square.');
+      } else if (threat === 1) {
+        setMessage('Caution.', 'There is 1 mine in the surrounding 8 squares.');
+      } else {
+        setMessage('Danger close.', `There are ${threat} mines in the surrounding 8 squares.`);
+      }
+
+      render();
+    }
+
+    function newGame() {
+      state = createField();
+      revealCurrentSquare(state.player.row, state.player.col);
+      setMessage('Reach the top safe strip.', 'Hidden ground is covered by fog. Click hidden squares to plant or remove flags. You can use arrow keys or WASD.');
+      render();
+    }
+
+    restartBtn.addEventListener('click', () => {
+      unlockAudio();
+      newGame();
+    });
+    difficultySelect.addEventListener('change', () => {
+      unlockAudio();
+      newGame();
+    });
+    sizeSelect.addEventListener('change', () => {
+      unlockAudio();
+      newGame();
+    });
+
+    document.addEventListener('keydown', (e) => {
+      unlockAudio();
+      const key = e.key;
+      const map = {
+        ArrowUp: 'up',
+        Up: 'up',
+        w: 'up',
+        W: 'up',
+        ArrowDown: 'down',
+        Down: 'down',
+        s: 'down',
+        S: 'down',
+        ArrowLeft: 'left',
+        Left: 'left',
+        a: 'left',
+        A: 'left',
+        ArrowRight: 'right',
+        Right: 'right',
+        d: 'right',
+        D: 'right'
+      };
+      const dir = map[key];
+      if (!dir) return;
+      e.preventDefault();
+      e.stopPropagation();
+      movePlayer(dir);
+    }, { passive: false });
+
+    document.querySelectorAll('[data-dir]').forEach(btn => {
+      btn.addEventListener('click', () => movePlayer(btn.dataset.dir));
+    });
+
+    newGame();
+  </script>
+</body>
+</html>
