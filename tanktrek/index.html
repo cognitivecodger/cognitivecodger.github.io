@@ -404,65 +404,39 @@
          }
 
         @media (max-width: 520px) {
-            .app {
-                padding: 8px;
-                gap: 8px;
-            }
-
-            .board-wrap {
-                padding: 8px;
-            }
-
+            /* keep topbar on one line and make stat boxes compact */
             .topbar {
+                grid-template-columns: 1fr auto auto auto;
                 gap: 8px;
+                align-items: center;
             }
 
-            .title-block h1 {
-                font-size: 1.06rem;
-            }
-
-            .title-block p {
-                font-size: 0.84rem;
+            .title-block {
+                padding-right: 6px;
             }
 
             .stat {
-                min-width: 0;
-            }
-
-            .dpad {
-                grid-template-columns: repeat(3, 54px);
-                grid-template-rows: repeat(2, 54px);
-            }
-
-            .dpad button {
-                min-height: 54px;
-            }
-
-            /* make the stat boxes much narrower on small screens */
-            .stat {
-                min-width: 56px; /* reduce minimum width */
-                max-width: 84px; /* cap the max width so they don't grow */
-                padding: 6px 8px; /* smaller padding */
+                min-width: 48px;    /* make narrow */
+                max-width: 78px;    /* cap so they don't expand */
+                padding: 6px 8px;
+                font-size: 0.95rem;
             }
 
             .stat-label {
-                font-size: 0.62rem; /* smaller label text */
+                font-size: 0.58rem;
             }
 
             .stat-value {
-                font-size: 1rem; /* slightly smaller value text */
+                font-size: 0.95rem;
                 margin-top: 2px;
             }
 
-            /* optionally stack them if you prefer one-per-row:
-           .topbar {
-               grid-template-columns: 1fr;
-               gap: 8px;
-           }
-           .topbar .stat {
-           justify-self: end;   /* move the small boxes to the right 
-           } */
-
+            /* give more vertical space to board when stats are compact */
+            .board-wrap {
+                padding-top: 8px;
+                padding-bottom: 8px;
+                max-height: 56vh;
+            }
         }
     </style>
 </head>
