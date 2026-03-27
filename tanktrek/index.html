@@ -401,31 +401,7 @@
                 aspect-ratio: 1 / 1.15;
                 max-height: 54vh;
             }
-            /* make the stat boxes much narrower on small screens */
-            .stat {
-                min-width: 56px; /* reduce minimum width */
-                max-width: 84px; /* cap the max width so they don't grow */
-                padding: 6px 8px; /* smaller padding */
-            }
-
-            .stat-label {
-                font-size: 0.62rem; /* smaller label text */
-            }
-
-            .stat-value {
-                font-size: 1rem; /* slightly smaller value text */
-                margin-top: 2px;
-            }
-
-            /* optionally stack them if you prefer one-per-row:
-            .topbar {
-                grid-template-columns: 1fr;
-                gap: 8px;
-            }
-            .topbar .stat {
-            justify-self: end;   /* move the small boxes to the right 
-            } */
-        }
+         }
 
         @media (max-width: 520px) {
             .app {
@@ -458,9 +434,35 @@
                 grid-template-rows: repeat(2, 54px);
             }
 
-                .dpad button {
-                    min-height: 54px;
-                }
+            .dpad button {
+                min-height: 54px;
+            }
+
+            /* make the stat boxes much narrower on small screens */
+            .stat {
+                min-width: 56px; /* reduce minimum width */
+                max-width: 84px; /* cap the max width so they don't grow */
+                padding: 6px 8px; /* smaller padding */
+            }
+
+            .stat-label {
+                font-size: 0.62rem; /* smaller label text */
+            }
+
+            .stat-value {
+                font-size: 1rem; /* slightly smaller value text */
+                margin-top: 2px;
+            }
+
+            /* optionally stack them if you prefer one-per-row:
+           .topbar {
+               grid-template-columns: 1fr;
+               gap: 8px;
+           }
+           .topbar .stat {
+           justify-self: end;   /* move the small boxes to the right 
+           } */
+
         }
     </style>
 </head>
