@@ -24,8 +24,8 @@
             --shadow: rgba(0, 0, 0, 0.25);
 
             /* Stat sizing variables — adjust these to resize the Threat/Steps/Best boxes */
-            --stat-min-width: 72px;        /* controls minimum width of each stat box */
-            --stat-padding: 6px 8px;       /* controls padding inside each stat box */
+            --stat-min-width: 110px;        /* controls minimum width of each stat box */
+            --stat-padding: 8px 12px;       /* controls padding inside each stat box */
             --stat-label-size: 0.72rem;     /* label text size */
             --stat-value-size: 1.12rem;     /* main value text size */
         }
@@ -401,6 +401,30 @@
                 aspect-ratio: 1 / 1.15;
                 max-height: 54vh;
             }
+            /* make the stat boxes much narrower on small screens */
+            .stat {
+                min-width: 56px; /* reduce minimum width */
+                max-width: 84px; /* cap the max width so they don't grow */
+                padding: 6px 8px; /* smaller padding */
+            }
+
+            .stat-label {
+                font-size: 0.62rem; /* smaller label text */
+            }
+
+            .stat-value {
+                font-size: 1rem; /* slightly smaller value text */
+                margin-top: 2px;
+            }
+
+            /* optionally stack them if you prefer one-per-row:
+            .topbar {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+            .topbar .stat {
+            justify-self: end;   /* move the small boxes to the right 
+            } */
         }
 
         @media (max-width: 520px) {
@@ -793,7 +817,7 @@
 
                 const now = audioContext.currentTime + 0.02;
                 const notes = [523.25, 659.25, 783.99, 1046.5];
-
+                ''
                 notes.forEach((freq, index) => {
                     const osc = audioContext.createOscillator();
                     const gain = audioContext.createGain();
