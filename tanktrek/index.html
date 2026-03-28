@@ -406,28 +406,44 @@
         @media (max-width: 520px) {
             /* keep topbar on one line and make stat boxes compact */
             .topbar {
-                grid-template-columns: 1fr auto auto auto;
+                grid-template-columns: 1fr repeat(3, auto);
                 gap: 8px;
                 align-items: center;
+                padding: 8px;
             }
 
+            /* allow title block to shrink inside the grid column */
             .title-block {
-                padding-right: 6px;
+                min-width: 0;
+            }
+
+            .title-block h1 {
+                font-size: 1.06rem;
+                margin: 0;
+            }
+
+            .title-block p {
+                font-size: 0.84rem;
+                margin: 4px 0 0;
+                color: var(--muted);
+                /* allow wrapping but do not force the grid column wider */
+                overflow-wrap: break-word;
             }
 
             .stat {
-                min-width: 30px;    /* make narrow */
-                max-width: 40px;    /* cap so they don't expand */
-                padding: 2px 4px;
-                font-size: 0.58rem;
+                min-width: 36px;    /* narrow but readable */
+                max-width: 84px;    /* cap so they don't grow */
+                padding: 4px 6px;
+                white-space: nowrap; /* keep label + value on one line inside the stat */
+                text-align: center;
             }
 
             .stat-label {
-                font-size: 0.58rem;
+                font-size: 0.62rem;
             }
 
             .stat-value {
-                font-size: 0.58rem;
+                font-size: 0.95rem;
                 margin-top: 2px;
             }
 
