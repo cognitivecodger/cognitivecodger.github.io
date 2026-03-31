@@ -165,14 +165,15 @@
             gap: 8px;
         }
 
-        /* Action buttons layout on the right column. Use this to change spacing
-         and wrapping behavior of the A/B buttons. */
+        /* Action buttons layout on the right column.
+           Use inline-flex so the .actions box shrinks to its content width
+           and #rightControls can align it to the right on all screen sizes. */
         .actions {
-            display: flex;
-            gap: 14px;
-            align-items: center;
-            justify-content: center;
-            flex-wrap: wrap;
+          display: inline-flex;      /* shrink-to-content (instead of full-width block) */
+          gap: 14px;
+          align-items: center;
+          justify-content: center;   /* center buttons inside the inline-flex box */
+          flex-wrap: nowrap;         /* prevent wrapping that can change alignment */
         }
 
         /* Base size and visual style for all interactive buttons (arrow cells
