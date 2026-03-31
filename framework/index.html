@@ -2,657 +2,825 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover"
+  />
   <title>Retro Game Framework</title>
   <style>
-        :root {
-            --bg: #101414;
-            --panel: #182020;
-            --panel-border: #2b3b3b;
-            --text: #d7f5dd;
-            --accent: #57ff93;
-            --danger: #ff5f5f;
-            --btn: #273232;
-            --btn-active: #3a4b4b;
-            --shadow: rgba(0, 0, 0, 0.35);
-        }
+    :root {
+      /* Shared colour palette for the whole wrapper UI. */
+      --bg: #101414;
+      --panel: #182020;
+      --panel-border: #2b3b3b;
+      --text: #d7f5dd;
+      --accent: #57ff93;
+      --danger: #ff5f5f;
+      --btn: #273232;
+      --btn-active: #3a4b4b;
+      --shadow: rgba(0, 0, 0, 0.35);
+    }
 
-        * {
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
+    * {
+      /* Keep sizing predictable when padding and borders are added. */
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
 
-        html, body {
-            margin: 0;
-            padding: 0;
-            background: radial-gradient(circle at top, #182121, #0d1111 55%);
-            color: var(--text);
-            font-family: Arial, sans-serif;
-            min-height: 100%;
-            overflow: hidden;
-            touch-action: none;
-        }
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      min-height: 100%;
+      background: radial-gradient(circle at top, #182121, #0d1111 55%);
+      color: var(--text);
+      font-family: Arial, sans-serif;
 
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: stretch;
-        }
+      /* Allow the page to scroll vertically on smaller screens instead of clipping. */
+      overflow-x: hidden;
+      overflow-y: auto;
 
-        #app {
-            width: 100%;
-            max-width: 980px;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            padding: 10px;
-            gap: 10px;
-        }
+      /* Prevent double-tap zoom and reduce accidental browser gestures on controls. */
+      touch-action: manipulation;
+    }
 
-        .panel {
-            background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(0,0,0,0.12));
-            border: 1px solid var(--panel-border);
-            border-radius: 14px;
-            box-shadow: 0 10px 30px var(--shadow);
-        }
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: stretch;
+    }
 
-        #topBar {
-            display: grid;
-            grid-template-columns: 56px 1fr 56px;
-            align-items: center;
-            min-height: 56px;
-            padding: 6px;
-            gap: 8px;
-        }
+    #app {
+      width: 100%;
+      max-width: 1180px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      padding: 10px;
+      gap: 10px;
+    }
 
-        #titleBox {
-            min-height: 42px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0 12px;
-            border-radius: 10px;
-            border: 1px solid #294040;
-            background: rgba(18, 28, 28, 0.92);
-            font-weight: bold;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-            text-align: center;
-        }
+    .panel {
+      /* Shared “window/panel” style used by title bar, canvas frame, status, controls. */
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(0, 0, 0, 0.12));
+      border: 1px solid var(--panel-border);
+      border-radius: 14px;
+      box-shadow: 0 10px 30px var(--shadow);
+    }
 
-        #gameFrame {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 10px;
-        }
+    #topBar {
+      /* Three columns: menu button, title, close button. */
+      display: grid;
+      grid-template-columns: 56px 1fr 56px;
+      align-items: center;
+      min-height: 56px;
+      padding: 6px;
+      gap: 8px;
+    }
 
-        canvas {
-            display: block;
-            width: min(100%, 960px);
-            height: auto;
-            aspect-ratio: 4 / 3;
-            background: #000;
-            image-rendering: pixelated;
-            image-rendering: crisp-edges;
-            border: 2px solid #1d2a2a;
-            border-radius: 8px;
-            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.03);
-        }
+    #titleBox {
+      min-height: 42px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 12px;
+      border-radius: 10px;
+      border: 1px solid #294040;
+      background: rgba(18, 28, 28, 0.92);
+      font-weight: bold;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      text-align: center;
+    }
 
-        #statusBox,
-        #controlRow {
-            padding: 8px;
-        }
+    #gameFrame {
+      /* The outer shell around the canvas. */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 10px;
+    }
 
-        /* Instructions box and status box share styling. These control the size
-         and centering of text in the middle column of the control row. */
-        #statusInner,
-        #instructionsBox {
-            min-height: 56px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 10px 12px;
-            border-radius: 10px;
-            border: 1px solid #294040;
-            background: rgba(18, 28, 28, 0.92);
-            text-align: center;
-            line-height: 1.35;
-            white-space: pre-line; /* allow line breaks in instructions text */
-            word-wrap: break-word;
-        }
+    canvas {
+      display: block;
 
-        /* The main layout for the bottom controls: two columns (left d-pad, right action buttons).
-           Instructions sit in a separate box below the controlRow. */
-        #controlRow {
-            display: grid;
-            grid-template-columns: 1fr 1fr; /* two equal columns: left and right */
-            gap: 10px;
-            align-items: stretch;
-        }
+      /* Keep the canvas visually large while preserving a fixed logical game size. */
+      width: min(100%, 1120px);
+      height: auto;
+      aspect-ratio: 16 / 9;
 
-        /* Containers for left/right columns.
-         - removed centering so left column is left-aligned and right column is right-aligned
-         - padding gives consistent spacing inside the panel edges */
-        #leftControls,
-        #rightControls {
-            display: flex;
-            align-items: center;
-            min-height: 220px; /* controls height of both columns */
-        }
+      background: #000;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      border: 2px solid #1d2a2a;
+      border-radius: 8px;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+    }
 
-        /* Pull d-pad to left edge of left column */
-        #leftControls {
-            justify-content: flex-start;
-            padding-left: 12px;
-        }
+    #statusBox,
+    #controlRow,
+    #instructionsPanel {
+      padding: 8px;
+    }
 
-        /* Pull action buttons to right edge of right column */
-        #rightControls {
-            justify-content: flex-end;
-            padding-right: 12px;
-        }
+    #statusInner,
+    #instructionsBox {
+      /* These are plain HTML info panels, not sprite-font panels. */
+      min-height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid #294040;
+      background: rgba(18, 28, 28, 0.92);
+      text-align: center;
+      line-height: 1.35;
 
-        /* The arrow buttons are arranged in a 3x3 grid using the .dpad class.
-         Each grid cell is sized here. The ghost elements are placeholders to
-         form the cross shape. */
-        .dpad {
-            display: grid;
-            grid-template-columns: repeat(3, 64px);
-            grid-template-rows: repeat(3, 64px);
-            gap: 8px;
-        }
+      /* Respect line breaks from JS and wrap long text safely. */
+      white-space: pre-line;
+      overflow-wrap: anywhere;
+    }
 
-        /* Action buttons layout on the right column.
-           Use inline-flex so the .actions box shrinks to its content width
-           and #rightControls can align it to the right on all screen sizes. */
-        .actions {
-          display: flex;         /* flex-level container for the A/B buttons */
-          gap: 14px;
-          align-items: center;
-          justify-content: center;
-          flex-wrap: nowrap;     /* prevent wrapping that would change alignment */
-          width: max-content;    /* ensure container only takes content width */
-          margin-left: auto;     /* push the .actions element to the right inside #rightControls */
-        }
+    #instructionsBox {
+      font-size: clamp(14px, 2.2vw, 20px);
+    }
 
-        /* Base size and visual style for all interactive buttons (arrow cells
-         and action buttons inherit these). Adjust width/height to change size. */
-        .btn,
-        .ghost {
-            width: 64px; /* base button size for dpad cells */
-            height: 64px;
-            border: 0;
-            border-radius: 16px;
-            background: var(--btn);
-            color: var(--text);
-            font-size: 24px;
-            font-weight: bold;
-            box-shadow: 0 4px 12px var(--shadow), inset 0 0 0 1px rgba(255,255,255,0.03);
-            touch-action: manipulation;
-            cursor: pointer;
-        }
+    #statusInner {
+      font-size: clamp(16px, 2.3vw, 22px);
+    }
 
-            .btn:active,
-            .btn.active {
-                transform: translateY(1px) scale(0.98);
-                background: var(--btn-active);
-            }
+    #controlRow {
+      /* Desktop/tablet layout: left controls, centre spacer/info area, right controls. */
+      display: grid;
+      grid-template-columns: minmax(140px, 220px) minmax(220px, 1fr) minmax(140px, 220px);
+      gap: 10px;
+      align-items: stretch;
+    }
 
-        /* Fire (A/B) buttons are larger circular buttons. Size and shape live here. */
-        .fire {
-            width: 84px; /* larger than base .btn */
-            height: 84px;
-            border-radius: 50%;
-            font-size: 20px;
-            letter-spacing: 1px;
-        }
+    #leftControls,
+    #rightControls {
+      /* Flex containers make it easy to pin controls to the outer edges. */
+      display: flex;
+      align-items: center;
+      min-height: 180px;
+    }
 
-        .fireA {
-            background: #254d2f;
-        }
+    #leftControls {
+      justify-content: flex-start;
+      padding-left: 20px;
+    }
 
-        .fireB {
-            background: #5a2f1f;
-        }
+    #rightControls {
+      justify-content: flex-end;
+      padding-right: 20px;
+    }
 
-        .iconBtn {
-            width: 44px;
-            height: 44px;
-            border-radius: 12px;
-            font-size: 20px;
-        }
+    .dpad {
+      /* 3x3 grid with “ghost” cells to create the classic cross layout. */
+      display: grid;
+      grid-template-columns: repeat(3, 70px);
+      grid-template-rows: repeat(3, 70px);
+      gap: 10px;
+    }
 
-        /* Invisible placeholder cells used to space the dpad into a cross shape */
-        .ghost {
-            visibility: hidden;
-            pointer-events: none;
-        }
+    .actions {
+      /* Keep A/B on one row unless a mobile rule explicitly changes it. */
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: nowrap;
+      width: max-content;
+      margin-left: auto;
+    }
 
-        /* Responsive adjustments:
-         - keep two-column layout on narrow screens but reduce column widths and button sizes
-         - instructions are placed outside/under the controlRow so they sit underneath buttons
-         - left/right columns remain left/right aligned at all sizes
-      */
-        @media (max-width: 860px) {
-            /* The old mobile rule forced both columns to 140px.
-               That is too narrow for a 3x3 d-pad (~186px wide with gaps)
-               and too narrow for two fire buttons (~166px wide).
-               The result is overflow, so the controls visually slide into each other.
-               Let the two columns share the available width instead. */
-            #controlRow {
-                grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-            }
+    .btn,
+    .ghost {
+      /* Base style shared by all visible buttons and ghost placeholders. */
+      width: 70px;
+      height: 70px;
+      border: 0;
+      border-radius: 18px;
+      background: var(--btn);
+      color: var(--text);
+      font-size: 26px;
+      font-weight: bold;
+      box-shadow: 0 4px 12px var(--shadow), inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+      touch-action: manipulation;
+      cursor: pointer;
+    }
 
-            #leftControls,
-            #rightControls {
-                min-height: auto;
-            }
+    .btn:active,
+    .btn.active {
+      /* Visual feedback for touch/mouse press. */
+      transform: translateY(1px) scale(0.98);
+      background: var(--btn-active);
+    }
 
-            #instructionsBox,
-            #statusInner {
-                min-height: 48px;
-            }
+    .fire {
+      /* A/B are larger circular buttons to stand apart from d-pad arrows. */
+      width: 96px;
+      height: 96px;
+      border-radius: 50%;
+      font-size: 22px;
+    }
 
-            .dpad {
-                grid-template-columns: repeat(3, 44px);
-                grid-template-rows: repeat(3, 44px);
-                gap: 6px;
-            }
+    .fireA {
+      background: #254d2f;
+    }
 
-            .btn, .ghost {
-                width: 44px;
-                height: 44px;
-                font-size: 18px;
-            }
+    .fireB {
+      background: #5a2f1f;
+    }
 
-            .fire {
-                width: 58px;
-                height: 58px;
-                font-size: 18px;
-            }
+    .iconBtn {
+      /* Menu and close buttons in the top bar. */
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      font-size: 20px;
+    }
 
-            .actions {
-                gap: 10px;
-            }
+    .ghost {
+      /* Placeholder cells preserve the d-pad shape without being interactive. */
+      visibility: hidden;
+      pointer-events: none;
+    }
 
-            #leftControls {
-                padding-left: 6px;
-            }
+    @media (max-width: 860px) {
+      #app {
+        padding: 8px;
+      }
 
-            #rightControls {
-                padding-right: 6px;
-            }
-        }
+      #topBar {
+        grid-template-columns: 50px 1fr 50px;
+        min-height: 52px;
+      }
+
+      #titleBox {
+        min-height: 38px;
+        font-size: 0.95rem;
+        letter-spacing: 0.04em;
+      }
+
+      #controlRow {
+        /* Mobile still keeps left and right controls side-by-side.
+           Equal fluid columns prevent overlap caused by fixed widths that are too small. */
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      }
+
+      #leftControls,
+      #rightControls {
+        min-height: auto;
+      }
+
+      #leftControls {
+        padding-left: 12px;
+      }
+
+      #rightControls {
+        padding-right: 12px;
+      }
+
+      #instructionsBox,
+      #statusInner {
+        min-height: 48px;
+      }
+
+      .dpad {
+        grid-template-columns: repeat(3, 52px);
+        grid-template-rows: repeat(3, 52px);
+        gap: 8px;
+      }
+
+      .btn,
+      .ghost {
+        width: 52px;
+        height: 52px;
+        border-radius: 12px;
+        font-size: 20px;
+      }
+
+      .fire {
+        width: 72px;
+        height: 72px;
+        font-size: 20px;
+      }
+
+      .actions {
+        gap: 10px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      #controlRow {
+        /* On very narrow phones, keep the same concept but tighten spacing further. */
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      }
+
+      .dpad {
+        grid-template-columns: repeat(3, 48px);
+        grid-template-rows: repeat(3, 48px);
+        gap: 6px;
+      }
+
+      .btn,
+      .ghost {
+        width: 48px;
+        height: 48px;
+        font-size: 18px;
+      }
+
+      .fire {
+        width: 68px;
+        height: 68px;
+        font-size: 18px;
+      }
+
+      #instructionsBox {
+        font-size: 13px;
+      }
+
+      #statusInner {
+        font-size: 16px;
+      }
+    }
   </style>
 </head>
 <body>
-    <div id="app">
-        <div id="topBar" class="panel">
-            <button id="menuButton" class="btn iconBtn" type="button" aria-label="Menu">☰</button>
-            <div id="titleBox">RETRO FRAMEWORK DEMO</div>
-            <button id="closeButton" class="btn iconBtn" type="button" aria-label="Close">✕</button>
-        </div>
-
-        <div id="gameFrame" class="panel">
-            <canvas id="game" aria-label="Game canvas"></canvas>
-        </div>
-
-        <div id="statusBox" class="panel">
-            <div id="statusInner">STATUS: READY</div>
-        </div>
-
-        <!-- controlRow is now a two-column panel: left = d-pad, right = A/B -->
-        <div id="controlRow" class="panel">
-            <div id="leftControls">
-                <!-- .dpad defines a 3x3 grid; ghost divs create the cross shape so arrow buttons sit in the correct cells -->
-                <div class="dpad" id="dpad">
-                    <div class="ghost"></div>
-                    <button class="btn" data-key="ArrowUp" type="button" aria-label="Up">▲</button>
-                    <div class="ghost"></div>
-
-                    <button class="btn" data-key="ArrowLeft" type="button" aria-label="Left">◀</button>
-                    <div class="ghost"></div>
-                    <button class="btn" data-key="ArrowRight" type="button" aria-label="Right">▶</button>
-
-                    <div class="ghost"></div>
-                    <button class="btn" data-key="ArrowDown" type="button" aria-label="Down">▼</button>
-                    <div class="ghost"></div>
-                </div>
-            </div>
-
-            <div id="rightControls">
-                <!-- .actions holds the fire buttons; they are pulled to the right by #rightControls -->
-                <div class="actions">
-                    <button class="btn fire fireA" data-key="KeyZ" type="button" aria-label="Button A">A</button>
-                    <button class="btn fire fireB" data-key="KeyX" type="button" aria-label="Button B">B</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Instructions remain in their own box under the controls -->
-        <div id="instructionsBox">
-            ARROWS OR DPAD TO MOVE. HOLD A TO DRAW. B IS AVAILABLE FOR A SECOND ACTION LATER.
-        </div>
-
+  <div id="app">
+    <div id="topBar" class="panel">
+      <button id="menuButton" class="btn iconBtn" type="button" aria-label="Menu">☰</button>
+      <div id="titleBox">RETRO FRAMEWORK DEMO</div>
+      <button id="closeButton" class="btn iconBtn" type="button" aria-label="Close">✕</button>
     </div>
 
-    <script>
-        class InputManager {
-            constructor() {
-                this.keys = new Map();
-                this.justPressed = new Set();
-                this.mobileButtons = [];
-                this.setupKeyboard();
-            }
+    <div id="gameFrame" class="panel">
+      <canvas id="game" aria-label="Game canvas"></canvas>
+    </div>
 
-            setupKeyboard() {
-                window.addEventListener('keydown', (e) => {
-                    const code = e.code;
-                    if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Space", "Enter", "Escape", "KeyZ", "KeyX"].includes(code)) {
-                        e.preventDefault();
-                    }
-                    if (!this.keys.get(code)) {
-                        this.justPressed.add(code);
-                    }
-                    this.keys.set(code, true);
-                });
+    <div id="statusBox" class="panel">
+      <div id="statusInner">STATUS: READY</div>
+    </div>
 
-                window.addEventListener('keyup', (e) => {
-                    this.keys.set(e.code, false);
-                });
-            }
+    <div id="controlRow" class="panel">
+      <div id="leftControls">
+        <!-- Ghost cells shape the d-pad without adding clickable buttons everywhere. -->
+        <div class="dpad" id="dpad">
+          <div class="ghost"></div>
+          <button class="btn" data-key="ArrowUp" type="button" aria-label="Up">▲</button>
+          <div class="ghost"></div>
 
-            /* Binds all buttons with a `data-key` attribute. This is how the touch
-               and mouse handlers map the visible buttons (dpad and fire buttons)
-               to logical key codes used by the engine. */
-            bindTouchButtons(selector = '[data-key]') {
-                this.mobileButtons = [...document.querySelectorAll(selector)];
+          <button class="btn" data-key="ArrowLeft" type="button" aria-label="Left">◀</button>
+          <div class="ghost"></div>
+          <button class="btn" data-key="ArrowRight" type="button" aria-label="Right">▶</button>
 
-                const press = (button, e) => {
-                    e.preventDefault();
-                    const code = button.dataset.key;
-                    if (!this.keys.get(code)) {
-                        this.justPressed.add(code);
-                    }
-                    this.keys.set(code, true);
-                    button.classList.add('active');
-                };
+          <div class="ghost"></div>
+          <button class="btn" data-key="ArrowDown" type="button" aria-label="Down">▼</button>
+          <div class="ghost"></div>
+        </div>
+      </div>
 
-                const release = (button, e) => {
-                    e.preventDefault();
-                    const code = button.dataset.key;
-                    this.keys.set(code, false);
-                    button.classList.remove('active');
-                };
+      <!-- Centre column intentionally left empty here.
+           It acts as a spacer so left and right controls stay separated. -->
+      <div aria-hidden="true"></div>
 
-                for (const button of this.mobileButtons) {
-                    button.addEventListener('touchstart', (e) => press(button, e), { passive: false });
-                    button.addEventListener('touchend', (e) => release(button, e), { passive: false });
-                    button.addEventListener('touchcancel', (e) => release(button, e), { passive: false });
-                    button.addEventListener('mousedown', (e) => press(button, e));
-                    button.addEventListener('mouseup', (e) => release(button, e));
-                    button.addEventListener('mouseleave', (e) => release(button, e));
-                }
-            }
+      <div id="rightControls">
+        <div class="actions">
+          <button class="btn fire fireA" data-key="KeyZ" type="button" aria-label="Button A">A</button>
+          <button class="btn fire fireB" data-key="KeyX" type="button" aria-label="Button B">B</button>
+        </div>
+      </div>
+    </div>
 
-            pollGamepad() {
-                const pads = navigator.getGamepads ? navigator.getGamepads() : [];
-                const pad = pads && pads[0];
-                if (!pad) return;
+    <div id="instructionsPanel" class="panel">
+      <div id="instructionsBox">
+        ARROWS OR DPAD TO MOVE. HOLD A TO DRAW. B IS AVAILABLE FOR A SECOND ACTION LATER.
+      </div>
+    </div>
+  </div>
 
-                const dead = 0.35;
-                const gamepadStates = {
-                    ArrowLeft: pad.axes[0] < -dead || !!pad.buttons[14]?.pressed,
-                    ArrowRight: pad.axes[0] > dead || !!pad.buttons[15]?.pressed,
-                    ArrowUp: pad.axes[1] < -dead || !!pad.buttons[12]?.pressed,
-                    ArrowDown: pad.axes[1] > dead || !!pad.buttons[13]?.pressed,
-                    KeyZ: !!pad.buttons[0]?.pressed,
-                    KeyX: !!pad.buttons[1]?.pressed,
-                    Enter: !!pad.buttons[9]?.pressed,
-                    Escape: !!pad.buttons[8]?.pressed,
-                };
+  <script>
+    class InputManager {
+      constructor() {
+        // keys holds the current pressed state for every logical input code.
+        this.keys = new Map();
 
-                for (const [code, pressed] of Object.entries(gamepadStates)) {
-                    if (pressed && !this.keys.get(code)) {
-                        this.justPressed.add(code);
-                    }
-                    this.keys.set(code, !!pressed || !!this.keys.get(code));
-                }
-            }
+        // justPressed is cleared every frame and is useful for “edge” events.
+        this.justPressed = new Set();
 
-            down(code) {
-                return !!this.keys.get(code);
-            }
+        // Store references to on-screen mobile buttons once they are bound.
+        this.mobileButtons = [];
 
-            pressed(code) {
-                return this.justPressed.has(code);
-            }
+        this.setupKeyboard();
+      }
 
-            endFrame() {
-                this.justPressed.clear();
-            }
+      setupKeyboard() {
+        // Keyboard input is mapped to the same logical codes used by touch buttons.
+        window.addEventListener('keydown', (e) => {
+          const code = e.code;
+
+          // Prevent page scrolling or browser behaviour for game-related keys.
+          if ([
+            'ArrowUp',
+            'ArrowDown',
+            'ArrowLeft',
+            'ArrowRight',
+            'Space',
+            'Enter',
+            'Escape',
+            'KeyZ',
+            'KeyX'
+          ].includes(code)) {
+            e.preventDefault();
+          }
+
+          // Only mark as justPressed the moment the key first becomes down.
+          if (!this.keys.get(code)) {
+            this.justPressed.add(code);
+          }
+
+          this.keys.set(code, true);
+        });
+
+        window.addEventListener('keyup', (e) => {
+          this.keys.set(e.code, false);
+        });
+      }
+
+      bindTouchButtons(selector = '[data-key]') {
+        // Buttons advertise their logical key via data-key, e.g. ArrowLeft or KeyZ.
+        this.mobileButtons = [...document.querySelectorAll(selector)];
+
+        const press = (button, e) => {
+          e.preventDefault();
+          const code = button.dataset.key;
+
+          if (!this.keys.get(code)) {
+            this.justPressed.add(code);
+          }
+
+          this.keys.set(code, true);
+          button.classList.add('active');
+        };
+
+        const release = (button, e) => {
+          e.preventDefault();
+          const code = button.dataset.key;
+          this.keys.set(code, false);
+          button.classList.remove('active');
+        };
+
+        for (const button of this.mobileButtons) {
+          // Touch events for actual mobile devices.
+          button.addEventListener('touchstart', (e) => press(button, e), { passive: false });
+          button.addEventListener('touchend', (e) => release(button, e), { passive: false });
+          button.addEventListener('touchcancel', (e) => release(button, e), { passive: false });
+
+          // Mouse events are handy for desktop testing in a browser.
+          button.addEventListener('mousedown', (e) => press(button, e));
+          button.addEventListener('mouseup', (e) => release(button, e));
+          button.addEventListener('mouseleave', (e) => release(button, e));
+        }
+      }
+
+      pollGamepad() {
+        // Poll the first connected pad each frame. This is simple and good enough
+        // for a framework starter; multiplayer can extend this later.
+        const pads = navigator.getGamepads ? navigator.getGamepads() : [];
+        const pad = pads && pads[0];
+        if (!pad) return;
+
+        // Dead zone avoids small analogue stick drift registering as movement.
+        const dead = 0.35;
+
+        const gamepadStates = {
+          ArrowLeft: pad.axes[0] < -dead || !!pad.buttons[14]?.pressed,
+          ArrowRight: pad.axes[0] > dead || !!pad.buttons[15]?.pressed,
+          ArrowUp: pad.axes[1] < -dead || !!pad.buttons[12]?.pressed,
+          ArrowDown: pad.axes[1] > dead || !!pad.buttons[13]?.pressed,
+          KeyZ: !!pad.buttons[0]?.pressed,
+          KeyX: !!pad.buttons[1]?.pressed,
+          Enter: !!pad.buttons[9]?.pressed,
+          Escape: !!pad.buttons[8]?.pressed,
+        };
+
+        for (const [code, pressed] of Object.entries(gamepadStates)) {
+          // Record the rising edge so “pressed once” logic works for controllers too.
+          if (pressed && !this.keys.get(code)) {
+            this.justPressed.add(code);
+          }
+
+          // Directly overwrite the logical state with the current gamepad state.
+          this.keys.set(code, !!pressed);
+        }
+      }
+
+      down(code) {
+        // True while the input is currently held.
+        return !!this.keys.get(code);
+      }
+
+      pressed(code) {
+        // True only on the first frame the input was pressed.
+        return this.justPressed.has(code);
+      }
+
+      endFrame() {
+        // Called once per frame after update/draw is complete.
+        this.justPressed.clear();
+      }
+    }
+
+    class Scene {
+      // Base scene interface. Games can subclass this for title screens, gameplay, pause, etc.
+      enter(engine) {}
+      update(engine, dt) {}
+      draw(engine, ctx) {}
+      exit(engine) {}
+    }
+
+    class DemoScene extends Scene {
+      enter(engine) {
+        // Start the player near the centre of the 480x270 play area.
+        this.player = {
+          x: 232,
+          y: 127,
+          w: 16,
+          h: 16,
+          speed: 96,
+          drawing: false,
+          altAction: false,
+          trail: [],
+        };
+
+        this.score = 0;
+      }
+
+      update(engine, dt) {
+        const input = engine.input;
+        const p = this.player;
+
+        // Basic movement using logical input states.
+        if (input.down('ArrowLeft')) p.x -= p.speed * dt;
+        if (input.down('ArrowRight')) p.x += p.speed * dt;
+        if (input.down('ArrowUp')) p.y -= p.speed * dt;
+        if (input.down('ArrowDown')) p.y += p.speed * dt;
+
+        // Clamp the player so it cannot move outside the visible game area.
+        p.x = Math.max(8, Math.min(engine.baseWidth - 8 - p.w, p.x));
+        p.y = Math.max(8, Math.min(engine.baseHeight - 8 - p.h, p.y));
+
+        // A = draw action, B = alternate action placeholder.
+        p.drawing = input.down('KeyZ');
+        p.altAction = input.down('KeyX');
+
+        if (p.drawing) {
+          // Drop simple trail particles while drawing so the demo feels alive.
+          p.trail.push({
+            x: p.x + p.w / 2,
+            y: p.y + p.h / 2,
+            life: 0.24,
+          });
+
+          this.score += dt * 10;
         }
 
-        class Scene {
-            enter(engine) { }
-            update(engine, dt) { }
-            draw(engine, ctx) { }
-            exit(engine) { }
+        // Age and remove expired trail points.
+        for (const t of p.trail) {
+          t.life -= dt;
+        }
+        p.trail = p.trail.filter((t) => t.life > 0);
+
+        // Status and instruction text live in HTML panels outside the canvas.
+        const statusText = p.altAction
+          ? 'STATUS: BUTTON B HELD'
+          : p.drawing
+            ? 'STATUS: DRAWING'
+            : 'STATUS: READY';
+
+        const instructionsText = p.altAction
+          ? 'B CAN TRIGGER A SECOND ACTION, MENU, BOMB, OR CANCEL LATER.'
+          : 'ARROWS OR DPAD TO MOVE. HOLD A TO DRAW. B IS AVAILABLE FOR A SECOND ACTION LATER.';
+
+        engine.setStatus(statusText);
+        engine.setInstructions(instructionsText);
+      }
+
+      draw(engine, ctx) {
+        const p = this.player;
+
+        // Clear the frame.
+        ctx.fillStyle = '#050707';
+        ctx.fillRect(0, 0, engine.baseWidth, engine.baseHeight);
+
+        // Simple grid backdrop so movement and scaling are easier to judge.
+        ctx.strokeStyle = '#0f1717';
+        for (let x = 0; x <= engine.baseWidth; x += 16) {
+          ctx.beginPath();
+          ctx.moveTo(x + 0.5, 0);
+          ctx.lineTo(x + 0.5, engine.baseHeight);
+          ctx.stroke();
         }
 
-        class DemoScene extends Scene {
-            enter(engine) {
-                this.player = {
-                    x: 152,
-                    y: 112,
-                    w: 16,
-                    h: 16,
-                    speed: 96,
-                    drawing: false,
-                    altAction: false,
-                    trail: [],
-                };
-                this.score = 0;
-            }
-
-            update(engine, dt) {
-                const input = engine.input;
-                const p = this.player;
-
-                if (input.down('ArrowLeft')) p.x -= p.speed * dt;
-                if (input.down('ArrowRight')) p.x += p.speed * dt;
-                if (input.down('ArrowUp')) p.y -= p.speed * dt;
-                if (input.down('ArrowDown')) p.y += p.speed * dt;
-
-                p.x = Math.max(8, Math.min(engine.baseWidth - 8 - p.w, p.x));
-                p.y = Math.max(8, Math.min(engine.baseHeight - 8 - p.h, p.y));
-
-                p.drawing = input.down('KeyZ');
-                p.altAction = input.down('KeyX');
-
-                if (p.drawing) {
-                    p.trail.push({ x: p.x + p.w / 2, y: p.y + p.h / 2, life: 0.24 });
-                    this.score += dt * 10;
-                }
-
-                for (const t of p.trail) t.life -= dt;
-                p.trail = p.trail.filter((t) => t.life > 0);
-
-                const statusText = p.altAction
-                    ? 'STATUS: BUTTON B HELD'
-                    : p.drawing
-                        ? 'STATUS: DRAWING'
-                        : 'STATUS: READY';
-
-                const instructionsText = p.altAction
-                    ? 'B CAN TRIGGER A SECOND ACTION, MENU, BOMB, OR CANCEL LATER.'
-                    : 'ARROWS OR DPAD TO MOVE. HOLD A TO DRAW. B IS AVAILABLE FOR A SECOND ACTION LATER.';
-
-                engine.setStatus(statusText);
-                engine.setInstructions(instructionsText);
-            }
-
-            draw(engine, ctx) {
-                const p = this.player;
-
-                ctx.fillStyle = '#050707';
-                ctx.fillRect(0, 0, engine.baseWidth, engine.baseHeight);
-
-                ctx.strokeStyle = '#0f1717';
-                for (let x = 0; x <= engine.baseWidth; x += 16) {
-                    ctx.beginPath();
-                    ctx.moveTo(x + 0.5, 0);
-                    ctx.lineTo(x + 0.5, engine.baseHeight);
-                    ctx.stroke();
-                }
-                for (let y = 0; y <= engine.baseHeight; y += 16) {
-                    ctx.beginPath();
-                    ctx.moveTo(0, y + 0.5);
-                    ctx.lineTo(engine.baseWidth, y + 0.5);
-                    ctx.stroke();
-                }
-
-                for (const t of p.trail) {
-                    const alpha = Math.max(0, t.life / 0.24);
-                    ctx.fillStyle = `rgba(87,255,147,${0.35 * alpha})`;
-                    ctx.fillRect(Math.round(t.x - 1), Math.round(t.y - 1), 3, 3);
-                }
-
-                ctx.fillStyle = p.altAction ? '#ff9f57' : p.drawing ? '#ff7070' : '#57ff93';
-                ctx.fillRect(Math.round(p.x), Math.round(p.y), p.w, p.h);
-
-                ctx.fillStyle = '#b7ffd0';
-                ctx.fillRect(Math.round(p.x + 4), Math.round(p.y + 4), 2, 2);
-                ctx.fillRect(Math.round(p.x + 10), Math.round(p.y + 4), 2, 2);
-            }
+        for (let y = 0; y <= engine.baseHeight; y += 16) {
+          ctx.beginPath();
+          ctx.moveTo(0, y + 0.5);
+          ctx.lineTo(engine.baseWidth, y + 0.5);
+          ctx.stroke();
         }
 
-        class GameEngine {
-            constructor(options = {}) {
-                this.baseWidth = options.baseWidth || 320;
-                this.baseHeight = options.baseHeight || 240;
-                this.maxScale = options.maxScale || 6;
-                this.canvas = options.canvas;
-                this.ctx = this.canvas.getContext('2d', { alpha: false });
-                this.input = new InputManager();
-                this.currentScene = null;
-                this.lastTime = 0;
-                this.pixelRatio = 1;
-                this.currentScale = 1;
-                this.statusEl = document.getElementById('statusInner');
-                this.instructionsEl = document.getElementById('instructionsBox');
-                this.titleEl = document.getElementById('titleBox');
-
-                this.ctx.imageSmoothingEnabled = false;
-                this.setupCanvas();
-                window.addEventListener('resize', () => this.setupCanvas());
-            }
-
-            setupCanvas() {
-                const frame = document.getElementById('gameFrame');
-                const rect = frame.getBoundingClientRect();
-                const availableWidth = Math.max(100, rect.width - 20);
-                const availableHeight = Math.max(100, window.innerHeight * 0.5);
-
-                const scaleX = Math.floor(availableWidth / this.baseWidth);
-                const scaleY = Math.floor(availableHeight / this.baseHeight);
-                this.currentScale = Math.max(1, Math.min(this.maxScale, scaleX, scaleY || 1));
-                this.pixelRatio = Math.max(1, Math.floor(window.devicePixelRatio || 1));
-
-                const internalScale = this.currentScale * this.pixelRatio;
-                this.canvas.width = this.baseWidth * internalScale;
-                this.canvas.height = this.baseHeight * internalScale;
-                this.canvas.style.width = `${this.baseWidth * this.currentScale}px`;
-                this.canvas.style.height = `${this.baseHeight * this.currentScale}px`;
-
-                this.ctx.setTransform(internalScale, 0, 0, internalScale, 0, 0);
-                this.ctx.imageSmoothingEnabled = false;
-            }
-
-            setScene(scene) {
-                if (this.currentScene?.exit) this.currentScene.exit(this);
-                this.currentScene = scene;
-                if (this.currentScene?.enter) this.currentScene.enter(this);
-            }
-
-            setTitle(text) {
-                this.titleEl.textContent = text;
-            }
-
-            setStatus(text) {
-                this.statusEl.textContent = text;
-            }
-
-            setInstructions(text) {
-                this.instructionsEl.textContent = text;
-            }
-
-            start() {
-                this.input.bindTouchButtons('[data-key]');
-                requestAnimationFrame((t) => this.loop(t));
-            }
-
-            loop(timestamp) {
-                if (!this.lastTime) this.lastTime = timestamp;
-                let dt = (timestamp - this.lastTime) / 1000;
-                if (dt > 0.033) dt = 0.033;
-                this.lastTime = timestamp;
-
-                this.input.pollGamepad();
-
-                if (this.currentScene?.update) this.currentScene.update(this, dt);
-                if (this.currentScene?.draw) this.currentScene.draw(this, this.ctx);
-
-                this.input.endFrame();
-                requestAnimationFrame((t) => this.loop(t));
-            }
+        // Trail particles fade out over time by reducing alpha with remaining life.
+        for (const t of p.trail) {
+          const alpha = Math.max(0, t.life / 0.24);
+          ctx.fillStyle = `rgba(87,255,147,${0.35 * alpha})`;
+          ctx.fillRect(Math.round(t.x - 1), Math.round(t.y - 1), 3, 3);
         }
 
-        /* Simple layout assertions — these verify the expected number of buttons
-           and presence of the instruction/status elements. They reference the same
-           DOM structure and data-key attributes used for layout and input binding. */
-        function runLayoutTests() {
-            console.assert(document.getElementById('topBar'), 'top bar should exist');
-            console.assert(document.getElementById('statusInner'), 'status box should exist');
-            console.assert(document.getElementById('instructionsBox'), 'instructions box should exist');
-            console.assert(document.querySelectorAll('#rightControls [data-key]').length === 2, 'right side should have two action buttons');
-            console.assert(document.querySelectorAll('#leftControls [data-key]').length === 4, 'left side should have four arrow buttons');
+        // Colour reflects current state: green idle, red drawing, orange alt action.
+        ctx.fillStyle = p.altAction ? '#ff9f57' : p.drawing ? '#ff7070' : '#57ff93';
+        ctx.fillRect(Math.round(p.x), Math.round(p.y), p.w, p.h);
+
+        // Tiny “eyes” just to make the player block look less plain.
+        ctx.fillStyle = '#b7ffd0';
+        ctx.fillRect(Math.round(p.x + 4), Math.round(p.y + 4), 2, 2);
+        ctx.fillRect(Math.round(p.x + 10), Math.round(p.y + 4), 2, 2);
+      }
+    }
+
+    class GameEngine {
+      constructor(options = {}) {
+        // Logical game resolution. The canvas is scaled up visually from this size.
+        this.baseWidth = options.baseWidth || 480;
+        this.baseHeight = options.baseHeight || 270;
+        this.maxScale = options.maxScale || 6;
+
+        this.canvas = options.canvas;
+        this.ctx = this.canvas.getContext('2d', { alpha: false });
+        this.input = new InputManager();
+        this.currentScene = null;
+        this.lastTime = 0;
+        this.pixelRatio = 1;
+        this.currentScale = 1;
+
+        // Cache references to the HTML panels so scenes can update them cheaply.
+        this.statusEl = document.getElementById('statusInner');
+        this.instructionsEl = document.getElementById('instructionsBox');
+        this.titleEl = document.getElementById('titleBox');
+
+        this.ctx.imageSmoothingEnabled = false;
+        this.setupCanvas();
+
+        // Recalculate scale when the window changes size or orientation.
+        window.addEventListener('resize', () => this.setupCanvas());
+      }
+
+      setupCanvas() {
+        const frame = document.getElementById('gameFrame');
+        const rect = frame.getBoundingClientRect();
+
+        // Measure the space available inside the canvas frame.
+        const availableWidth = Math.max(100, rect.width - 20);
+        const availableHeight = Math.max(140, window.innerHeight * 0.62);
+
+        const scaleX = Math.floor(availableWidth / this.baseWidth);
+        const scaleY = Math.floor(availableHeight / this.baseHeight);
+
+        // Integer scaling keeps the retro look crisp.
+        this.currentScale = Math.max(1, Math.min(this.maxScale, scaleX, scaleY || 1));
+
+        // Render at device pixel ratio for sharper output on high-density screens.
+        this.pixelRatio = Math.max(1, Math.floor(window.devicePixelRatio || 1));
+
+        const internalScale = this.currentScale * this.pixelRatio;
+
+        // Internal drawing buffer size.
+        this.canvas.width = this.baseWidth * internalScale;
+        this.canvas.height = this.baseHeight * internalScale;
+
+        // CSS display size seen by the user.
+        this.canvas.style.width = `${this.baseWidth * this.currentScale}px`;
+        this.canvas.style.height = `${this.baseHeight * this.currentScale}px`;
+
+        // Scale the drawing context so game code still works in logical pixels.
+        this.ctx.setTransform(internalScale, 0, 0, internalScale, 0, 0);
+        this.ctx.imageSmoothingEnabled = false;
+      }
+
+      setScene(scene) {
+        if (this.currentScene?.exit) {
+          this.currentScene.exit(this);
         }
 
-        function wireTopButtons(engine) {
-            document.getElementById('menuButton').addEventListener('click', () => {
-                engine.setStatus('STATUS: MENU BUTTON PRESSED');
-            });
+        this.currentScene = scene;
 
-            document.getElementById('closeButton').addEventListener('click', () => {
-                engine.setStatus('STATUS: CLOSE BUTTON PRESSED');
-            });
+        if (this.currentScene?.enter) {
+          this.currentScene.enter(this);
+        }
+      }
+
+      setTitle(text) {
+        this.titleEl.textContent = text;
+      }
+
+      setStatus(text) {
+        this.statusEl.textContent = text;
+      }
+
+      setInstructions(text) {
+        this.instructionsEl.textContent = text;
+      }
+
+      start() {
+        // Bind all visible on-screen controls to logical key codes.
+        this.input.bindTouchButtons('[data-key]');
+        requestAnimationFrame((t) => this.loop(t));
+      }
+
+      loop(timestamp) {
+        // First frame initialisation.
+        if (!this.lastTime) {
+          this.lastTime = timestamp;
         }
 
-        function boot() {
-            runLayoutTests();
+        // Convert milliseconds to seconds for movement logic.
+        let dt = (timestamp - this.lastTime) / 1000;
 
-            const engine = new GameEngine({
-                canvas: document.getElementById('game'),
-                baseWidth: 320,
-                baseHeight: 240,
-                maxScale: 6,
-            });
-
-            engine.setTitle('RETRO FRAMEWORK DEMO');
-            engine.setStatus('STATUS: READY');
-            engine.setInstructions('ARROWS OR DPAD TO MOVE. HOLD A TO DRAW. B IS AVAILABLE FOR A SECOND ACTION LATER.');
-            wireTopButtons(engine);
-            engine.setScene(new DemoScene());
-            engine.start();
-
-            window.framework = engine;
+        // Clamp long frame gaps to avoid giant jumps when tabbing back in.
+        if (dt > 0.033) {
+          dt = 0.033;
         }
 
-        boot();
-    </script>
+        this.lastTime = timestamp;
+
+        this.input.pollGamepad();
+
+        if (this.currentScene?.update) {
+          this.currentScene.update(this, dt);
+        }
+
+        if (this.currentScene?.draw) {
+          this.currentScene.draw(this, this.ctx);
+        }
+
+        this.input.endFrame();
+        requestAnimationFrame((t) => this.loop(t));
+      }
+    }
+
+    function runLayoutTests() {
+      // Lightweight assertions help catch accidental DOM/layout breakage early.
+      console.assert(document.getElementById('topBar'), 'top bar should exist');
+      console.assert(document.getElementById('statusInner'), 'status box should exist');
+      console.assert(document.getElementById('instructionsBox'), 'instructions box should exist');
+      console.assert(
+        document.querySelectorAll('#rightControls [data-key]').length === 2,
+        'right side should have two action buttons'
+      );
+      console.assert(
+        document.querySelectorAll('#leftControls [data-key]').length === 4,
+        'left side should have four arrow buttons'
+      );
+    }
+
+    function wireTopButtons(engine) {
+      // These are placeholders for future menu/close behaviour.
+      document.getElementById('menuButton').addEventListener('click', () => {
+        engine.setStatus('STATUS: MENU BUTTON PRESSED');
+      });
+
+      document.getElementById('closeButton').addEventListener('click', () => {
+        engine.setStatus('STATUS: CLOSE BUTTON PRESSED');
+      });
+    }
+
+    function boot() {
+      runLayoutTests();
+
+      const engine = new GameEngine({
+        canvas: document.getElementById('game'),
+        baseWidth: 480,
+        baseHeight: 270,
+        maxScale: 6,
+      });
+
+      engine.setTitle('RETRO FRAMEWORK DEMO');
+      engine.setStatus('STATUS: READY');
+      engine.setInstructions(
+        'ARROWS OR DPAD TO MOVE. HOLD A TO DRAW. B IS AVAILABLE FOR A SECOND ACTION LATER.'
+      );
+
+      wireTopButtons(engine);
+      engine.setScene(new DemoScene());
+      engine.start();
+
+      // Expose the framework in dev tools for quick testing.
+      window.framework = engine;
+    }
+
+    boot();
+  </script>
 </body>
 </html>
