@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>Retro Game Framework</title>
+  <style>
+    :root {
+      --bg: #101414;
+      --panel: #182020;
+      --panel-border: #2b3b3b;
+      --text: #d7f5dd;
+      --accent: #57ff93;
+      --danger: #ff5f5f;
+      --btn: #273232;
+      --btn-active: #3a4b4b;
+      --shadow: rgba(0, 0, 0, 0.35);
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: radial-gradient(circle at top, #182121, #0d1111 55%);
+      color: var(--text);
+      font-family: Arial, sans-serif;
+      min-height: 100%;
+      overflow: hidden;
+      touch-action: none;
+    }
+
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: stretch;
+    }
+
+    #app {
+      width: 100%;
+      max-width: 980px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 10px;
+      gap: 10px;
+    }
+
+    .panel {
+      background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(0,0,0,0.12));
+      border: 1px solid var(--panel-border);
+      border-radius: 14px;
+      box-shadow: 0 10px 30px var(--shadow);
+    }
+
+    #topBar {
+      display: grid;
+      grid-template-columns: 56px 1fr 56px;
+      align-items: center;
+      min-height: 56px;
+      padding: 6px;
+      gap: 8px;
+    }
+
+    #titleBox {
+      min-height: 42px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 12px;
+      border-radius: 10px;
+      border: 1px solid #294040;
+      background: rgba(18, 28, 28, 0.92);
+      font-weight: bold;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      text-align: center;
+    }
+
+    #gameFrame {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 10px;
+    }
+
+    canvas {
+      display: block;
+      width: min(100%, 960px);
+      height: auto;
+      aspect-ratio: 4 / 3;
+      background: #000;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      border: 2px solid #1d2a2a;
+      border-radius: 8px;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.03);
+    }
+
+    #statusBox,
+    #controlRow {
+      padding: 8px;
+    }
+
+    #statusInner,
+    #instructionsBox {
+      min-height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid #294040;
+      background: rgba(18, 28, 28, 0.92);
+      text-align: center;
+      line-height: 1.35;
+      white-space: pre-line; /* allow 
+ line breaks */
+      word-wrap: break-word;
+    }
+
+    #controlRow {
+      display: grid;
+      grid-template-columns: 220px 1fr 220px;
+      gap: 10px;
+      align-items: stretch;
+    }
+
+    #leftControls,
+    #rightControls {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 220px;
+    }
+
+    .dpad {
+      display: grid;
+      grid-template-columns: repeat(3, 64px);
+      grid-template-rows: repeat(3, 64px);
+      gap: 8px;
+    }
+
+    .actions {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn,
+    .ghost {
+      width: 64px;
+      height: 64px;
+      border: 0;
+      border-radius: 16px;
+      background: var(--btn);
+      color: var(--text);
+      font-size: 24px;
+      font-weight: bold;
+      box-shadow: 0 4px 12px var(--shadow), inset 0 0 0 1px rgba(255,255,255,0.03);
+      touch-action: manipulation;
+      cursor: pointer;
+    }
+
+    .btn:active,
+    .btn.active {
+      transform: translateY(1px) scale(0.98);
+      background: var(--btn-active);
+    }
+
+    .fire {
+      width: 84px;
+      height: 84px;
+      border-radius: 50%;
+      font-size: 20px;
+      letter-spacing: 1px;
+    }
+
+    .fireA { background: #254d2f; }
+    .fireB { background: #5a2f1f; }
+    .iconBtn {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      font-size: 20px;
+    }
+
+    .ghost {
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    @media (max-width: 860px) {
+      #controlRow {
+        grid-template-columns: 1fr;
+      }
+
+      #leftControls,
+      #rightControls {
+        min-height: auto;
+      }
+
+      #instructionsBox,
+      #statusInner {
+        min-height: 48px;
+      }
+
+      .dpad {
+        grid-template-columns: repeat(3, 58px);
+        grid-template-rows: repeat(3, 58px);
+        gap: 6px;
+      }
+
+      .btn, .ghost {
+        width: 58px;
+        height: 58px;
+      }
+
+      .fire {
+        width: 76px;
+        height: 76px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div id="topBar" class="panel">
+      <button id="menuButton" class="btn iconBtn" type="button" aria-label="Menu">☰</button>
+      <div id="titleBox">RETRO FRAMEWORK DEMO</div>
+      <button id="closeButton" class="btn iconBtn" type="button" aria-label="Close">✕</button>
+    </div>
+
+    <div id="gameFrame" class="panel">
+      <canvas id="game" aria-label="Game canvas"></canvas>
+    </div>
+
+    <div id="statusBox" class="panel">
+      <div id="statusInner">STATUS: READY</div>
+    </div>
+
+    <div id="controlRow" class="panel">
+      <div id="leftControls">
+        <div class="dpad" id="dpad">
+          <div class="ghost"></div>
+          <button class="btn" data-key="ArrowUp" type="button" aria-label="Up">▲</button>
+          <div class="ghost"></div>
+
+          <button class="btn" data-key="ArrowLeft" type="button" aria-label="Left">◀</button>
+          <div class="ghost"></div>
+          <button class="btn" data-key="ArrowRight" type="button" aria-label="Right">▶</button>
+
+          <div class="ghost"></div>
+          <button class="btn" data-key="ArrowDown" type="button" aria-label="Down">▼</button>
+          <div class="ghost"></div>
+        </div>
+      </div>
+
+      <div id="instructionsBox">
+        ARROWS OR DPAD TO MOVE. HOLD A TO DRAW. B IS AVAILABLE FOR A SECOND ACTION LATER.
+      </div>
+
+      <div id="rightControls">
+        <div class="actions">
+          <button class="btn fire fireA" data-key="KeyZ" type="button" aria-label="Button A">A</button>
+          <button class="btn fire fireB" data-key="KeyX" type="button" aria-label="Button B">B</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    class InputManager {
+      constructor() {
+        this.keys = new Map();
+        this.justPressed = new Set();
+        this.mobileButtons = [];
+        this.setupKeyboard();
+      }
+
+      setupKeyboard() {
+        window.addEventListener('keydown', (e) => {
+          const code = e.code;
+          if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Space", "Enter", "Escape", "KeyZ", "KeyX"].includes(code)) {
+            e.preventDefault();
+          }
+          if (!this.keys.get(code)) {
+            this.justPressed.add(code);
+          }
+          this.keys.set(code, true);
+        });
+
+        window.addEventListener('keyup', (e) => {
+          this.keys.set(e.code, false);
+        });
+      }
+
+      bindTouchButtons(selector = '[data-key]') {
+        this.mobileButtons = [...document.querySelectorAll(selector)];
+
+        const press = (button, e) => {
+          e.preventDefault();
+          const code = button.dataset.key;
+          if (!this.keys.get(code)) {
+            this.justPressed.add(code);
+          }
+          this.keys.set(code, true);
+          button.classList.add('active');
+        };
+
+        const release = (button, e) => {
+          e.preventDefault();
+          const code = button.dataset.key;
+          this.keys.set(code, false);
+          button.classList.remove('active');
+        };
+
+        for (const button of this.mobileButtons) {
+          button.addEventListener('touchstart', (e) => press(button, e), { passive: false });
+          button.addEventListener('touchend', (e) => release(button, e), { passive: false });
+          button.addEventListener('touchcancel', (e) => release(button, e), { passive: false });
+          button.addEventListener('mousedown', (e) => press(button, e));
+          button.addEventListener('mouseup', (e) => release(button, e));
+          button.addEventListener('mouseleave', (e) => release(button, e));
+        }
+      }
+
+      pollGamepad() {
+        const pads = navigator.getGamepads ? navigator.getGamepads() : [];
+        const pad = pads && pads[0];
+        if (!pad) return;
+
+        const dead = 0.35;
+        const gamepadStates = {
+          ArrowLeft: pad.axes[0] < -dead || !!pad.buttons[14]?.pressed,
+          ArrowRight: pad.axes[0] > dead || !!pad.buttons[15]?.pressed,
+          ArrowUp: pad.axes[1] < -dead || !!pad.buttons[12]?.pressed,
+          ArrowDown: pad.axes[1] > dead || !!pad.buttons[13]?.pressed,
+          KeyZ: !!pad.buttons[0]?.pressed,
+          KeyX: !!pad.buttons[1]?.pressed,
+          Enter: !!pad.buttons[9]?.pressed,
+          Escape: !!pad.buttons[8]?.pressed,
+        };
+
+        for (const [code, pressed] of Object.entries(gamepadStates)) {
+          if (pressed && !this.keys.get(code)) {
+            this.justPressed.add(code);
+          }
+          this.keys.set(code, !!pressed || !!this.keys.get(code));
+        }
+      }
+
+      down(code) {
+        return !!this.keys.get(code);
+      }
+
+      pressed(code) {
+        return this.justPressed.has(code);
+      }
+
+      endFrame() {
+        this.justPressed.clear();
+      }
+    }
+
+    class Scene {
+      enter(engine) {}
+      update(engine, dt) {}
+      draw(engine, ctx) {}
+      exit(engine) {}
+    }
+
+    class DemoScene extends Scene {
+      enter(engine) {
+        this.player = {
+          x: 152,
+          y: 112,
+          w: 16,
+          h: 16,
+          speed: 96,
+          drawing: false,
+          altAction: false,
+          trail: [],
+        };
+        this.score = 0;
+      }
+
+      update(engine, dt) {
+        const input = engine.input;
+        const p = this.player;
+
+        if (input.down('ArrowLeft')) p.x -= p.speed * dt;
+        if (input.down('ArrowRight')) p.x += p.speed * dt;
+        if (input.down('ArrowUp')) p.y -= p.speed * dt;
+        if (input.down('ArrowDown')) p.y += p.speed * dt;
+
+        p.x = Math.max(8, Math.min(engine.baseWidth - 8 - p.w, p.x));
+        p.y = Math.max(8, Math.min(engine.baseHeight - 8 - p.h, p.y));
+
+        p.drawing = input.down('KeyZ');
+        p.altAction = input.down('KeyX');
+
+        if (p.drawing) {
+          p.trail.push({ x: p.x + p.w / 2, y: p.y + p.h / 2, life: 0.24 });
+          this.score += dt * 10;
+        }
+
+        for (const t of p.trail) t.life -= dt;
+        p.trail = p.trail.filter((t) => t.life > 0);
+
+        const statusText = p.altAction
+          ? 'STATUS: BUTTON B HELD'
+          : p.drawing
+            ? 'STATUS: DRAWING'
+            : 'STATUS: READY';
+
+        const instructionsText = p.altAction
+          ? 'B CAN TRIGGER A SECOND ACTION, MENU, BOMB, OR CANCEL LATER.'
+          : 'ARROWS OR DPAD TO MOVE. HOLD A TO DRAW. B IS AVAILABLE FOR A SECOND ACTION LATER.';
+
+        engine.setStatus(statusText);
+        engine.setInstructions(instructionsText);
+      }
+
+      draw(engine, ctx) {
+        const p = this.player;
+
+        ctx.fillStyle = '#050707';
+        ctx.fillRect(0, 0, engine.baseWidth, engine.baseHeight);
+
+        ctx.strokeStyle = '#0f1717';
+        for (let x = 0; x <= engine.baseWidth; x += 16) {
+          ctx.beginPath();
+          ctx.moveTo(x + 0.5, 0);
+          ctx.lineTo(x + 0.5, engine.baseHeight);
+          ctx.stroke();
+        }
+        for (let y = 0; y <= engine.baseHeight; y += 16) {
+          ctx.beginPath();
+          ctx.moveTo(0, y + 0.5);
+          ctx.lineTo(engine.baseWidth, y + 0.5);
+          ctx.stroke();
+        }
+
+        for (const t of p.trail) {
+          const alpha = Math.max(0, t.life / 0.24);
+          ctx.fillStyle = `rgba(87,255,147,${0.35 * alpha})`;
+          ctx.fillRect(Math.round(t.x - 1), Math.round(t.y - 1), 3, 3);
+        }
+
+        ctx.fillStyle = p.altAction ? '#ff9f57' : p.drawing ? '#ff7070' : '#57ff93';
+        ctx.fillRect(Math.round(p.x), Math.round(p.y), p.w, p.h);
+
+        ctx.fillStyle = '#b7ffd0';
+        ctx.fillRect(Math.round(p.x + 4), Math.round(p.y + 4), 2, 2);
+        ctx.fillRect(Math.round(p.x + 10), Math.round(p.y + 4), 2, 2);
+      }
+    }
+
+    class GameEngine {
+      constructor(options = {}) {
+        this.baseWidth = options.baseWidth || 320;
+        this.baseHeight = options.baseHeight || 240;
+        this.maxScale = options.maxScale || 6;
+        this.canvas = options.canvas;
+        this.ctx = this.canvas.getContext('2d', { alpha: false });
+        this.input = new InputManager();
+        this.currentScene = null;
+        this.lastTime = 0;
+        this.pixelRatio = 1;
+        this.currentScale = 1;
+        this.statusEl = document.getElementById('statusInner');
+        this.instructionsEl = document.getElementById('instructionsBox');
+        this.titleEl = document.getElementById('titleBox');
+
+        this.ctx.imageSmoothingEnabled = false;
+        this.setupCanvas();
+        window.addEventListener('resize', () => this.setupCanvas());
+      }
+
+      setupCanvas() {
+        const frame = document.getElementById('gameFrame');
+        const rect = frame.getBoundingClientRect();
+        const availableWidth = Math.max(100, rect.width - 20);
+        const availableHeight = Math.max(100, window.innerHeight * 0.5);
+
+        const scaleX = Math.floor(availableWidth / this.baseWidth);
+        const scaleY = Math.floor(availableHeight / this.baseHeight);
+        this.currentScale = Math.max(1, Math.min(this.maxScale, scaleX, scaleY || 1));
+        this.pixelRatio = Math.max(1, Math.floor(window.devicePixelRatio || 1));
+
+        const internalScale = this.currentScale * this.pixelRatio;
+        this.canvas.width = this.baseWidth * internalScale;
+        this.canvas.height = this.baseHeight * internalScale;
+        this.canvas.style.width = `${this.baseWidth * this.currentScale}px`;
+        this.canvas.style.height = `${this.baseHeight * this.currentScale}px`;
+
+        this.ctx.setTransform(internalScale, 0, 0, internalScale, 0, 0);
+        this.ctx.imageSmoothingEnabled = false;
+      }
+
+      setScene(scene) {
+        if (this.currentScene?.exit) this.currentScene.exit(this);
+        this.currentScene = scene;
+        if (this.currentScene?.enter) this.currentScene.enter(this);
+      }
+
+      setTitle(text) {
+        this.titleEl.textContent = text;
+      }
+
+      setStatus(text) {
+        this.statusEl.textContent = text;
+      }
+
+      setInstructions(text) {
+        this.instructionsEl.textContent = text;
+      }
+
+      start() {
+        this.input.bindTouchButtons('[data-key]');
+        requestAnimationFrame((t) => this.loop(t));
+      }
+
+      loop(timestamp) {
+        if (!this.lastTime) this.lastTime = timestamp;
+        let dt = (timestamp - this.lastTime) / 1000;
+        if (dt > 0.033) dt = 0.033;
+        this.lastTime = timestamp;
+
+        this.input.pollGamepad();
+
+        if (this.currentScene?.update) this.currentScene.update(this, dt);
+        if (this.currentScene?.draw) this.currentScene.draw(this, this.ctx);
+
+        this.input.endFrame();
+        requestAnimationFrame((t) => this.loop(t));
+      }
+    }
+
+    function runLayoutTests() {
+      console.assert(document.getElementById('topBar'), 'top bar should exist');
+      console.assert(document.getElementById('statusInner'), 'status box should exist');
+      console.assert(document.getElementById('instructionsBox'), 'instructions box should exist');
+      console.assert(document.querySelectorAll('#rightControls [data-key]').length === 2, 'right side should have two action buttons');
+      console.assert(document.querySelectorAll('#leftControls [data-key]').length === 4, 'left side should have four arrow buttons');
+    }
+
+    function wireTopButtons(engine) {
+      document.getElementById('menuButton').addEventListener('click', () => {
+        engine.setStatus('STATUS: MENU BUTTON PRESSED');
+      });
+
+      document.getElementById('closeButton').addEventListener('click', () => {
+        engine.setStatus('STATUS: CLOSE BUTTON PRESSED');
+      });
+    }
+
+    function boot() {
+      runLayoutTests();
+
+      const engine = new GameEngine({
+        canvas: document.getElementById('game'),
+        baseWidth: 320,
+        baseHeight: 240,
+        maxScale: 6,
+      });
+
+      engine.setTitle('RETRO FRAMEWORK DEMO');
+      engine.setStatus('STATUS: READY');
+      engine.setInstructions('ARROWS OR DPAD TO MOVE. HOLD A TO DRAW. B IS AVAILABLE FOR A SECOND ACTION LATER.');
+      wireTopButtons(engine);
+      engine.setScene(new DemoScene());
+      engine.start();
+
+      window.framework = engine;
+    }
+
+    boot();
+  </script>
+</body>
+</html>
