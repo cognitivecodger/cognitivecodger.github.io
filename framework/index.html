@@ -169,11 +169,13 @@
            Use inline-flex so the .actions box shrinks to its content width
            and #rightControls can align it to the right on all screen sizes. */
         .actions {
-          display: inline-flex;      /* shrink-to-content (instead of full-width block) */
+          display: flex;         /* flex-level container for the A/B buttons */
           gap: 14px;
           align-items: center;
-          justify-content: center;   /* center buttons inside the inline-flex box */
-          flex-wrap: nowrap;         /* prevent wrapping that can change alignment */
+          justify-content: center;
+          flex-wrap: nowrap;     /* prevent wrapping that would change alignment */
+          width: max-content;    /* ensure container only takes content width */
+          margin-left: auto;     /* push the .actions element to the right inside #rightControls */
         }
 
         /* Base size and visual style for all interactive buttons (arrow cells
