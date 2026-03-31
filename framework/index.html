@@ -237,35 +237,53 @@
          - left/right columns remain left/right aligned at all sizes
       */
         @media (max-width: 860px) {
-            /* keep two columns but reduce their width so layout fits smaller screens */
+            /* The old mobile rule forced both columns to 140px.
+               That is too narrow for a 3x3 d-pad (~186px wide with gaps)
+               and too narrow for two fire buttons (~166px wide).
+               The result is overflow, so the controls visually slide into each other.
+               Let the two columns share the available width instead. */
             #controlRow {
-                grid-template-columns: 140px 140px; /* narrower left/right columns */
+                grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
             }
 
             #leftControls,
             #rightControls {
-                min-height: auto; /* let content size naturally when space is constrained */
+                min-height: auto;
             }
 
             #instructionsBox,
             #statusInner {
-                min-height: 48px; /* slightly smaller on narrow screens */
+                min-height: 48px;
             }
 
             .dpad {
-                grid-template-columns: repeat(3, 58px);
-                grid-template-rows: repeat(3, 58px);
+                grid-template-columns: repeat(3, 44px);
+                grid-template-rows: repeat(3, 44px);
                 gap: 6px;
             }
 
             .btn, .ghost {
-                width: 58px;
-                height: 58px;
+                width: 44px;
+                height: 44px;
+                font-size: 18px;
             }
 
             .fire {
-                width: 76px;
-                height: 76px;
+                width: 58px;
+                height: 58px;
+                font-size: 18px;
+            }
+
+            .actions {
+                gap: 10px;
+            }
+
+            #leftControls {
+                padding-left: 6px;
+            }
+
+            #rightControls {
+                padding-right: 6px;
             }
         }
   </style>
