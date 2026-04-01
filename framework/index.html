@@ -65,8 +65,6 @@
       justify-content: flex-start;
       padding: 10px;
       gap: 10px;
-
-      /* Anchor absolute-positioned UI such as the burger menu popup. */
       position: relative;
     }
 
@@ -665,18 +663,26 @@
           extraY: false,
           selecting: false,
           paused: false,
-          trail: [],
+          trail: []
         };
+
         this.score = 0;
+
+        /* Use the new shared helpers immediately so the demo doubles as an example. */
+        engine.startGame();
+        engine.setScore(0);
+        engine.setLives(3);
+        engine.setLevel(1);
+        engine.clearMessage();
       }
 
       update(engine, dt) {
         const input = engine.input;
         const p = this.player;
 
-        // Start toggles pause. Keyboard P is treated as Start by the input layer.
+        // Start toggles pause using the shared framework helper.
         if (input.pressed('Enter')) {
-          p.paused = !p.paused;
+          p.paused = engine.togglePause();
         }
 
         // Select is a real input now, ready for future inventory/menu/secondary uses.
@@ -701,9 +707,20 @@
             p.trail.push({
               x: p.x + p.w / 2,
               y: p.y + p.h / 2,
-              life: 0.24,
+              life: 0.24
             });
             this.score += dt * 10;
+            engine.setScore(Math.floor(this.score));
+          }
+
+          if (p.extraY) {
+            engine.showMessage('Y IS ACTIVE. USE THIS AREA FOR CONTEXTUAL HELP OR BONUS MODES.');
+          } else if (p.extraX) {
+            engine.showMessage('X IS ACTIVE. THIS COULD OPEN MAPS, TOOLS, OR TACTICAL VIEWS.');
+          } else if (p.selecting) {
+            engine.showMessage('SELECT IS CURRENTLY ACTIVE. YOU CAN REUSE IT FOR MAP, INVENTORY, OR MODE SWITCHES.');
+          } else {
+            engine.clearMessage();
           }
 
           for (const t of p.trail) {
@@ -715,10 +732,11 @@
           p.altAction = false;
           p.extraX = false;
           p.extraY = false;
+          engine.showMessage('PRESS START AGAIN TO RESUME.');
         }
 
-        // Status text now reports Start / Select explicitly so games can rely on them later.
-        const statusText = p.paused
+        // Status text now reports Start / Select explicitly and includes the shared helper summary.
+        const statusPrefix = p.paused
           ? 'STATUS: PAUSED'
           : p.selecting
             ? 'STATUS: SELECT HELD'
@@ -732,16 +750,12 @@
                     ? 'STATUS: BUTTON Y HELD'
                     : 'STATUS: READY';
 
-        const instructionsText = p.paused
-          ? 'PRESS START AGAIN TO RESUME. SELECT IS AVAILABLE FOR SECONDARY FUNCTIONS.'
-          : p.selecting
-            ? 'SELECT IS CURRENTLY ACTIVE. YOU CAN REUSE IT FOR MAP, INVENTORY, OR MODE SWITCHES.'
-            : p.altAction
-              ? 'B CAN TRIGGER A SECOND ACTION, MENU, BOMB, OR CANCEL LATER.'
-              : 'ARROWS OR DPAD TO MOVE. HOLD A TO DRAW. START PAUSES. SELECT IS AVAILABLE FOR SECONDARY FUNCTIONS.';
+        const baseInstructions = p.altAction
+          ? 'B CAN TRIGGER A SECOND ACTION, MENU, BOMB, OR CANCEL LATER.'
+          : 'ARROWS OR DPAD TO MOVE. HOLD A TO DRAW. START PAUSES. SELECT IS AVAILABLE FOR SECONDARY FUNCTIONS.';
 
-        engine.setStatus(statusText);
-        engine.setInstructions(instructionsText);
+        engine.setStatus(engine.buildStatusLine(statusPrefix));
+        engine.setInstructions(engine.buildInstructionText(baseInstructions));
       }
 
       draw(engine, ctx) {
@@ -770,7 +784,7 @@
           ctx.fillRect(Math.round(t.x - 1), Math.round(t.y - 1), 3, 3);
         }
 
-        // The player colour reflects current action state. */
+        // The player colour reflects current action state.
         ctx.fillStyle = p.paused
           ? '#9ba7a7'
           : p.selecting
@@ -811,6 +825,19 @@
         this.statusEl = document.getElementById('statusInner');
         this.instructionsEl = document.getElementById('instructionsBox');
         this.titleEl = document.getElementById('titleBox');
+
+        /* Framework helpers state.
+           These values let games update common HUD-style information without
+           each scene having to rebuild all the UI strings by hand. */
+        this.frameworkState = {
+          score: null,
+          lives: null,
+          level: null,
+          message: '',
+          isPaused: false,
+          isGameOver: false,
+          isRunning: false
+        };
 
         this.ctx.imageSmoothingEnabled = false;
         this.setupCanvas();
@@ -859,6 +886,93 @@
 
       setInstructions(text) {
         this.instructionsEl.textContent = text;
+      }
+
+      /* ---------------- Framework helper methods ----------------
+         These are intended to be reused by future games like Snake and Tank Trek. */
+
+      setScore(value) {
+        this.frameworkState.score = value;
+      }
+
+      setLives(value) {
+        this.frameworkState.lives = value;
+      }
+
+      setLevel(value) {
+        this.frameworkState.level = value;
+      }
+
+      showMessage(text) {
+        this.frameworkState.message = String(text || '');
+      }
+
+      clearMessage() {
+        this.frameworkState.message = '';
+      }
+
+      pause() {
+        this.frameworkState.isPaused = true;
+      }
+
+      resume() {
+        this.frameworkState.isPaused = false;
+      }
+
+      togglePause() {
+        this.frameworkState.isPaused = !this.frameworkState.isPaused;
+        return this.frameworkState.isPaused;
+      }
+
+      isPaused() {
+        return this.frameworkState.isPaused;
+      }
+
+      startGame() {
+        this.frameworkState.isRunning = true;
+        this.frameworkState.isGameOver = false;
+      }
+
+      stopGame() {
+        this.frameworkState.isRunning = false;
+      }
+
+      restartGame() {
+        /* Reset only the shared helper state.
+           Individual games can still re-seed their own scene state separately. */
+        this.frameworkState.score = null;
+        this.frameworkState.lives = null;
+        this.frameworkState.level = null;
+        this.frameworkState.message = '';
+        this.frameworkState.isPaused = false;
+        this.frameworkState.isGameOver = false;
+        this.frameworkState.isRunning = true;
+      }
+
+      gameOver(message = 'GAME OVER') {
+        this.frameworkState.isGameOver = true;
+        this.frameworkState.isRunning = false;
+        this.frameworkState.isPaused = false;
+        this.frameworkState.message = message;
+      }
+
+      buildStatusLine(prefix = 'STATUS: READY') {
+        /* Helper for scenes that want a consistent HUD summary in the status box. */
+        const extras = [];
+        if (this.frameworkState.score !== null) extras.push(`SCORE ${this.frameworkState.score}`);
+        if (this.frameworkState.lives !== null) extras.push(`LIVES ${this.frameworkState.lives}`);
+        if (this.frameworkState.level !== null) extras.push(`LEVEL ${this.frameworkState.level}`);
+        if (this.frameworkState.isPaused) extras.push('PAUSED');
+        if (this.frameworkState.isGameOver) extras.push('GAME OVER');
+        return extras.length ? `${prefix} | ${extras.join(' | ')}` : prefix;
+      }
+
+      buildInstructionText(baseText = '') {
+        /* Helper for scenes that want a shared message area without losing their own instructions. */
+        if (baseText && this.frameworkState.message) {
+          return `${baseText}\n${this.frameworkState.message}`;
+        }
+        return this.frameworkState.message || baseText;
       }
 
       start() {
@@ -942,8 +1056,49 @@
       console.assert(utilityButtons.includes('ShiftLeft'), 'utility strip should expose Select via ShiftLeft');
     }
 
+    function runFrameworkHelperTests() {
+      // Validate shared helper behaviour without needing a full game scene.
+      const testCanvas = document.createElement('canvas');
+      testCanvas.width = 64;
+      testCanvas.height = 64;
+      const engine = new GameEngine({ canvas: testCanvas, baseWidth: 64, baseHeight: 64, maxScale: 1 });
+
+      engine.setScore(123);
+      engine.setLives(4);
+      engine.setLevel(2);
+      console.assert(engine.frameworkState.score === 123, 'setScore should store score');
+      console.assert(engine.frameworkState.lives === 4, 'setLives should store lives');
+      console.assert(engine.frameworkState.level === 2, 'setLevel should store level');
+
+      engine.showMessage('HELLO');
+      console.assert(engine.buildInstructionText('BASE') === 'BASE\nHELLO', 'buildInstructionText should append message');
+      engine.clearMessage();
+      console.assert(engine.buildInstructionText('BASE') === 'BASE', 'clearMessage should remove shared message');
+
+      console.assert(engine.isPaused() === false, 'engine should not start paused');
+      engine.pause();
+      console.assert(engine.isPaused() === true, 'pause should set paused state');
+      engine.resume();
+      console.assert(engine.isPaused() === false, 'resume should clear paused state');
+      console.assert(engine.togglePause() === true, 'togglePause should return new paused state');
+      console.assert(engine.togglePause() === false, 'togglePause should toggle back');
+
+      engine.startGame();
+      console.assert(engine.frameworkState.isRunning === true, 'startGame should mark the engine as running');
+      engine.gameOver('BOOM');
+      console.assert(engine.frameworkState.isGameOver === true, 'gameOver should mark the engine as game over');
+      console.assert(engine.frameworkState.message === 'BOOM', 'gameOver should set the shared message');
+      engine.restartGame();
+      console.assert(engine.frameworkState.isRunning === true, 'restartGame should mark the engine as running again');
+      console.assert(engine.frameworkState.isGameOver === false, 'restartGame should clear game over');
+
+      const statusLine = engine.buildStatusLine('STATUS: TEST');
+      console.assert(statusLine.includes('STATUS: TEST'), 'buildStatusLine should include the prefix');
+    }
+
     function applyReverseLayout(enabled) {
       const actionPad = document.getElementById('actionPad');
+      if (!actionPad) return;
       actionPad.classList.toggle('reversed', enabled);
       localStorage.setItem('reverseButtons', enabled ? '1' : '0');
     }
@@ -984,12 +1139,13 @@
       runReverseLayoutTests();
       runMenuOverlayTests();
       runUtilityInputTests();
+      runFrameworkHelperTests();
 
       const engine = new GameEngine({
         canvas: document.getElementById('game'),
         baseWidth: 480,
         baseHeight: 480,
-        maxScale: 6,
+        maxScale: 6
       });
 
       const saved = localStorage.getItem('reverseButtons') === '1';
