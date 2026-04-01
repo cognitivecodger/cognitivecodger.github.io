@@ -21,12 +21,12 @@
       --shadow: rgba(0, 0, 0, 0.35);
 
       /* Responsive control sizing.
-         clamp(min, preferred, max) lets the buttons grow with screen size
-         without becoming too tiny on phones or too huge on desktops. */
-      --control-cell: clamp(60px, 10vw, 105px); /* Increased another ~20% for larger control blocks */ /* Increased ~20% so entire 3x3 blocks grow */
-      --control-gap: clamp(3px, 0.8vw, 6px); /* Reduced gap so buttons can grow larger */
-      --action-cell: clamp(58px, 9.2vw, 100px); /* Increased ~20% for action buttons */
-      --outer-pad: clamp(8px, 2vw, 20px);
+         Two control clusters are much easier to fit on phones than three.
+         clamp(min, preferred, max) lets the pads grow on larger screens
+         without breaking smaller mobile layouts. */
+      --control-cell: clamp(54px, 9vw, 96px);
+      --control-gap: clamp(2px, 0.6vw, 4px);
+      --outer-pad: clamp(6px, 1.5vw, 16px);
       --topbar-btn: clamp(40px, 5vw, 44px);
     }
 
@@ -159,22 +159,23 @@
     }
 
     #controlRow {
-      /* Three control zones:
+      /* Two control zones:
          left  = d-pad 3x3
-         middle = utility 3x3 with centre pause button
-         right = action 3x3 with A and B on the middle row */
+         right = action 3x3 with Pause, B, and A arranged as requested
+
+         [P][ ][ ]
+         [ ][ ][B]
+         [ ][A][ ] */
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 10px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
       align-items: stretch;
     }
 
     #leftControls,
-    #centerControls,
     #rightControls {
       display: flex;
       align-items: center;
-      justify-content: center;
       min-height: calc(var(--control-cell) * 3 + var(--control-gap) * 2 + 16px);
     }
 
@@ -183,30 +184,24 @@
       padding-left: var(--outer-pad);
     }
 
-    #centerControls {
-      justify-content: center;
-      padding-left: 8px;
-      padding-right: 8px;
-    }
-
     #rightControls {
       justify-content: flex-end;
       padding-right: var(--outer-pad);
     }
 
     .controlGrid {
-      /* Generic 3x3 control matrix used by d-pad, utility pad, and action pad. */
+      /* Visible border around each 3x3 control block for clearer grouping. */
+      padding: 4px;
+      border: 1px solid var(--panel-border);
+      border-radius: 12px;
+      background: rgba(20, 30, 30, 0.6);
+
+      /* Generic 3x3 control matrix used by d-pad and action pad. */
       display: grid;
       grid-template-columns: repeat(3, var(--control-cell));
       grid-template-rows: repeat(3, var(--control-cell));
       gap: var(--control-gap);
       width: max-content;
-    }
-
-    .actionGrid {
-      /* Action pad uses its own cell size so A/B can be slightly larger than arrows. */
-      grid-template-columns: repeat(3, var(--action-cell));
-      grid-template-rows: repeat(3, var(--action-cell));
     }
 
     .btn,
@@ -232,15 +227,14 @@
       background: var(--btn-active);
     }
 
-    .fire {
-      /* A/B remain circular and slightly larger than the d-pad arrows. */
+    .fire,
+    .pauseBtn {
+      /* Circular buttons give the action pad a different visual identity. */
       border-radius: 50%;
       font-size: clamp(18px, 2.3vw, 22px);
     }
 
     .pauseBtn {
-      /* Pause sits in the centre utility pad, ready for later functionality. */
-      border-radius: 50%;
       background: #374444;
       font-size: clamp(14px, 1.8vw, 18px);
       letter-spacing: 0.04em;
@@ -284,18 +278,12 @@
       }
 
       #controlRow {
-        /* Keep all three control groups side-by-side on mobile.
-           Fluid columns plus clamp-sized cells stop them colliding. */
-        gap: 6px;
+        /* Two pads remain side-by-side on mobile, which is far safer than three. */
+        gap: 8px;
       }
 
       #leftControls {
         padding-left: 8px;
-      }
-
-      #centerControls {
-        padding-left: 4px;
-        padding-right: 4px;
       }
 
       #rightControls {
@@ -310,10 +298,9 @@
 
     @media (max-width: 520px) {
       :root {
-        /* On narrower phones, trim the preferred sizes slightly so all three pads fit. */
-        --control-cell: clamp(34px, 9vw, 50px);
-        --control-gap: clamp(4px, 1vw, 6px);
-        --action-cell: clamp(38px, 10vw, 58px);
+        /* On narrower phones, reduce control size just enough to avoid overlap. */
+        --control-cell: clamp(42px, 12vw, 66px);
+        --control-gap: clamp(2px, 0.5vw, 4px);
         --outer-pad: clamp(4px, 1vw, 8px);
       }
 
@@ -365,41 +352,23 @@
         </div>
       </div>
 
-      <div id="centerControls">
-        <!-- Utility pad uses the same 3x3 idea.
-             Only the centre button is visible for now, acting as pause/menu. -->
-        <div class="controlGrid" id="utilityPad">
-          <div class="ghost"></div>
-          <div class="ghost"></div>
-          <div class="ghost"></div>
-
-          <div class="ghost"></div>
+      <div id="rightControls">
+        <!-- Action pad now also uses a 3x3 grid, but only three buttons are visible.
+             Requested layout:
+             [P][ ][ ]
+             [ ][ ][B]
+             [ ][A][ ] -->
+        <div class="controlGrid" id="actionPad">
           <button class="btn pauseBtn" data-key="Escape" type="button" aria-label="Pause">II</button>
           <div class="ghost"></div>
-
-          <div class="ghost"></div>
-          <div class="ghost"></div>
-          <div class="ghost"></div>
-        </div>
-      </div>
-
-      <div id="rightControls">
-        <!-- Action pad also uses a 3x3 grid.
-             A and B sit on the middle left and middle right cells as requested:
-             [ ][ ][ ]
-             [A][ ][B]
-             [ ][ ][ ] -->
-        <div class="controlGrid actionGrid" id="actionPad">
-          <div class="ghost"></div>
-          <div class="ghost"></div>
           <div class="ghost"></div>
 
-          <button class="btn fire fireA" data-key="KeyZ" type="button" aria-label="Button A">A</button>
+          <div class="ghost"></div>
           <div class="ghost"></div>
           <button class="btn fire fireB" data-key="KeyX" type="button" aria-label="Button B">B</button>
 
           <div class="ghost"></div>
-          <div class="ghost"></div>
+          <button class="btn fire fireA" data-key="KeyZ" type="button" aria-label="Button A">A</button>
           <div class="ghost"></div>
         </div>
       </div>
@@ -407,7 +376,7 @@
 
     <div id="instructionsPanel" class="panel">
       <div id="instructionsBox">
-        ARROWS OR DPAD TO MOVE. HOLD A TO DRAW. B IS AVAILABLE FOR A SECOND ACTION LATER.
+        ARROWS OR DPAD TO MOVE. HOLD A TO DRAW. PRESS P TO PAUSE.
       </div>
     </div>
   </div>
@@ -441,22 +410,27 @@
             'Space',
             'Enter',
             'Escape',
+            'KeyP',
             'KeyZ',
             'KeyX'
           ].includes(code)) {
             e.preventDefault();
           }
 
+          // Treat P as an alias for Escape so the pause button and keyboard match conceptually.
+          const logicalCode = code === 'KeyP' ? 'Escape' : code;
+
           // Track the first frame of a key press separately from “held”.
-          if (!this.keys.get(code)) {
-            this.justPressed.add(code);
+          if (!this.keys.get(logicalCode)) {
+            this.justPressed.add(logicalCode);
           }
 
-          this.keys.set(code, true);
+          this.keys.set(logicalCode, true);
         });
 
         window.addEventListener('keyup', (e) => {
-          this.keys.set(e.code, false);
+          const logicalCode = e.code === 'KeyP' ? 'Escape' : e.code;
+          this.keys.set(logicalCode, false);
         });
       }
 
@@ -571,7 +545,7 @@
         const input = engine.input;
         const p = this.player;
 
-        // Toggle paused state with the centre utility button or Escape on keyboard/pad.
+        // Toggle paused state with the action-pad pause button or Escape/P on keyboard/pad.
         if (input.pressed('Escape')) {
           p.paused = !p.paused;
         }
@@ -620,10 +594,10 @@
               : 'STATUS: READY';
 
         const instructionsText = p.paused
-          ? 'PRESS THE CENTRE PAUSE BUTTON OR ESC AGAIN TO RESUME.'
+          ? 'PRESS THE PAUSE BUTTON OR P OR ESC AGAIN TO RESUME.'
           : p.altAction
             ? 'B CAN TRIGGER A SECOND ACTION, MENU, BOMB, OR CANCEL LATER.'
-            : 'ARROWS OR DPAD TO MOVE. HOLD A TO DRAW. PRESS THE CENTRE BUTTON TO PAUSE.';
+            : 'ARROWS OR DPAD TO MOVE. HOLD A TO DRAW. PRESS P TO PAUSE.';
 
         engine.setStatus(statusText);
         engine.setInstructions(instructionsText);
@@ -682,7 +656,7 @@
 
     class GameEngine {
       constructor(options = {}) {
-        // Logical resolution. The visible canvas is just a scaled-up version of this. 
+        // Logical resolution. The visible canvas is just a scaled-up version of this.
         this.baseWidth = options.baseWidth || 480;
         this.baseHeight = options.baseHeight || 270;
         this.maxScale = options.maxScale || 6;
@@ -804,18 +778,14 @@
       console.assert(document.getElementById('topBar'), 'top bar should exist');
       console.assert(document.getElementById('statusInner'), 'status box should exist');
       console.assert(document.getElementById('instructionsBox'), 'instructions box should exist');
-      console.assert(document.getElementById('utilityPad'), 'centre utility pad should exist');
+      console.assert(document.getElementById('actionPad'), 'action pad should exist');
       console.assert(
-        document.querySelectorAll('#rightControls [data-key]').length === 2,
-        'right side should have two action buttons'
+        document.querySelectorAll('#rightControls [data-key]').length === 3,
+        'right side should have three visible action buttons including pause'
       );
       console.assert(
         document.querySelectorAll('#leftControls [data-key]').length === 4,
         'left side should have four arrow buttons'
-      );
-      console.assert(
-        document.querySelectorAll('#centerControls [data-key]').length === 1,
-        'centre controls should have one visible utility button'
       );
     }
 
@@ -843,7 +813,7 @@
       engine.setTitle('RETRO FRAMEWORK DEMO');
       engine.setStatus('STATUS: READY');
       engine.setInstructions(
-        'ARROWS OR DPAD TO MOVE. HOLD A TO DRAW. PRESS THE CENTRE BUTTON TO PAUSE.'
+        'ARROWS OR DPAD TO MOVE. HOLD A TO DRAW. PRESS P TO PAUSE.'
       );
 
       wireTopButtons(engine);
