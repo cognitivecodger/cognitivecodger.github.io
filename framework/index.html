@@ -23,9 +23,9 @@
       /* Responsive control sizing.
          clamp(min, preferred, max) lets the buttons grow with screen size
          without becoming too tiny on phones or too huge on desktops. */
-      --control-cell: clamp(42px, 7vw, 74px);
+      --control-cell: clamp(60px, 10vw, 105px); /* Increased another ~20% for larger control blocks */ /* Increased ~20% so entire 3x3 blocks grow */
       --control-gap: clamp(3px, 0.8vw, 6px); /* Reduced gap so buttons can grow larger */
-      --action-cell: clamp(48px, 7.8vw, 84px);
+      --action-cell: clamp(58px, 9.2vw, 100px); /* Increased ~20% for action buttons */
       --outer-pad: clamp(8px, 2vw, 20px);
       --topbar-btn: clamp(40px, 5vw, 44px);
     }
