@@ -113,7 +113,7 @@
       display: block;
       width: min(100%, 1120px);
       height: auto;
-      aspect-ratio: 16 / 9;
+      aspect-ratio: 1 / 1; /* 16 / 9; /* ASPECT RATIOn IS HERE */
       background: #000;
       image-rendering: pixelated;
       image-rendering: crisp-edges;
@@ -774,7 +774,7 @@
       const engine = new GameEngine({
         canvas: document.getElementById('game'),
         baseWidth: 480,
-        baseHeight: 270,
+        baseHeight: 480, /*  270, */
         maxScale: 6,
       });
 
