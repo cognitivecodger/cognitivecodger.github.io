@@ -21,11 +21,13 @@
       --shadow: rgba(0, 0, 0, 0.35);
 
       /* Responsive control sizing.
-         Two control clusters are much easier to fit on phones than three.
+         Three clusters are back, but the middle one is a slim 1x3 utility strip,
+         which is much easier to fit on phones than a full 3x3 pad.
          clamp(min, preferred, max) lets the pads grow on larger screens
          without breaking smaller mobile layouts. */
       --control-cell: clamp(54px, 9vw, 96px);
       --control-gap: clamp(2px, 0.6vw, 4px);
+      --utility-cell: clamp(36px, 5vw, 52px);
       --outer-pad: clamp(6px, 1.5vw, 16px);
       --topbar-btn: clamp(40px, 5vw, 44px);
     }
@@ -44,12 +46,8 @@
       background: radial-gradient(circle at top, #182121, #0d1111 55%);
       color: var(--text);
       font-family: Arial, sans-serif;
-
-      /* Allow vertical scrolling if the whole shell is taller than the phone. */
       overflow-x: hidden;
       overflow-y: auto;
-
-      /* Reduce browser gesture interference on touch controls. */
       touch-action: manipulation;
     }
 
@@ -113,12 +111,9 @@
 
     canvas {
       display: block;
-
-      /* Keep the canvas visually large while using a fixed logical game size. */
       width: min(100%, 1120px);
       height: auto;
       aspect-ratio: 16 / 9;
-
       background: #000;
       image-rendering: pixelated;
       image-rendering: crisp-edges;
@@ -159,20 +154,28 @@
     }
 
     #controlRow {
-      /* Two control zones:
-         left  = d-pad 3x3
-         right = action 3x3 with Pause, B, and A arranged as requested
+      /* Three control zones:
+         left   = d-pad 3x3
+         centre = utility 1x3 with pause in the middle
+         right  = action 3x3 with B and A arranged as requested
 
-         [P][ ][ ]
+         centre column:
+         [ ]
+         [P]
+         [ ]
+
+         right pad:
+         [ ][ ][ ]
          [ ][ ][B]
          [ ][A][ ] */
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-columns: minmax(0, 1fr) max-content minmax(0, 1fr);
       gap: 12px;
       align-items: stretch;
     }
 
     #leftControls,
+    #centerControls,
     #rightControls {
       display: flex;
       align-items: center;
@@ -182,6 +185,12 @@
     #leftControls {
       justify-content: flex-start;
       padding-left: var(--outer-pad);
+    }
+
+    #centerControls {
+      justify-content: center;
+      padding-left: 4px;
+      padding-right: 4px;
     }
 
     #rightControls {
@@ -200,6 +209,20 @@
       display: grid;
       grid-template-columns: repeat(3, var(--control-cell));
       grid-template-rows: repeat(3, var(--control-cell));
+      gap: var(--control-gap);
+      width: max-content;
+    }
+
+    .utilityStrip {
+      /* Slim 1x3 utility strip for pause. This keeps the centre control area visible
+         without taking the width of another full 3x3 pad on mobile. */
+      padding: 4px;
+      border: 1px solid var(--panel-border);
+      border-radius: 12px;
+      background: rgba(20, 30, 30, 0.6);
+      display: grid;
+      grid-template-columns: var(--utility-cell);
+      grid-template-rows: repeat(3, var(--utility-cell));
       gap: var(--control-gap);
       width: max-content;
     }
@@ -257,7 +280,7 @@
     }
 
     .ghost {
-      /* Hidden placeholders preserve the 3x3 control geometry without being clickable. */
+      /* Hidden placeholders preserve control geometry without being clickable. */
       visibility: hidden;
       pointer-events: none;
     }
@@ -278,12 +301,17 @@
       }
 
       #controlRow {
-        /* Two pads remain side-by-side on mobile, which is far safer than three. */
+        /* A narrow utility strip in the middle keeps this three-column layout viable. */
         gap: 8px;
       }
 
       #leftControls {
         padding-left: 8px;
+      }
+
+      #centerControls {
+        padding-left: 2px;
+        padding-right: 2px;
       }
 
       #rightControls {
@@ -298,9 +326,10 @@
 
     @media (max-width: 520px) {
       :root {
-        /* On narrower phones, reduce control size just enough to avoid overlap. */
+        /* On narrower phones, reduce sizes just enough to avoid overlap. */
         --control-cell: clamp(42px, 12vw, 66px);
         --control-gap: clamp(2px, 0.5vw, 4px);
+        --utility-cell: clamp(28px, 7vw, 40px);
         --outer-pad: clamp(4px, 1vw, 8px);
       }
 
@@ -352,14 +381,20 @@
         </div>
       </div>
 
-      <div id="rightControls">
-        <!-- Action pad now also uses a 3x3 grid, but only three buttons are visible.
-             Requested layout:
-             [P][ ][ ]
-             [ ][ ][B]
-             [ ][A][ ] -->
-        <div class="controlGrid" id="actionPad">
+      <div id="centerControls">
+        <!-- The centre control area is a 1x3 strip rather than a full 3x3 box.
+             This gives pause its own place without consuming too much width. -->
+        <div class="utilityStrip" id="utilityPad">
+          <div class="ghost"></div>
           <button class="btn pauseBtn" data-key="Escape" type="button" aria-label="Pause">II</button>
+          <div class="ghost"></div>
+        </div>
+      </div>
+
+      <div id="rightControls">
+        <!-- Action pad keeps the requested B/A layout, with pause removed. -->
+        <div class="controlGrid" id="actionPad">
+          <div class="ghost"></div>
           <div class="ghost"></div>
           <div class="ghost"></div>
 
@@ -384,24 +419,15 @@
   <script>
     class InputManager {
       constructor() {
-        // Current pressed state for each logical input code.
         this.keys = new Map();
-
-        // Inputs that changed from “up” to “down” this frame only.
         this.justPressed = new Set();
-
-        // References to all on-screen buttons once bound.
         this.mobileButtons = [];
-
         this.setupKeyboard();
       }
 
       setupKeyboard() {
-        // Keyboard input is mapped to the same logical codes used by touch buttons.
         window.addEventListener('keydown', (e) => {
           const code = e.code;
-
-          // Prevent browser scrolling or default actions for control keys.
           if ([
             'ArrowUp',
             'ArrowDown',
@@ -417,14 +443,10 @@
             e.preventDefault();
           }
 
-          // Treat P as an alias for Escape so the pause button and keyboard match conceptually.
           const logicalCode = code === 'KeyP' ? 'Escape' : code;
-
-          // Track the first frame of a key press separately from “held”.
           if (!this.keys.get(logicalCode)) {
             this.justPressed.add(logicalCode);
           }
-
           this.keys.set(logicalCode, true);
         });
 
@@ -435,17 +457,14 @@
       }
 
       bindTouchButtons(selector = '[data-key]') {
-        // Buttons declare which logical input they trigger using data-key.
         this.mobileButtons = [...document.querySelectorAll(selector)];
 
         const press = (button, e) => {
           e.preventDefault();
           const code = button.dataset.key;
-
           if (!this.keys.get(code)) {
             this.justPressed.add(code);
           }
-
           this.keys.set(code, true);
           button.classList.add('active');
         };
@@ -458,12 +477,9 @@
         };
 
         for (const button of this.mobileButtons) {
-          // Touch listeners for real phones and tablets.
           button.addEventListener('touchstart', (e) => press(button, e), { passive: false });
           button.addEventListener('touchend', (e) => release(button, e), { passive: false });
           button.addEventListener('touchcancel', (e) => release(button, e), { passive: false });
-
-          // Mouse listeners are still useful for desktop testing.
           button.addEventListener('mousedown', (e) => press(button, e));
           button.addEventListener('mouseup', (e) => release(button, e));
           button.addEventListener('mouseleave', (e) => release(button, e));
@@ -471,14 +487,11 @@
       }
 
       pollGamepad() {
-        // Poll the first connected controller each frame.
         const pads = navigator.getGamepads ? navigator.getGamepads() : [];
         const pad = pads && pads[0];
         if (!pad) return;
 
-        // Dead zone avoids unwanted analogue drift.
         const dead = 0.35;
-
         const gamepadStates = {
           ArrowLeft: pad.axes[0] < -dead || !!pad.buttons[14]?.pressed,
           ArrowRight: pad.axes[0] > dead || !!pad.buttons[15]?.pressed,
@@ -494,29 +507,24 @@
           if (pressed && !this.keys.get(code)) {
             this.justPressed.add(code);
           }
-
           this.keys.set(code, !!pressed);
         }
       }
 
       down(code) {
-        // True while an input is actively held.
         return !!this.keys.get(code);
       }
 
       pressed(code) {
-        // True only on the first frame the input becomes active.
         return this.justPressed.has(code);
       }
 
       endFrame() {
-        // Reset one-frame press information after update and draw are complete.
         this.justPressed.clear();
       }
     }
 
     class Scene {
-      // Base scene interface for future title screens, gameplay scenes, pause screens, etc.
       enter(engine) {}
       update(engine, dt) {}
       draw(engine, ctx) {}
@@ -525,7 +533,6 @@
 
     class DemoScene extends Scene {
       enter(engine) {
-        // Start the player near the centre of the logical 480x270 play area.
         this.player = {
           x: 232,
           y: 127,
@@ -537,7 +544,6 @@
           paused: false,
           trail: [],
         };
-
         this.score = 0;
       }
 
@@ -545,23 +551,19 @@
         const input = engine.input;
         const p = this.player;
 
-        // Toggle paused state with the action-pad pause button or Escape/P on keyboard/pad.
         if (input.pressed('Escape')) {
           p.paused = !p.paused;
         }
 
-        // Pause freezes movement and action updates, but keeps the wrapper alive.
         if (!p.paused) {
           if (input.down('ArrowLeft')) p.x -= p.speed * dt;
           if (input.down('ArrowRight')) p.x += p.speed * dt;
           if (input.down('ArrowUp')) p.y -= p.speed * dt;
           if (input.down('ArrowDown')) p.y += p.speed * dt;
 
-          // Clamp the player to the visible game area.
           p.x = Math.max(8, Math.min(engine.baseWidth - 8 - p.w, p.x));
           p.y = Math.max(8, Math.min(engine.baseHeight - 8 - p.h, p.y));
 
-          // A = draw action, B = alternate action placeholder.
           p.drawing = input.down('KeyZ');
           p.altAction = input.down('KeyX');
 
@@ -571,7 +573,6 @@
               y: p.y + p.h / 2,
               life: 0.24,
             });
-
             this.score += dt * 10;
           }
 
@@ -580,7 +581,6 @@
           }
           p.trail = p.trail.filter((t) => t.life > 0);
         } else {
-          // While paused, clear held action state so the status display stays honest.
           p.drawing = false;
           p.altAction = false;
         }
@@ -605,12 +605,9 @@
 
       draw(engine, ctx) {
         const p = this.player;
-
-        // Clear the frame.
         ctx.fillStyle = '#050707';
         ctx.fillRect(0, 0, engine.baseWidth, engine.baseHeight);
 
-        // Draw a simple grid background to make motion and scaling easier to judge.
         ctx.strokeStyle = '#0f1717';
         for (let x = 0; x <= engine.baseWidth; x += 16) {
           ctx.beginPath();
@@ -626,27 +623,22 @@
           ctx.stroke();
         }
 
-        // Trail particles fade out based on remaining life.
         for (const t of p.trail) {
           const alpha = Math.max(0, t.life / 0.24);
           ctx.fillStyle = `rgba(87,255,147,${0.35 * alpha})`;
           ctx.fillRect(Math.round(t.x - 1), Math.round(t.y - 1), 3, 3);
         }
 
-        // The player colour reflects its current state.
         ctx.fillStyle = p.paused ? '#9ba7a7' : p.altAction ? '#ff9f57' : p.drawing ? '#ff7070' : '#57ff93';
         ctx.fillRect(Math.round(p.x), Math.round(p.y), p.w, p.h);
 
-        // Tiny “eyes” add some character to the placeholder player block.
         ctx.fillStyle = '#b7ffd0';
         ctx.fillRect(Math.round(p.x + 4), Math.round(p.y + 4), 2, 2);
         ctx.fillRect(Math.round(p.x + 10), Math.round(p.y + 4), 2, 2);
 
         if (p.paused) {
-          // Light pause overlay so the game state is obvious even without reading status text.
           ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
           ctx.fillRect(0, 0, engine.baseWidth, engine.baseHeight);
-
           ctx.fillStyle = '#d7f5dd';
           ctx.fillRect(engine.baseWidth / 2 - 12, engine.baseHeight / 2 - 20, 8, 40);
           ctx.fillRect(engine.baseWidth / 2 + 4, engine.baseHeight / 2 - 20, 8, 40);
@@ -656,11 +648,9 @@
 
     class GameEngine {
       constructor(options = {}) {
-        // Logical resolution. The visible canvas is just a scaled-up version of this.
         this.baseWidth = options.baseWidth || 480;
         this.baseHeight = options.baseHeight || 270;
         this.maxScale = options.maxScale || 6;
-
         this.canvas = options.canvas;
         this.ctx = this.canvas.getContext('2d', { alpha: false });
         this.input = new InputManager();
@@ -668,47 +658,32 @@
         this.lastTime = 0;
         this.pixelRatio = 1;
         this.currentScale = 1;
-
-        // Cache wrapper panel references so scenes can update them efficiently.
         this.statusEl = document.getElementById('statusInner');
         this.instructionsEl = document.getElementById('instructionsBox');
         this.titleEl = document.getElementById('titleBox');
 
         this.ctx.imageSmoothingEnabled = false;
         this.setupCanvas();
-
-        // Recalculate on resize or device rotation.
         window.addEventListener('resize', () => this.setupCanvas());
       }
 
       setupCanvas() {
         const frame = document.getElementById('gameFrame');
         const rect = frame.getBoundingClientRect();
-
-        // Measure the practical space available inside the canvas frame.
         const availableWidth = Math.max(100, rect.width - 20);
         const availableHeight = Math.max(140, window.innerHeight * 0.62);
 
         const scaleX = Math.floor(availableWidth / this.baseWidth);
         const scaleY = Math.floor(availableHeight / this.baseHeight);
-
-        // Integer scaling helps keep the retro look crisp instead of blurry.
         this.currentScale = Math.max(1, Math.min(this.maxScale, scaleX, scaleY || 1));
-
-        // Use device pixel ratio for sharper results on dense mobile screens.
         this.pixelRatio = Math.max(1, Math.floor(window.devicePixelRatio || 1));
-
         const internalScale = this.currentScale * this.pixelRatio;
 
-        // Internal drawing buffer size.
         this.canvas.width = this.baseWidth * internalScale;
         this.canvas.height = this.baseHeight * internalScale;
-
-        // Visual size seen in the browser.
         this.canvas.style.width = `${this.baseWidth * this.currentScale}px`;
         this.canvas.style.height = `${this.baseHeight * this.currentScale}px`;
 
-        // Scale the context so game code still draws in logical pixels.
         this.ctx.setTransform(internalScale, 0, 0, internalScale, 0, 0);
         this.ctx.imageSmoothingEnabled = false;
       }
@@ -717,9 +692,7 @@
         if (this.currentScene?.exit) {
           this.currentScene.exit(this);
         }
-
         this.currentScene = scene;
-
         if (this.currentScene?.enter) {
           this.currentScene.enter(this);
         }
@@ -738,7 +711,6 @@
       }
 
       start() {
-        // Bind visible on-screen controls to the input manager.
         this.input.bindTouchButtons('[data-key]');
         requestAnimationFrame((t) => this.loop(t));
       }
@@ -748,22 +720,16 @@
           this.lastTime = timestamp;
         }
 
-        // Convert milliseconds to seconds for movement logic.
         let dt = (timestamp - this.lastTime) / 1000;
-
-        // Clamp huge time jumps after tab switching so objects do not leap across the screen.
         if (dt > 0.033) {
           dt = 0.033;
         }
-
         this.lastTime = timestamp;
 
         this.input.pollGamepad();
-
         if (this.currentScene?.update) {
           this.currentScene.update(this, dt);
         }
-
         if (this.currentScene?.draw) {
           this.currentScene.draw(this, this.ctx);
         }
@@ -774,14 +740,18 @@
     }
 
     function runLayoutTests() {
-      // A few lightweight assertions make layout regressions easier to spot.
       console.assert(document.getElementById('topBar'), 'top bar should exist');
       console.assert(document.getElementById('statusInner'), 'status box should exist');
       console.assert(document.getElementById('instructionsBox'), 'instructions box should exist');
       console.assert(document.getElementById('actionPad'), 'action pad should exist');
+      console.assert(document.getElementById('utilityPad'), 'utility pad should exist');
       console.assert(
-        document.querySelectorAll('#rightControls [data-key]').length === 3,
-        'right side should have three visible action buttons including pause'
+        document.querySelectorAll('#rightControls [data-key]').length === 2,
+        'right side should have two visible action buttons'
+      );
+      console.assert(
+        document.querySelectorAll('#centerControls [data-key]').length === 1,
+        'centre strip should have one visible pause button'
       );
       console.assert(
         document.querySelectorAll('#leftControls [data-key]').length === 4,
@@ -790,7 +760,6 @@
     }
 
     function wireTopButtons(engine) {
-      // Simple placeholders for future menu/close behaviour.
       document.getElementById('menuButton').addEventListener('click', () => {
         engine.setStatus('STATUS: MENU BUTTON PRESSED');
       });
@@ -802,7 +771,6 @@
 
     function boot() {
       runLayoutTests();
-
       const engine = new GameEngine({
         canvas: document.getElementById('game'),
         baseWidth: 480,
@@ -812,15 +780,10 @@
 
       engine.setTitle('RETRO FRAMEWORK DEMO');
       engine.setStatus('STATUS: READY');
-      engine.setInstructions(
-        'ARROWS OR DPAD TO MOVE. HOLD A TO DRAW. PRESS P TO PAUSE.'
-      );
-
+      engine.setInstructions('ARROWS OR DPAD TO MOVE. HOLD A TO DRAW. PRESS P TO PAUSE.');
       wireTopButtons(engine);
       engine.setScene(new DemoScene());
       engine.start();
-
-      // Expose the engine in dev tools for quick experiments.
       window.framework = engine;
     }
 
