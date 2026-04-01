@@ -21,13 +21,12 @@
       --shadow: rgba(0, 0, 0, 0.35);
 
       /* Responsive control sizing.
-         Three clusters are back, but the middle one is a slim 1x3 utility strip,
-         which is much easier to fit on phones than a full 3x3 pad.
-         clamp(min, preferred, max) lets the pads grow on larger screens
-         without breaking smaller mobile layouts. */
+         The middle utility area is a slim 1x3 strip for Start/Select.
+         clamp(min, preferred, max) lets controls grow on larger screens
+         while staying usable on smaller phones. */
       --control-cell: clamp(54px, 9vw, 96px);
       --control-gap: clamp(2px, 0.6vw, 4px);
-      --utility-cell: clamp(36px, 9vw, 96px); /*--utility-cell: clamp(36px, 5vw, 52px);*/
+      --utility-cell: clamp(36px, 9vw, 96px);
       --outer-pad: clamp(6px, 1.5vw, 16px);
       --topbar-btn: clamp(40px, 5vw, 44px);
     }
@@ -66,6 +65,9 @@
       justify-content: flex-start;
       padding: 10px;
       gap: 10px;
+
+      /* Anchor absolute-positioned UI such as the burger menu popup. */
+      position: relative;
     }
 
     .panel {
@@ -84,6 +86,45 @@
       min-height: 56px;
       padding: 6px;
       gap: 8px;
+    }
+
+    #menuPanel {
+      /* Float the menu above the layout instead of pushing content downward. */
+      position: absolute;
+      top: 74px;
+      left: 10px;
+      z-index: 30;
+      padding: 8px;
+      width: min(260px, calc(100% - 20px));
+    }
+
+    #menuInner {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid #294040;
+      background: rgba(18, 28, 28, 0.92);
+    }
+
+    .menuHeading {
+      font-size: 0.9rem;
+      font-weight: bold;
+      letter-spacing: 0.08em;
+      color: #b7ffd0;
+    }
+
+    .menuOption {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      font-size: 0.95rem;
+    }
+
+    .menuOption input {
+      accent-color: #57ff93;
     }
 
     #titleBox {
@@ -113,7 +154,7 @@
       display: block;
       width: min(100%, 1120px);
       height: auto;
-      aspect-ratio: 1 / 1; /* 16 / 9; /* ASPECT RATIOn IS HERE */
+      aspect-ratio: 1 / 1;
       background: #000;
       image-rendering: pixelated;
       image-rendering: crisp-edges;
@@ -156,18 +197,23 @@
     #controlRow {
       /* Three control zones:
          left   = d-pad 3x3
-         centre = utility 1x3 with pause in the middle
-         right  = action 3x3 with B and A arranged as requested
+         centre = utility 1x3 with Start / Select
+         right  = action 3x3 with Y/X/B/A labels
 
          centre column:
-         [ ]
-         [P]
-         [ ]
+         [START]
+         [     ]
+         [SELECT]
 
-         right pad:
-         [ ][ ][ ]
-         [ ][ ][B]
-         [ ][A][ ] */
+         default action pad:
+         [ ][Y][ ]
+         [X][ ][B]
+         [ ][A][ ]
+
+         reversed action pad:
+         [ ][X][ ]
+         [Y][ ][A]
+         [ ][B][ ] */
       display: grid;
       grid-template-columns: minmax(0, 1fr) max-content minmax(0, 1fr);
       gap: 12px;
@@ -204,8 +250,6 @@
       border: 1px solid var(--panel-border);
       border-radius: 12px;
       background: rgba(20, 30, 30, 0.6);
-
-      /* Generic 3x3 control matrix used by d-pad and action pad. */
       display: grid;
       grid-template-columns: repeat(3, var(--control-cell));
       grid-template-rows: repeat(3, var(--control-cell));
@@ -214,8 +258,7 @@
     }
 
     .utilityStrip {
-      /* Slim 1x3 utility strip for pause. This keeps the centre control area visible
-         without taking the width of another full 3x3 pad on mobile. */
+      /* Slim 1x3 utility strip for Start and Select. */
       padding: 4px;
       border: 1px solid var(--panel-border);
       border-radius: 12px;
@@ -250,17 +293,18 @@
       background: var(--btn-active);
     }
 
-    .fire,
-    .pauseBtn {
+    .fire {
       /* Circular buttons give the action pad a different visual identity. */
       border-radius: 50%;
       font-size: clamp(18px, 2.3vw, 22px);
     }
 
-    .pauseBtn {
-      background: #374444;
-      font-size: clamp(14px, 1.8vw, 18px);
-      letter-spacing: 0.04em;
+    .utilityBtn {
+      /* Start / Select use a different shape so they read as system buttons. */
+      border-radius: 999px;
+      font-size: clamp(10px, 1.2vw, 12px);
+      letter-spacing: 0.08em;
+      padding: 0 4px;
     }
 
     .fireA {
@@ -269,6 +313,32 @@
 
     .fireB {
       background: #5a2f1f;
+    }
+
+    .fireX {
+      background: #2d355a;
+    }
+
+    .fireY {
+      background: #5a5330;
+    }
+
+    /* Default face-button labels. Physical button positions stay fixed.
+       Only the labels change when reverse mode is toggled. */
+    #actionPad .label-y::before { content: 'Y'; }
+    #actionPad .label-x::before { content: 'X'; }
+    #actionPad .label-b::before { content: 'B'; }
+    #actionPad .label-a::before { content: 'A'; }
+
+    /* Reversed labels. */
+    #actionPad.reversed .label-y::before { content: 'X'; }
+    #actionPad.reversed .label-x::before { content: 'Y'; }
+    #actionPad.reversed .label-b::before { content: 'A'; }
+    #actionPad.reversed .label-a::before { content: 'B'; }
+
+    .face-label {
+      display: inline-block;
+      line-height: 1;
     }
 
     .iconBtn {
@@ -286,6 +356,12 @@
     }
 
     @media (max-width: 860px) {
+      #menuPanel {
+        top: 68px;
+        left: 8px;
+        width: min(240px, calc(100% - 16px));
+      }
+
       #app {
         padding: 8px;
       }
@@ -337,6 +413,10 @@
         gap: 4px;
       }
 
+      .utilityBtn {
+        font-size: 9px;
+      }
+
       #instructionsBox {
         font-size: 13px;
       }
@@ -353,6 +433,18 @@
       <button id="menuButton" class="btn iconBtn" type="button" aria-label="Menu">☰</button>
       <div id="titleBox">RETRO FRAMEWORK DEMO</div>
       <button id="closeButton" class="btn iconBtn" type="button" aria-label="Close">✕</button>
+    </div>
+
+    <!-- Simple popup menu attached to the burger button.
+         Hidden by default and used for layout/config toggles. -->
+    <div id="menuPanel" class="panel" hidden>
+      <div id="menuInner">
+        <div class="menuHeading">OPTIONS</div>
+        <label class="menuOption">
+          <input type="checkbox" id="reverseToggle" />
+          <span>REVERSE BUTTONS</span>
+        </label>
+      </div>
     </div>
 
     <div id="gameFrame" class="panel">
@@ -382,28 +474,36 @@
       </div>
 
       <div id="centerControls">
-        <!-- The centre control area is a 1x3 strip rather than a full 3x3 box.
-             This gives pause its own place without consuming too much width. -->
+        <!-- Utility strip now exposes Start and Select as real engine inputs. -->
         <div class="utilityStrip" id="utilityPad">
+          <button class="btn utilityBtn" data-key="Enter" type="button" aria-label="Start">START</button>
           <div class="ghost"></div>
-          <button class="btn pauseBtn" data-key="Escape" type="button" aria-label="Pause">II</button>
-          <div class="ghost"></div>
+          <button class="btn utilityBtn" data-key="ShiftLeft" type="button" aria-label="Select">SELECT</button>
         </div>
       </div>
 
       <div id="rightControls">
-        <!-- Action pad keeps the requested B/A layout, with pause removed. -->
+        <!-- Action pad layout:
+             default:
+             [ ][Y][ ]
+             [X][ ][B]
+             [ ][A][ ]
+
+             reversed:
+             [ ][X][ ]
+             [Y][ ][A]
+             [ ][B][ ] -->
         <div class="controlGrid" id="actionPad">
           <div class="ghost"></div>
-          <div class="ghost"></div>
+          <button class="btn fire fireY label-y" data-key="KeyS" type="button" aria-label="Top face button"><span class="face-label"></span></button>
           <div class="ghost"></div>
 
+          <button class="btn fire fireX label-x" data-key="KeyA" type="button" aria-label="Left face button"><span class="face-label"></span></button>
           <div class="ghost"></div>
-          <div class="ghost"></div>
-          <button class="btn fire fireB" data-key="KeyX" type="button" aria-label="Button B">B</button>
+          <button class="btn fire fireB label-b" data-key="KeyX" type="button" aria-label="Right face button"><span class="face-label"></span></button>
 
           <div class="ghost"></div>
-          <button class="btn fire fireA" data-key="KeyZ" type="button" aria-label="Button A">A</button>
+          <button class="btn fire fireA label-a" data-key="KeyZ" type="button" aria-label="Bottom face button"><span class="face-label"></span></button>
           <div class="ghost"></div>
         </div>
       </div>
@@ -411,7 +511,7 @@
 
     <div id="instructionsPanel" class="panel">
       <div id="instructionsBox">
-        ARROWS OR DPAD TO MOVE. HOLD A TO DRAW. PRESS P TO PAUSE.
+        ARROWS OR DPAD TO MOVE. HOLD A TO DRAW. START PAUSES. SELECT IS AVAILABLE FOR SECONDARY FUNCTIONS.
       </div>
     </div>
   </div>
@@ -419,15 +519,23 @@
   <script>
     class InputManager {
       constructor() {
+        // Current pressed state for each logical input code.
         this.keys = new Map();
+
+        // Inputs that changed from up to down this frame only.
         this.justPressed = new Set();
+
+        // References to all on-screen buttons once bound.
         this.mobileButtons = [];
+
         this.setupKeyboard();
       }
 
       setupKeyboard() {
         window.addEventListener('keydown', (e) => {
           const code = e.code;
+
+          // Prevent browser scrolling or default actions for control keys.
           if ([
             'ArrowUp',
             'ArrowDown',
@@ -436,14 +544,19 @@
             'Space',
             'Enter',
             'Escape',
+            'ShiftLeft',
             'KeyP',
+            'KeyA',
+            'KeyS',
             'KeyZ',
             'KeyX'
           ].includes(code)) {
             e.preventDefault();
           }
 
-          const logicalCode = code === 'KeyP' ? 'Escape' : code;
+          // Treat P as a Start alias so keyboard pause matches the on-screen Start button.
+          const logicalCode = code === 'KeyP' ? 'Enter' : code;
+
           if (!this.keys.get(logicalCode)) {
             this.justPressed.add(logicalCode);
           }
@@ -451,7 +564,7 @@
         });
 
         window.addEventListener('keyup', (e) => {
-          const logicalCode = e.code === 'KeyP' ? 'Escape' : e.code;
+          const logicalCode = e.code === 'KeyP' ? 'Enter' : e.code;
           this.keys.set(logicalCode, false);
         });
       }
@@ -462,6 +575,7 @@
         const press = (button, e) => {
           e.preventDefault();
           const code = button.dataset.key;
+
           if (!this.keys.get(code)) {
             this.justPressed.add(code);
           }
@@ -477,9 +591,12 @@
         };
 
         for (const button of this.mobileButtons) {
+          // Touch listeners for phones/tablets.
           button.addEventListener('touchstart', (e) => press(button, e), { passive: false });
           button.addEventListener('touchend', (e) => release(button, e), { passive: false });
           button.addEventListener('touchcancel', (e) => release(button, e), { passive: false });
+
+          // Mouse listeners are still useful for desktop testing.
           button.addEventListener('mousedown', (e) => press(button, e));
           button.addEventListener('mouseup', (e) => release(button, e));
           button.addEventListener('mouseleave', (e) => release(button, e));
@@ -491,6 +608,7 @@
         const pad = pads && pads[0];
         if (!pad) return;
 
+        // Dead zone avoids unwanted analogue drift.
         const dead = 0.35;
         const gamepadStates = {
           ArrowLeft: pad.axes[0] < -dead || !!pad.buttons[14]?.pressed,
@@ -499,8 +617,10 @@
           ArrowDown: pad.axes[1] > dead || !!pad.buttons[13]?.pressed,
           KeyZ: !!pad.buttons[0]?.pressed,
           KeyX: !!pad.buttons[1]?.pressed,
+          KeyA: !!pad.buttons[2]?.pressed,
+          KeyS: !!pad.buttons[3]?.pressed,
+          ShiftLeft: !!pad.buttons[8]?.pressed,
           Enter: !!pad.buttons[9]?.pressed,
-          Escape: !!pad.buttons[8]?.pressed,
         };
 
         for (const [code, pressed] of Object.entries(gamepadStates)) {
@@ -535,12 +655,15 @@
       enter(engine) {
         this.player = {
           x: 232,
-          y: 127,
+          y: 232,
           w: 16,
           h: 16,
           speed: 96,
           drawing: false,
           altAction: false,
+          extraX: false,
+          extraY: false,
+          selecting: false,
           paused: false,
           trail: [],
         };
@@ -551,9 +674,13 @@
         const input = engine.input;
         const p = this.player;
 
-        if (input.pressed('Escape')) {
+        // Start toggles pause. Keyboard P is treated as Start by the input layer.
+        if (input.pressed('Enter')) {
           p.paused = !p.paused;
         }
+
+        // Select is a real input now, ready for future inventory/menu/secondary uses.
+        p.selecting = input.down('ShiftLeft');
 
         if (!p.paused) {
           if (input.down('ArrowLeft')) p.x -= p.speed * dt;
@@ -561,11 +688,14 @@
           if (input.down('ArrowUp')) p.y -= p.speed * dt;
           if (input.down('ArrowDown')) p.y += p.speed * dt;
 
+          // Clamp the player to the visible game area.
           p.x = Math.max(8, Math.min(engine.baseWidth - 8 - p.w, p.x));
           p.y = Math.max(8, Math.min(engine.baseHeight - 8 - p.h, p.y));
 
           p.drawing = input.down('KeyZ');
           p.altAction = input.down('KeyX');
+          p.extraX = input.down('KeyA');
+          p.extraY = input.down('KeyS');
 
           if (p.drawing) {
             p.trail.push({
@@ -583,21 +713,32 @@
         } else {
           p.drawing = false;
           p.altAction = false;
+          p.extraX = false;
+          p.extraY = false;
         }
 
+        // Status text now reports Start / Select explicitly so games can rely on them later.
         const statusText = p.paused
           ? 'STATUS: PAUSED'
-          : p.altAction
-            ? 'STATUS: BUTTON B HELD'
-            : p.drawing
-              ? 'STATUS: DRAWING'
-              : 'STATUS: READY';
+          : p.selecting
+            ? 'STATUS: SELECT HELD'
+            : p.altAction
+              ? 'STATUS: BUTTON B HELD'
+              : p.drawing
+                ? 'STATUS: BUTTON A HELD'
+                : p.extraX
+                  ? 'STATUS: BUTTON X HELD'
+                  : p.extraY
+                    ? 'STATUS: BUTTON Y HELD'
+                    : 'STATUS: READY';
 
         const instructionsText = p.paused
-          ? 'PRESS THE PAUSE BUTTON OR P OR ESC AGAIN TO RESUME.'
-          : p.altAction
-            ? 'B CAN TRIGGER A SECOND ACTION, MENU, BOMB, OR CANCEL LATER.'
-            : 'ARROWS OR DPAD TO MOVE. HOLD A TO DRAW. PRESS P TO PAUSE.';
+          ? 'PRESS START AGAIN TO RESUME. SELECT IS AVAILABLE FOR SECONDARY FUNCTIONS.'
+          : p.selecting
+            ? 'SELECT IS CURRENTLY ACTIVE. YOU CAN REUSE IT FOR MAP, INVENTORY, OR MODE SWITCHES.'
+            : p.altAction
+              ? 'B CAN TRIGGER A SECOND ACTION, MENU, BOMB, OR CANCEL LATER.'
+              : 'ARROWS OR DPAD TO MOVE. HOLD A TO DRAW. START PAUSES. SELECT IS AVAILABLE FOR SECONDARY FUNCTIONS.';
 
         engine.setStatus(statusText);
         engine.setInstructions(instructionsText);
@@ -629,7 +770,16 @@
           ctx.fillRect(Math.round(t.x - 1), Math.round(t.y - 1), 3, 3);
         }
 
-        ctx.fillStyle = p.paused ? '#9ba7a7' : p.altAction ? '#ff9f57' : p.drawing ? '#ff7070' : '#57ff93';
+        // The player colour reflects current action state. */
+        ctx.fillStyle = p.paused
+          ? '#9ba7a7'
+          : p.selecting
+            ? '#9f7cff'
+            : p.altAction
+              ? '#ff9f57'
+              : p.drawing
+                ? '#ff7070'
+                : '#57ff93';
         ctx.fillRect(Math.round(p.x), Math.round(p.y), p.w, p.h);
 
         ctx.fillStyle = '#b7ffd0';
@@ -649,7 +799,7 @@
     class GameEngine {
       constructor(options = {}) {
         this.baseWidth = options.baseWidth || 480;
-        this.baseHeight = options.baseHeight || 270;
+        this.baseHeight = options.baseHeight || 480;
         this.maxScale = options.maxScale || 6;
         this.canvas = options.canvas;
         this.ctx = this.canvas.getContext('2d', { alpha: false });
@@ -684,6 +834,7 @@
         this.canvas.style.width = `${this.baseWidth * this.currentScale}px`;
         this.canvas.style.height = `${this.baseHeight * this.currentScale}px`;
 
+        // Scale the context so game code still draws in logical pixels.
         this.ctx.setTransform(internalScale, 0, 0, internalScale, 0, 0);
         this.ctx.imageSmoothingEnabled = false;
       }
@@ -740,18 +891,20 @@
     }
 
     function runLayoutTests() {
+      // Lightweight assertions make layout regressions easier to spot.
       console.assert(document.getElementById('topBar'), 'top bar should exist');
       console.assert(document.getElementById('statusInner'), 'status box should exist');
       console.assert(document.getElementById('instructionsBox'), 'instructions box should exist');
       console.assert(document.getElementById('actionPad'), 'action pad should exist');
       console.assert(document.getElementById('utilityPad'), 'utility pad should exist');
+      console.assert(document.getElementById('reverseToggle'), 'reverse toggle should exist');
       console.assert(
-        document.querySelectorAll('#rightControls [data-key]').length === 2,
-        'right side should have two visible action buttons'
+        document.querySelectorAll('#rightControls [data-key]').length === 4,
+        'right side should have four visible face buttons'
       );
       console.assert(
-        document.querySelectorAll('#centerControls [data-key]').length === 1,
-        'centre strip should have one visible pause button'
+        document.querySelectorAll('#centerControls [data-key]').length === 2,
+        'centre strip should have Start and Select buttons'
       );
       console.assert(
         document.querySelectorAll('#leftControls [data-key]').length === 4,
@@ -759,31 +912,101 @@
       );
     }
 
+    function runReverseLayoutTests() {
+      // Verify the label-toggle class is applied and removed correctly.
+      const actionPad = document.getElementById('actionPad');
+      console.assert(actionPad, 'action pad must exist for reverse-layout tests');
+
+      applyReverseLayout(false);
+      console.assert(!actionPad.classList.contains('reversed'), 'action pad should not be reversed by default');
+
+      applyReverseLayout(true);
+      console.assert(actionPad.classList.contains('reversed'), 'action pad should be reversed when enabled');
+
+      applyReverseLayout(false);
+      console.assert(!actionPad.classList.contains('reversed'), 'action pad should return to normal when disabled');
+    }
+
+    function runMenuOverlayTests() {
+      const app = document.getElementById('app');
+      const menuPanel = document.getElementById('menuPanel');
+      console.assert(getComputedStyle(app).position === 'relative', 'app should anchor overlay menu positioning');
+      console.assert(getComputedStyle(menuPanel).position === 'absolute', 'menu panel should overlay instead of affecting layout flow');
+      console.assert(Number.parseInt(getComputedStyle(menuPanel).zIndex || '0', 10) > 0, 'menu panel should sit above other content');
+    }
+
+    function runUtilityInputTests() {
+      // Verify Start / Select buttons exist and map to the intended logical inputs.
+      const utilityButtons = [...document.querySelectorAll('#utilityPad [data-key]')].map((el) => el.dataset.key);
+      console.assert(utilityButtons.includes('Enter'), 'utility strip should expose Start via Enter');
+      console.assert(utilityButtons.includes('ShiftLeft'), 'utility strip should expose Select via ShiftLeft');
+    }
+
+    function applyReverseLayout(enabled) {
+      const actionPad = document.getElementById('actionPad');
+      actionPad.classList.toggle('reversed', enabled);
+      localStorage.setItem('reverseButtons', enabled ? '1' : '0');
+    }
+
     function wireTopButtons(engine) {
-      document.getElementById('menuButton').addEventListener('click', () => {
-        engine.setStatus('STATUS: MENU BUTTON PRESSED');
+      const menuButton = document.getElementById('menuButton');
+      const closeButton = document.getElementById('closeButton');
+      const menuPanel = document.getElementById('menuPanel');
+      const toggle = document.getElementById('reverseToggle');
+
+      // Close the popup when clicking/tapping outside it.
+      document.addEventListener('pointerdown', (event) => {
+        const clickedMenuButton = menuButton.contains(event.target);
+        const clickedInsideMenu = menuPanel.contains(event.target);
+        if (!menuPanel.hidden && !clickedMenuButton && !clickedInsideMenu) {
+          menuPanel.hidden = true;
+          engine.setStatus('STATUS: READY');
+        }
       });
 
-      document.getElementById('closeButton').addEventListener('click', () => {
+      menuButton.addEventListener('click', () => {
+        menuPanel.hidden = !menuPanel.hidden;
+        engine.setStatus(menuPanel.hidden ? 'STATUS: READY' : 'STATUS: MENU OPEN');
+      });
+
+      closeButton.addEventListener('click', () => {
         engine.setStatus('STATUS: CLOSE BUTTON PRESSED');
+      });
+
+      toggle.addEventListener('change', () => {
+        applyReverseLayout(toggle.checked);
+        engine.setStatus(toggle.checked ? 'STATUS: BUTTONS REVERSED' : 'STATUS: NORMAL BUTTONS');
       });
     }
 
     function boot() {
       runLayoutTests();
+      runReverseLayoutTests();
+      runMenuOverlayTests();
+      runUtilityInputTests();
+
       const engine = new GameEngine({
         canvas: document.getElementById('game'),
         baseWidth: 480,
-        baseHeight: 480, /*  270, */
+        baseHeight: 480,
         maxScale: 6,
       });
 
+      const saved = localStorage.getItem('reverseButtons') === '1';
+      const toggle = document.getElementById('reverseToggle');
+      if (toggle) {
+        toggle.checked = saved;
+      }
+      applyReverseLayout(saved);
+
       engine.setTitle('RETRO FRAMEWORK DEMO');
       engine.setStatus('STATUS: READY');
-      engine.setInstructions('ARROWS OR DPAD TO MOVE. HOLD A TO DRAW. PRESS P TO PAUSE.');
+      engine.setInstructions('ARROWS OR DPAD TO MOVE. HOLD A TO DRAW. START PAUSES. SELECT IS AVAILABLE FOR SECONDARY FUNCTIONS.');
       wireTopButtons(engine);
       engine.setScene(new DemoScene());
       engine.start();
+
+      // Expose the engine in dev tools for quick experiments.
       window.framework = engine;
     }
 
