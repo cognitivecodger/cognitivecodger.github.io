@@ -1,0 +1,659 @@
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
+import { Download, Eraser, Grid3X3, MousePointer2, Palette, PenLine, Save, Trash2, Upload } from "lucide-react";
+
+const DEFAULT_COLORS = [
+  "#ffffff",
+  "#000000",
+  "#ef4444",
+  "#f97316",
+  "#eab308",
+  "#22c55e",
+  "#06b6d4",
+  "#3b82f6",
+  "#8b5cf6",
+  "#ec4899",
+];
+
+const CANVAS_WIDTH = 1000;
+const CANVAS_HEIGHT = 700;
+const FILE_VERSION = 1;
+
+function uid() {
+  return Math.random().toString(36).slice(2, 10);
+}
+
+function snapValue(value, step) {
+  return Math.round(value / step) * step;
+}
+
+function getMousePosition(evt, svgEl) {
+  const rect = svgEl.getBoundingClientRect();
+  const scaleX = CANVAS_WIDTH / rect.width;
+  const scaleY = CANVAS_HEIGHT / rect.height;
+  return {
+    x: (evt.clientX - rect.left) * scaleX,
+    y: (evt.clientY - rect.top) * scaleY,
+  };
+}
+
+function makeSvgMarkup({ shapes, width, height, gridSize, subDivisions, showGrid, background }) {
+  const step = gridSize / Math.max(1, subDivisions);
+  const subGridLines = [];
+  const majorGridLines = [];
+
+  if (showGrid) {
+    for (let x = 0; x <= width; x += step) {
+      const major = x % gridSize === 0;
+      const stroke = major ? "rgba(148,163,184,0.55)" : "rgba(148,163,184,0.18)";
+      const arr = `<line x1="${x}" y1="0" x2="${x}" y2="${height}" stroke="${stroke}" stroke-width="1" />`;
+      if (major) majorGridLines.push(arr);
+      else subGridLines.push(arr);
+    }
+    for (let y = 0; y <= height; y += step) {
+      const major = y % gridSize === 0;
+      const stroke = major ? "rgba(148,163,184,0.55)" : "rgba(148,163,184,0.18)";
+      const arr = `<line x1="0" y1="${y}" x2="${width}" y2="${y}" stroke="${stroke}" stroke-width="1" />`;
+      if (major) majorGridLines.push(arr);
+      else subGridLines.push(arr);
+    }
+  }
+
+  const shapeMarkup = shapes
+    .map((shape) => {
+      const common = `stroke="${shape.color}" stroke-width="${shape.strokeWidth}" fill="none" stroke-linecap="round" stroke-linejoin="round"`;
+      if (shape.type === "line") {
+        return `<line x1="${shape.x1}" y1="${shape.y1}" x2="${shape.x2}" y2="${shape.y2}" ${common} />`;
+      }
+      if (shape.type === "rect") {
+        const x = Math.min(shape.x1, shape.x2);
+        const y = Math.min(shape.y1, shape.y2);
+        const w = Math.abs(shape.x2 - shape.x1);
+        const h = Math.abs(shape.y2 - shape.y1);
+        return `<rect x="${x}" y="${y}" width="${w}" height="${h}" ${common} />`;
+      }
+      if (shape.type === "polyline") {
+        const points = shape.points.map((p) => `${p.x},${p.y}`).join(" ");
+        return `<polyline points="${points}" ${common} />`;
+      }
+      return "";
+    })
+    .join("\n");
+
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+  <rect x="0" y="0" width="${width}" height="${height}" fill="${background}" />
+  ${subGridLines.join("\n")}
+  ${majorGridLines.join("\n")}
+  ${shapeMarkup}
+</svg>`;
+}
+
+function downloadTextFile(filename, content, mimeType) {
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function downloadBlob(filename, blob) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+export default function SimpleGridEditor() {
+  const svgRef = useRef(null);
+  const fileInputRef = useRef(null);
+  const [tool, setTool] = useState("line");
+  const [gridSize, setGridSize] = useState(40);
+  const [subDivisions, setSubDivisions] = useState(2);
+  const [showGrid, setShowGrid] = useState(true);
+  const [snapToGrid, setSnapToGrid] = useState(true);
+  const [strokeWidth, setStrokeWidth] = useState(3);
+  const [color, setColor] = useState("#06b6d4");
+  const [background, setBackground] = useState("#0f172a");
+  const [shapes, setShapes] = useState([]);
+  const [previewShape, setPreviewShape] = useState(null);
+  const [draftPolyline, setDraftPolyline] = useState([]);
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [startPoint, setStartPoint] = useState(null);
+  const [filename, setFilename] = useState("grid-drawing");
+  const [selectedId, setSelectedId] = useState(null);
+
+  const snapStep = useMemo(() => {
+    return snapToGrid ? gridSize / Math.max(1, subDivisions) : 1;
+  }, [gridSize, subDivisions, snapToGrid]);
+
+  const normalisePoint = useCallback(
+    (point) => ({
+      x: snapValue(point.x, snapStep),
+      y: snapValue(point.y, snapStep),
+    }),
+    [snapStep]
+  );
+
+  const handlePointerDown = useCallback(
+    (evt) => {
+      if (!svgRef.current) return;
+      const raw = getMousePosition(evt, svgRef.current);
+      const point = normalisePoint(raw);
+
+      if (tool === "select") {
+        setSelectedId(null);
+        return;
+      }
+
+      if (tool === "polyline") {
+        if (evt.detail === 2) {
+          if (draftPolyline.length >= 2) {
+            const newShape = {
+              id: uid(),
+              type: "polyline",
+              points: [...draftPolyline, point],
+              color,
+              strokeWidth,
+            };
+            setShapes((prev) => [...prev, newShape]);
+          }
+          setDraftPolyline([]);
+          setPreviewShape(null);
+          return;
+        }
+
+        setDraftPolyline((prev) => {
+          const next = [...prev, point];
+          return next;
+        });
+        return;
+      }
+
+      setIsDrawing(true);
+      setStartPoint(point);
+      setPreviewShape({
+        id: "preview",
+        type: tool,
+        x1: point.x,
+        y1: point.y,
+        x2: point.x,
+        y2: point.y,
+        color,
+        strokeWidth,
+      });
+    },
+    [tool, normalisePoint, color, strokeWidth, draftPolyline]
+  );
+
+  const handlePointerMove = useCallback(
+    (evt) => {
+      if (!svgRef.current) return;
+      const raw = getMousePosition(evt, svgRef.current);
+      const point = normalisePoint(raw);
+
+      if (tool === "polyline" && draftPolyline.length > 0) {
+        setPreviewShape({
+          id: "preview-polyline",
+          type: "polyline",
+          points: [...draftPolyline, point],
+          color,
+          strokeWidth,
+        });
+        return;
+      }
+
+      if (!isDrawing || !startPoint) return;
+
+      setPreviewShape({
+        id: "preview",
+        type: tool,
+        x1: startPoint.x,
+        y1: startPoint.y,
+        x2: point.x,
+        y2: point.y,
+        color,
+        strokeWidth,
+      });
+    },
+    [normalisePoint, tool, draftPolyline, color, strokeWidth, isDrawing, startPoint]
+  );
+
+  const handlePointerUp = useCallback(
+    (evt) => {
+      if (!isDrawing || !startPoint || !svgRef.current) return;
+
+      const raw = getMousePosition(evt, svgRef.current);
+      const point = normalisePoint(raw);
+      const next = {
+        id: uid(),
+        type: tool,
+        x1: startPoint.x,
+        y1: startPoint.y,
+        x2: point.x,
+        y2: point.y,
+        color,
+        strokeWidth,
+      };
+
+      const samePoint = next.x1 === next.x2 && next.y1 === next.y2;
+      if (!samePoint) {
+        setShapes((prev) => [...prev, next]);
+      }
+
+      setIsDrawing(false);
+      setStartPoint(null);
+      setPreviewShape(null);
+    },
+    [isDrawing, startPoint, normalisePoint, tool, color, strokeWidth]
+  );
+
+  const handleUndo = useCallback(() => {
+    if (draftPolyline.length > 0) {
+      setDraftPolyline((prev) => prev.slice(0, -1));
+      return;
+    }
+    setShapes((prev) => prev.slice(0, -1));
+  }, [draftPolyline.length]);
+
+  const handleClear = useCallback(() => {
+    setShapes([]);
+    setDraftPolyline([]);
+    setPreviewShape(null);
+    setSelectedId(null);
+  }, []);
+
+  const deleteSelected = useCallback(() => {
+    if (!selectedId) return;
+    setShapes((prev) => prev.filter((shape) => shape.id !== selectedId));
+    setSelectedId(null);
+  }, [selectedId]);
+
+  const projectData = useMemo(
+    () => ({
+      type: "simple-grid-editor-project",
+      version: FILE_VERSION,
+      canvas: {
+        width: CANVAS_WIDTH,
+        height: CANVAS_HEIGHT,
+        background,
+        gridSize,
+        subDivisions,
+        showGrid,
+      },
+      shapes,
+    }),
+    [background, gridSize, subDivisions, showGrid, shapes]
+  );
+
+  const handleSaveProject = useCallback(() => {
+    downloadTextFile(`${filename || "grid-drawing"}.grid.json`, JSON.stringify(projectData, null, 2), "application/json");
+  }, [filename, projectData]);
+
+  const handleExportSvg = useCallback(() => {
+    const markup = makeSvgMarkup({
+      shapes,
+      width: CANVAS_WIDTH,
+      height: CANVAS_HEIGHT,
+      gridSize,
+      subDivisions,
+      showGrid,
+      background,
+    });
+    downloadTextFile(`${filename || "grid-drawing"}.svg`, markup, "image/svg+xml");
+  }, [shapes, gridSize, subDivisions, showGrid, background, filename]);
+
+  const handleExportPng = useCallback(async () => {
+    const markup = makeSvgMarkup({
+      shapes,
+      width: CANVAS_WIDTH,
+      height: CANVAS_HEIGHT,
+      gridSize,
+      subDivisions,
+      showGrid,
+      background,
+    });
+
+    const blob = new Blob([markup], { type: "image/svg+xml;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = CANVAS_WIDTH;
+      canvas.height = CANVAS_HEIGHT;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+      ctx.drawImage(img, 0, 0);
+      canvas.toBlob((pngBlob) => {
+        if (pngBlob) {
+          downloadBlob(`${filename || "grid-drawing"}.png`, pngBlob);
+        }
+      }, "image/png");
+      URL.revokeObjectURL(url);
+    };
+    img.src = url;
+  }, [shapes, gridSize, subDivisions, showGrid, background, filename]);
+
+  const handleLoadProject = useCallback((evt) => {
+    const file = evt.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const parsed = JSON.parse(String(reader.result));
+        if (parsed?.type !== "simple-grid-editor-project") {
+          throw new Error("Not a valid project file.");
+        }
+        setShapes(Array.isArray(parsed.shapes) ? parsed.shapes : []);
+        setBackground(parsed.canvas?.background || "#0f172a");
+        setGridSize(parsed.canvas?.gridSize || 40);
+        setSubDivisions(parsed.canvas?.subDivisions || 2);
+        setShowGrid(parsed.canvas?.showGrid ?? true);
+        setDraftPolyline([]);
+        setPreviewShape(null);
+        setSelectedId(null);
+      } catch (error) {
+        alert("Could not load that file.");
+      }
+    };
+    reader.readAsText(file);
+    evt.target.value = "";
+  }, []);
+
+  useEffect(() => {
+    const onKeyDown = (evt) => {
+      if ((evt.ctrlKey || evt.metaKey) && evt.key.toLowerCase() === "z") {
+        evt.preventDefault();
+        handleUndo();
+      }
+      if (evt.key === "Escape") {
+        setDraftPolyline([]);
+        setPreviewShape(null);
+        setIsDrawing(false);
+        setStartPoint(null);
+      }
+      if (evt.key === "Delete" || evt.key === "Backspace") {
+        deleteSelected();
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [handleUndo, deleteSelected]);
+
+  const renderShape = (shape, isPreview = false) => {
+    const selected = shape.id === selectedId;
+    const opacity = isPreview ? 0.75 : 1;
+    const commonProps = {
+      stroke: shape.color,
+      strokeWidth: shape.strokeWidth,
+      fill: "none",
+      strokeLinecap: "round",
+      strokeLinejoin: "round",
+      opacity,
+      onClick: (evt) => {
+        evt.stopPropagation();
+        if (tool === "select") setSelectedId(shape.id);
+      },
+    };
+
+    if (shape.type === "line") {
+      return (
+        <g key={shape.id}>
+          <line x1={shape.x1} y1={shape.y1} x2={shape.x2} y2={shape.y2} {...commonProps} />
+          {selected && (
+            <line
+              x1={shape.x1}
+              y1={shape.y1}
+              x2={shape.x2}
+              y2={shape.y2}
+              stroke="#f8fafc"
+              strokeWidth={shape.strokeWidth + 4}
+              opacity={0.25}
+            />
+          )}
+        </g>
+      );
+    }
+
+    if (shape.type === "rect") {
+      const x = Math.min(shape.x1, shape.x2);
+      const y = Math.min(shape.y1, shape.y2);
+      const width = Math.abs(shape.x2 - shape.x1);
+      const height = Math.abs(shape.y2 - shape.y1);
+      return (
+        <g key={shape.id}>
+          <rect x={x} y={y} width={width} height={height} {...commonProps} />
+          {selected && <rect x={x} y={y} width={width} height={height} stroke="#f8fafc" strokeWidth={5} opacity={0.25} fill="none" />}
+        </g>
+      );
+    }
+
+    if (shape.type === "polyline") {
+      const points = shape.points.map((p) => `${p.x},${p.y}`).join(" ");
+      return (
+        <g key={shape.id}>
+          <polyline points={points} {...commonProps} />
+          {selected && <polyline points={points} stroke="#f8fafc" strokeWidth={shape.strokeWidth + 4} opacity={0.25} fill="none" />}
+        </g>
+      );
+    }
+
+    return null;
+  };
+
+  const subGridStep = gridSize / Math.max(1, subDivisions);
+  const verticalLines = [];
+  const horizontalLines = [];
+  for (let x = 0; x <= CANVAS_WIDTH; x += subGridStep) {
+    const major = x % gridSize === 0;
+    verticalLines.push(
+      <line
+        key={`vx-${x}`}
+        x1={x}
+        y1={0}
+        x2={x}
+        y2={CANVAS_HEIGHT}
+        stroke={major ? "rgba(148,163,184,0.55)" : "rgba(148,163,184,0.18)"}
+        strokeWidth={1}
+      />
+    );
+  }
+  for (let y = 0; y <= CANVAS_HEIGHT; y += subGridStep) {
+    const major = y % gridSize === 0;
+    horizontalLines.push(
+      <line
+        key={`hy-${y}`}
+        x1={0}
+        y1={y}
+        x2={CANVAS_WIDTH}
+        y2={y}
+        stroke={major ? "rgba(148,163,184,0.55)" : "rgba(148,163,184,0.18)"}
+        strokeWidth={1}
+      />
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-slate-950 text-slate-100 p-4 md:p-6">
+      <div className="mx-auto grid max-w-7xl gap-4 lg:grid-cols-[320px_1fr]">
+        <Card className="rounded-2xl border-slate-800 bg-slate-900 shadow-xl">
+          <CardHeader>
+            <CardTitle className="text-xl">Simple Grid Editor</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="space-y-2">
+              <Label>Project name</Label>
+              <Input value={filename} onChange={(e) => setFilename(e.target.value)} className="border-slate-700 bg-slate-950" />
+            </div>
+
+            <div className="space-y-3">
+              <Label>Tool</Label>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  ["select", "Select", MousePointer2],
+                  ["line", "Line", PenLine],
+                  ["rect", "Rect", Grid3X3],
+                  ["polyline", "Path", PenLine],
+                ].map(([value, label, Icon]) => (
+                  <Button
+                    key={value}
+                    variant={tool === value ? "default" : "outline"}
+                    className="justify-start rounded-xl"
+                    onClick={() => {
+                      setTool(value);
+                      setSelectedId(null);
+                    }}
+                  >
+                    <Icon className="mr-2 h-4 w-4" />
+                    {label}
+                  </Button>
+                ))}
+              </div>
+              {tool === "polyline" && <p className="text-sm text-slate-400">Click to place points. Double-click to finish the path.</p>}
+            </div>
+
+            <div className="space-y-3">
+              <Label>Colour</Label>
+              <div className="flex items-center gap-3">
+                <Input type="color" value={color} onChange={(e) => setColor(e.target.value)} className="h-12 w-16 border-slate-700 bg-slate-950 p-1" />
+                <Input value={color} onChange={(e) => setColor(e.target.value)} className="border-slate-700 bg-slate-950" />
+              </div>
+              <div className="grid grid-cols-5 gap-2">
+                {DEFAULT_COLORS.map((swatch) => (
+                  <button
+                    key={swatch}
+                    type="button"
+                    aria-label={`Use ${swatch}`}
+                    onClick={() => setColor(swatch)}
+                    className="h-10 rounded-xl border border-slate-700"
+                    style={{ backgroundColor: swatch }}
+                  />
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <Label>Stroke width: {strokeWidth}px</Label>
+              <Slider value={[strokeWidth]} min={1} max={12} step={1} onValueChange={(v) => setStrokeWidth(v[0])} />
+            </div>
+
+            <div className="space-y-3">
+              <Label>Grid size: {gridSize}px</Label>
+              <Slider value={[gridSize]} min={10} max={100} step={5} onValueChange={(v) => setGridSize(v[0])} />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Sub-grid divisions</Label>
+              <Select value={String(subDivisions)} onValueChange={(v) => setSubDivisions(Number(v))}>
+                <SelectTrigger className="border-slate-700 bg-slate-950">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1">1 (no sub-grid)</SelectItem>
+                  <SelectItem value="2">2</SelectItem>
+                  <SelectItem value="4">4</SelectItem>
+                  <SelectItem value="5">5</SelectItem>
+                  <SelectItem value="8">8</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-3">
+              <Label>Background</Label>
+              <div className="flex items-center gap-3">
+                <Input type="color" value={background} onChange={(e) => setBackground(e.target.value)} className="h-12 w-16 border-slate-700 bg-slate-950 p-1" />
+                <Input value={background} onChange={(e) => setBackground(e.target.value)} className="border-slate-700 bg-slate-950" />
+              </div>
+            </div>
+
+            <div className="space-y-3 rounded-2xl border border-slate-800 p-4">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="show-grid">Show grid</Label>
+                <Switch id="show-grid" checked={showGrid} onCheckedChange={setShowGrid} />
+              </div>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="snap-grid">Snap to grid</Label>
+                <Switch id="snap-grid" checked={snapToGrid} onCheckedChange={setSnapToGrid} />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <Button variant="outline" className="rounded-xl" onClick={handleUndo}>
+                <Eraser className="mr-2 h-4 w-4" />
+                Undo
+              </Button>
+              <Button variant="outline" className="rounded-xl" onClick={handleClear}>
+                <Trash2 className="mr-2 h-4 w-4" />
+                Clear
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-1 gap-2">
+              <Button className="rounded-xl" onClick={handleSaveProject}>
+                <Save className="mr-2 h-4 w-4" />
+                Save project JSON
+              </Button>
+              <Button variant="outline" className="rounded-xl" onClick={() => fileInputRef.current?.click()}>
+                <Upload className="mr-2 h-4 w-4" />
+                Load project JSON
+              </Button>
+              <input ref={fileInputRef} type="file" accept=".json,.grid.json,application/json" className="hidden" onChange={handleLoadProject} />
+              <Button variant="outline" className="rounded-xl" onClick={handleExportSvg}>
+                <Download className="mr-2 h-4 w-4" />
+                Export SVG
+              </Button>
+              <Button variant="outline" className="rounded-xl" onClick={handleExportPng}>
+                <Download className="mr-2 h-4 w-4" />
+                Export PNG
+              </Button>
+            </div>
+
+            <div className="rounded-2xl border border-slate-800 bg-slate-950 p-4 text-sm text-slate-400">
+              <p><span className="text-slate-200">Tips:</span> Ctrl/Cmd+Z undoes. Escape cancels current drawing. Delete removes the selected shape.</p>
+              <p className="mt-2">For editable work, save as JSON. For sharing or other apps, export SVG or PNG.</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="rounded-2xl border-slate-800 bg-slate-900 shadow-xl">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-xl"><Palette className="h-5 w-5" /> Canvas</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-auto rounded-2xl border border-slate-800 bg-slate-950 p-3">
+              <svg
+                ref={svgRef}
+                viewBox={`0 0 ${CANVAS_WIDTH} ${CANVAS_HEIGHT}`}
+                className="h-auto w-full cursor-crosshair rounded-xl bg-slate-950"
+                onMouseDown={handlePointerDown}
+                onMouseMove={handlePointerMove}
+                onMouseUp={handlePointerUp}
+                onClick={() => {
+                  if (tool !== "select") setSelectedId(null);
+                }}
+              >
+                <rect x="0" y="0" width={CANVAS_WIDTH} height={CANVAS_HEIGHT} fill={background} />
+                {showGrid && verticalLines}
+                {showGrid && horizontalLines}
+                {shapes.map((shape) => renderShape(shape))}
+                {previewShape && renderShape(previewShape, true)}
+              </svg>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}
