@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DnD Dice Roller</title>
+  <style>
+    :root {
+      --bg: #0f0b14;
+      --panel: rgba(30, 21, 43, 0.94);
+      --panel-border: #6f5a8f;
+      --gold: #d9b86a;
+      --text: #efe6d2;
+      --muted: #b9aa8d;
+      --danger: #d66b6b;
+      --success: #8fd98a;
+      --shadow: rgba(0, 0, 0, 0.45);
+      --roll-duration: 820ms;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Georgia, "Times New Roman", serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top, rgba(161, 76, 255, 0.16), transparent 30%),
+        radial-gradient(circle at bottom right, rgba(111, 209, 255, 0.12), transparent 25%),
+        linear-gradient(180deg, var(--bg) 0%, #09070d 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .app {
+      width: min(1200px, 100%);
+      background: linear-gradient(180deg, rgba(38, 26, 53, 0.96), rgba(18, 13, 27, 0.96));
+      border: 2px solid var(--panel-border);
+      border-radius: 24px;
+      box-shadow: 0 18px 60px var(--shadow), inset 0 0 0 1px rgba(255,255,255,0.05);
+      overflow: hidden;
+    }
+
+    .header {
+      padding: 26px 24px 18px;
+      text-align: center;
+      border-bottom: 1px solid rgba(217, 184, 106, 0.25);
+      background: linear-gradient(180deg, rgba(217, 184, 106, 0.08), rgba(0,0,0,0));
+    }
+
+    .title {
+      margin: 0;
+      font-size: clamp(2rem, 4vw, 3rem);
+      letter-spacing: 0.08em;
+      color: var(--gold);
+      text-shadow: 0 0 14px rgba(217, 184, 106, 0.24);
+    }
+
+    .subtitle {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 1rem;
+    }
+
+    .content {
+      display: grid;
+      grid-template-columns: 180px minmax(0, 1fr);
+      gap: 20px;
+      padding: 20px;
+      align-items: start;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid rgba(217, 184, 106, 0.18);
+      border-radius: 20px;
+      padding: 18px;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.03);
+    }
+
+    .panel h2 {
+      margin: 0 0 14px;
+      font-size: 1.2rem;
+      color: var(--gold);
+      letter-spacing: 0.04em;
+    }
+
+    .dice-panel {
+      padding: 16px 12px;
+      position: sticky;
+      top: 20px;
+    }
+
+    .dice-panel h2 {
+      text-align: center;
+      margin-bottom: 12px;
+    }
+
+    .dice-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .main-column {
+      display: grid;
+      gap: 20px;
+    }
+
+    .top-row {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .die-btn {
+      appearance: none;
+      border: 1px solid rgba(217, 184, 106, 0.2);
+      background: rgba(255,255,255,0.02);
+      color: var(--text);
+      border-radius: 18px;
+      padding: 8px;
+      font: inherit;
+      cursor: pointer;
+      transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease, background 0.12s ease, opacity 0.12s ease;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 86px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .die-btn:hover,
+    .die-btn:focus-visible {
+      transform: translateY(-2px);
+      border-color: var(--gold);
+      background: rgba(217, 184, 106, 0.05);
+      box-shadow: 0 10px 18px rgba(0,0,0,0.3), 0 0 0 2px rgba(217, 184, 106, 0.12);
+      outline: none;
+    }
+
+    .die-btn:active { transform: translateY(0); }
+
+    .die-btn:disabled,
+    .mod-btn:disabled,
+    .add-mod-btn:disabled,
+    .action-btn:disabled,
+    input:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .die-btn.rolling { animation: dieWobble var(--roll-duration) ease-in-out; }
+
+    .die-svg {
+      width: 72px;
+      height: 72px;
+      filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.35));
+      flex: 0 0 auto;
+      overflow: visible;
+    }
+
+    .die-svg .face-main { stroke-width: 3; }
+
+    .die-svg .face-highlight {
+      fill: rgba(255, 255, 255, 0.16);
+      stroke: rgba(255, 255, 255, 0.28);
+      stroke-width: 1.2;
+    }
+
+    .die-svg text {
+      fill: #1b1022;
+      font-family: Georgia, "Times New Roman", serif;
+      font-weight: 700;
+      text-anchor: middle;
+      dominant-baseline: middle;
+      paint-order: stroke;
+      stroke: rgba(255, 244, 214, 0.85);
+      stroke-width: 1.3;
+      letter-spacing: 0.02em;
+      user-select: none;
+      pointer-events: none;
+    }
+
+    .controls {
+      display: grid;
+      gap: 14px;
+    }
+
+    .modifier-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      padding: 12px;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .modifier-row label {
+      font-weight: bold;
+      color: var(--gold);
+      letter-spacing: 0.03em;
+    }
+
+    .mod-btn {
+      appearance: none;
+      min-width: 48px;
+      border: 1px solid rgba(217, 184, 106, 0.35);
+      background: linear-gradient(180deg, rgba(88, 53, 124, 0.95), rgba(47, 29, 68, 0.95));
+      color: var(--text);
+      border-radius: 10px;
+      padding: 10px 14px;
+      font: inherit;
+      font-size: 1.1rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease, background 0.12s ease, color 0.12s ease;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+    }
+
+    .mod-btn:hover,
+    .mod-btn:focus-visible {
+      transform: translateY(-1px);
+      border-color: var(--gold);
+      outline: none;
+    }
+
+    input[type="number"] {
+      background: #120d1b;
+      color: var(--text);
+      border: 1px solid rgba(217, 184, 106, 0.32);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font: inherit;
+      width: 110px;
+      text-align: center;
+    }
+
+    .modifier-builder {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .add-mod-btn,
+    .action-btn {
+      appearance: none;
+      border: none;
+      border-radius: 14px;
+      padding: 14px 18px;
+      font: inherit;
+      font-weight: bold;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      transition: transform 0.12s ease, filter 0.12s ease, box-shadow 0.12s ease;
+    }
+
+    .add-mod-btn {
+      border-radius: 10px;
+      padding: 10px 14px;
+      color: #20130b;
+      background: linear-gradient(180deg, #f0cc7c, #b98c39);
+    }
+
+    .add-mod-btn:hover,
+    .add-mod-btn:focus-visible,
+    .action-btn:hover,
+    .action-btn:focus-visible {
+      transform: translateY(-2px);
+      filter: brightness(1.08);
+      outline: none;
+    }
+
+    .action-btn:active,
+    .add-mod-btn:active { transform: translateY(0); }
+
+    .modifier-chip-list {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+      width: 100%;
+    }
+
+    .modifier-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(217, 184, 106, 0.25);
+      color: var(--text);
+      font-weight: bold;
+    }
+
+    .remove-chip-btn {
+      appearance: none;
+      border: none;
+      background: transparent;
+      color: var(--gold);
+      font: inherit;
+      font-weight: bold;
+      cursor: pointer;
+      padding: 0;
+      line-height: 1;
+    }
+
+    .remove-chip-btn:hover,
+    .remove-chip-btn:focus-visible {
+      color: #fff3c7;
+      outline: none;
+    }
+
+    .modifier-help,
+    .hint {
+      color: var(--muted);
+      font-size: 0.95rem;
+      line-height: 1.4;
+    }
+
+    .modifier-help {
+      width: 100%;
+      margin-top: 4px;
+    }
+
+    .button-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .roll-btn {
+      color: #20130b;
+      background: linear-gradient(180deg, #f0cc7c, #b98c39);
+      flex: 1 1 180px;
+    }
+
+    .clear-btn {
+      color: var(--text);
+      background: linear-gradient(180deg, #7f3944, #592029);
+      flex: 1 1 140px;
+    }
+
+    .queue-box,
+    .result-box,
+    .history-box {
+      min-height: 78px;
+      padding: 14px;
+      border-radius: 16px;
+      background: rgba(8, 7, 14, 0.55);
+      border: 1px solid rgba(217, 184, 106, 0.16);
+    }
+
+    .queue-box-large,
+    .total {
+      font-size: clamp(1.8rem, 5vw, 2.6rem);
+      color: var(--success);
+      font-weight: bold;
+      line-height: 1.25;
+    }
+
+    .queue-die-text { font-weight: bold; }
+    .queue-mod-text { color: var(--gold); font-weight: bold; }
+
+    .queue-paren,
+    .queue-separator {
+      color: var(--text);
+      opacity: 0.9;
+    }
+
+    .queue-box-large,
+    .result-box {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .queue-box-large.rolling,
+    .result-box.rolling {
+      animation: panelPulse var(--roll-duration) ease-in-out;
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.04), 0 0 28px rgba(217, 184, 106, 0.16) inset;
+    }
+
+    .queue-box-large.rolling::after,
+    .result-box.rolling::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(120deg, transparent 0%, rgba(255,255,255,0.12) 50%, transparent 100%);
+      transform: translateX(-100%);
+      animation: shimmer var(--roll-duration) ease-in-out;
+      pointer-events: none;
+    }
+
+    .queue-box-large {
+      min-height: 120px;
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .queue-box-large .empty {
+      font-size: 1rem;
+      font-weight: normal;
+      color: var(--muted);
+    }
+
+    .result-box {
+      display: grid;
+      gap: 10px;
+    }
+
+    .formula {
+      font-size: 1.1rem;
+      line-height: 1.5;
+      word-break: break-word;
+    }
+
+    .rolling .rolling-placeholder {
+      color: var(--gold);
+      letter-spacing: 0.08em;
+      animation: flickerText 0.22s steps(2, end) infinite;
+    }
+
+    .rolled-num {
+      display: inline-block;
+      font-weight: bold;
+      animation: none;
+    }
+
+    .rolled-num.pulse { animation: resultPop 520ms ease-out; }
+
+    .total.final {
+      animation: totalPop 560ms ease-out;
+      text-shadow: 0 0 14px rgba(143, 217, 138, 0.25);
+    }
+
+    .history-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .history-item {
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.05);
+      font-size: 0.98rem;
+    }
+
+    .history-item strong { color: var(--success); }
+
+    .empty {
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    @keyframes dieWobble {
+      0% { transform: translateY(0) rotate(0deg) scale(1); }
+      18% { transform: translateY(-2px) rotate(-8deg) scale(1.03); }
+      36% { transform: translateY(1px) rotate(8deg) scale(0.99); }
+      54% { transform: translateY(-1px) rotate(-6deg) scale(1.02); }
+      72% { transform: translateY(1px) rotate(4deg) scale(0.995); }
+      100% { transform: translateY(0) rotate(0deg) scale(1); }
+    }
+
+    @keyframes panelPulse {
+      0% { transform: scale(1); }
+      28% { transform: scale(1.01); }
+      62% { transform: scale(0.998); }
+      100% { transform: scale(1); }
+    }
+
+    @keyframes shimmer {
+      0% { transform: translateX(-100%); opacity: 0; }
+      20% { opacity: 1; }
+      100% { transform: translateX(100%); opacity: 0; }
+    }
+
+    @keyframes flickerText {
+      0% { opacity: 0.45; }
+      100% { opacity: 1; }
+    }
+
+    @keyframes resultPop {
+      0% { transform: scale(0.72); filter: brightness(1.8); }
+      55% { transform: scale(1.16); filter: brightness(1.25); }
+      100% { transform: scale(1); filter: brightness(1); }
+    }
+
+    @keyframes totalPop {
+      0% { transform: scale(0.82); opacity: 0.55; }
+      55% { transform: scale(1.12); opacity: 1; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    @media (max-width: 980px) {
+      .content { grid-template-columns: 1fr; }
+      .dice-panel { position: static; }
+      .dice-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(92px, 1fr));
+      }
+      .top-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app" id="appRoot">
+    <header class="header">
+      <h1 class="title">Codger's Dice Roller</h1>
+      <p class="subtitle">Queue your dice, add modifiers, and let fate decide.</p>
+    </header>
+
+    <section class="content">
+      <section class="panel dice-panel">
+        <h2>Dice</h2>
+        <div class="dice-grid" id="diceGrid"></div>
+      </section>
+
+      <section class="main-column">
+        <section class="panel controls">
+          <h2>Roll Setup</h2>
+
+          <div class="modifier-row">
+            <label>Modifier</label>
+            <div class="modifier-builder">
+              <button class="mod-btn" id="decModBtn" type="button" aria-label="Decrease modifier">-</button>
+              <input id="modifierValue" type="number" step="1" value="0" aria-label="Modifier value" />
+              <button class="mod-btn" id="incModBtn" type="button" aria-label="Increase modifier">+</button>
+              <button class="add-mod-btn" id="addModifierBtn" type="button">Add</button>
+            </div>
+            <div class="modifier-help">Use -/+ to set the value, then Add to queue it.</div>
+            <div class="modifier-chip-list" id="modifierList">
+              <span class="empty">No modifiers added.</span>
+            </div>
+          </div>
+
+          <div class="button-row">
+            <button class="action-btn roll-btn" id="rollBtn" type="button">Roll</button>
+            <button class="action-btn clear-btn" id="clearBtn" type="button">Clear</button>
+          </div>
+        </section>
+
+        <section class="top-row">
+          <section class="panel">
+            <h2>Queued Roll</h2>
+            <div class="queue-box queue-box-large" id="queueDisplay">
+              <span class="empty">No dice or modifiers queued yet.</span>
+            </div>
+            <div class="hint">Click a die to add it once. Click it again to add another of the same type.</div>
+          </section>
+
+          <section class="panel">
+            <h2>Latest Result</h2>
+            <div class="result-box" id="resultDisplay">
+              <div class="empty">Your result will appear here.</div>
+            </div>
+          </section>
+        </section>
+
+        <section class="panel">
+          <h2>Roll History</h2>
+          <div class="history-box">
+            <div class="history-list" id="historyList">
+              <div class="empty">No rolls yet.</div>
+            </div>
+          </div>
+        </section>
+      </section>
+    </section>
+  </main>
+
+  <script>
+    (() => {
+      const diceTypes = [2, 4, 6, 8, 10, 12, 20, 100];
+      const queue = [];
+      const modifiers = [];
+      const history = [];
+
+      let isRolling = false;
+      let rollingInterval = null;
+      let rollingTimeout = null;
+      let rollingTick = 0;
+
+      const diceGrid = document.getElementById('diceGrid');
+      const queueDisplay = document.getElementById('queueDisplay');
+      const resultDisplay = document.getElementById('resultDisplay');
+      const historyList = document.getElementById('historyList');
+      const modifierList = document.getElementById('modifierList');
+      const addModifierBtn = document.getElementById('addModifierBtn');
+      const rollBtn = document.getElementById('rollBtn');
+      const clearBtn = document.getElementById('clearBtn');
+      const modifierValue = document.getElementById('modifierValue');
+      const decModBtn = document.getElementById('decModBtn');
+      const incModBtn = document.getElementById('incModBtn');
+
+      function setInputsDisabled(disabled) {
+        document.querySelectorAll('.die-btn, .mod-btn, .add-mod-btn, .action-btn').forEach((el) => {
+          el.disabled = disabled;
+        });
+        modifierValue.disabled = disabled;
+      }
+
+      function getDieColor(sides) {
+        const colorMap = {
+          2: '#ff6fa8',
+          4: '#4caf50',
+          6: '#e53935',
+          8: '#4fc3f7',
+          10: '#fdd835',
+          12: '#d7b899',
+          20: '#ffffff',
+          100: '#fb8c00'
+        };
+        return colorMap[sides] || '#888888';
+      }
+
+      function getDieSVG(sides) {
+        const color = getDieColor(sides);
+        const gradientId = `gemGradient-${sides}`;
+        const commonDefs = `
+          <defs>
+            <linearGradient id="${gradientId}" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#ffffff" stop-opacity="0.35" />
+              <stop offset="18%" stop-color="${color}" />
+              <stop offset="100%" stop-color="#140c1b" />
+            </linearGradient>
+          </defs>`;
+
+        const face = `url(#${gradientId})`;
+        const stroke = color;
+
+        const shapes = {
+          2: `
+            <ellipse class="face-main" cx="50" cy="50" rx="30" ry="22" fill="${face}" stroke="${stroke}" />
+            <ellipse class="face-highlight" cx="44" cy="42" rx="16" ry="8" />
+            <text x="50" y="51" font-size="24">D2</text>`,
+          4: `
+            <polygon class="face-main" points="50,14 18,80 82,80" fill="${face}" stroke="${stroke}" />
+            <polygon class="face-highlight" points="50,22 35,54 65,54" />
+            <text x="50" y="62" font-size="20">D4</text>`,
+          6: `
+            <rect class="face-main" x="22" y="22" width="56" height="56" rx="12" fill="${face}" stroke="${stroke}" />
+            <polygon class="face-highlight" points="28,28 70,28 62,20 36,20" />
+            <text x="50" y="51" font-size="22">D6</text>`,
+          8: `
+            <polygon class="face-main" points="50,12 80,50 50,88 20,50" fill="${face}" stroke="${stroke}" />
+            <polygon class="face-highlight" points="50,20 66,40 50,56 34,40" />
+            <text x="50" y="52" font-size="20">D8</text>`,
+          10: `
+            <polygon class="face-main" points="50,10 74,22 84,48 72,78 50,90 28,78 16,48 26,22" fill="${face}" stroke="${stroke}" />
+            <polygon class="face-highlight" points="50,18 66,28 58,48 42,48 34,28" />
+            <text x="50" y="55" font-size="17">D10</text>`,
+          12: `
+            <polygon class="face-main" points="50,8 72,14 86,32 86,56 72,78 50,92 28,78 14,56 14,32 28,14" fill="${face}" stroke="${stroke}" />
+            <polygon class="face-highlight" points="50,20 64,28 64,44 50,54 36,44 36,28" />
+            <text x="50" y="56" font-size="18">D12</text>`,
+          20: `
+            <polygon class="face-main" points="50,10 80,30 68,82 32,82 20,30" fill="${face}" stroke="${stroke}" />
+            <polygon class="face-highlight" points="50,18 61,36 39,36" />
+            <text x="50" y="58" font-size="17">D20</text>`,
+          100: `
+            <circle class="face-main" cx="50" cy="50" r="34" fill="${face}" stroke="${stroke}" />
+            <path class="face-highlight" d="M32 28 C44 20, 56 20, 68 28 C60 34, 52 40, 46 50 C40 44, 36 36, 32 28 Z" />
+            <text x="50" y="52" font-size="18">D100</text>`
+        };
+
+        return `
+          <svg class="die-svg" viewBox="0 0 100 100" aria-hidden="true">
+            ${commonDefs}
+            ${shapes[sides] || shapes[6]}
+          </svg>`;
+      }
+
+      function groupDice(diceArray) {
+        return diceArray.reduce((acc, sides) => {
+          acc[sides] = (acc[sides] || 0) + 1;
+          return acc;
+        }, {});
+      }
+
+      function getModifierTotal() {
+        return modifiers.reduce((sum, value) => sum + value, 0);
+      }
+
+      function createDiceButtons() {
+        diceTypes.forEach((sides) => {
+          const button = document.createElement('button');
+          button.className = 'die-btn';
+          button.type = 'button';
+          button.dataset.sides = String(sides);
+          button.innerHTML = getDieSVG(sides);
+          button.setAttribute('aria-label', `Add D${sides}`);
+          button.addEventListener('click', () => {
+            if (isRolling) return;
+            queue.push(sides);
+            renderQueue();
+          });
+          diceGrid.appendChild(button);
+        });
+      }
+
+      function renderQueue() {
+        const grouped = groupDice(queue);
+        const diceParts = Object.keys(grouped)
+          .map(Number)
+          .sort((a, b) => a - b)
+          .map((sides) => `<span class="queue-die-text" style="color:${getDieColor(sides)}">${grouped[sides]}d${sides}</span>`);
+
+        const modifierParts = modifiers.map((modifier) => {
+          const sign = modifier > 0 ? '+' : '-';
+          return `<span class="queue-mod-text">${sign}${Math.abs(modifier)}</span>`;
+        });
+
+        if (diceParts.length === 0 && modifierParts.length === 0) {
+          queueDisplay.innerHTML = '<span class="empty">No dice or modifiers queued yet.</span>';
+          return;
+        }
+
+        let expression = '';
+        if (diceParts.length > 0) {
+          expression += `<span class="queue-paren">(</span>${diceParts.join('<span class="queue-separator"> + </span>')}<span class="queue-paren">)</span>`;
+        }
+        if (modifierParts.length > 0) {
+          expression += (diceParts.length > 0 ? ' ' : '') + modifierParts.join(' ');
+        }
+
+        queueDisplay.innerHTML = expression;
+      }
+
+      function renderRollingPreview() {
+        rollingTick += 1;
+
+        const grouped = groupDice(queue);
+        const ordered = Object.keys(grouped).map(Number).sort((a, b) => a - b);
+
+        const dicePreview = ordered.map((sides) => {
+          const color = getDieColor(sides);
+          const values = Array.from({ length: grouped[sides] }, (_, index) => {
+            const value = ((rollingTick * 3) + (index * 2) + sides) % sides + 1;
+            return `<span class="rolled-num" style="color:${color}">${value}</span>`;
+          }).join('<span class="queue-separator"> + </span>');
+          return values;
+        }).join('<span class="queue-separator"> + </span>');
+
+        const modifierParts = modifiers
+          .map((modifier) => `<span class="queue-mod-text">${modifier > 0 ? '+' : '-'}${Math.abs(modifier)}</span>`)
+          .join(' ');
+
+        const queueExpression = [
+          dicePreview ? `<span class="queue-paren">(</span>${dicePreview}<span class="queue-paren">)</span>` : '',
+          modifierParts
+        ].filter(Boolean).join(' ');
+
+        queueDisplay.innerHTML = queueExpression || '<span class="rolling-placeholder">ROLLING...</span>';
+
+        const previewParts = [];
+        if (queue.length > 0) {
+          const fakeResults = queue
+            .map((sides, index) => {
+              const value = ((rollingTick * 5) + index + sides) % sides + 1;
+              return `<span class="rolled-num" style="color:${getDieColor(sides)}">${value}</span>`;
+            })
+            .join(' + ');
+          previewParts.push(`(${fakeResults})`);
+        }
+        if (modifiers.length > 0) {
+          previewParts.push(modifiers.map((value) => `${value > 0 ? '+' : '-'}${Math.abs(value)}`).join(' '));
+        }
+
+        const fakeTotal = queue.reduce((sum, sides, index) => sum + ((((rollingTick * 5) + index + sides) % sides) + 1), 0) + getModifierTotal();
+
+        resultDisplay.innerHTML = `
+          <div class="total rolling-placeholder">${fakeTotal}</div>
+          <div class="formula rolling-placeholder">${previewParts.join(' ') || 'ROLLING...'}</div>
+        `;
+      }
+
+      function renderModifiers() {
+        if (modifiers.length === 0) {
+          modifierList.innerHTML = '<span class="empty">No modifiers added.</span>';
+          return;
+        }
+
+        modifierList.innerHTML = modifiers.map((modifier, index) => {
+          const sign = modifier > 0 ? '+' : '-';
+          return `
+            <span class="modifier-chip">
+              ${sign}${Math.abs(modifier)}
+              <button class="remove-chip-btn" type="button" data-index="${index}" aria-label="Remove modifier ${sign}${Math.abs(modifier)}">×</button>
+            </span>
+          `;
+        }).join('');
+
+        modifierList.querySelectorAll('.remove-chip-btn').forEach((button) => {
+          button.addEventListener('click', () => {
+            if (isRolling) return;
+            const index = Number(button.dataset.index);
+            modifiers.splice(index, 1);
+            renderModifiers();
+            renderQueue();
+          });
+        });
+      }
+
+      function addModifier() {
+        if (isRolling) return;
+        const value = parseInt(modifierValue.value || '0', 10);
+        if (Number.isNaN(value) || value === 0) {
+          modifierValue.value = 0;
+          return;
+        }
+        modifiers.push(value);
+        modifierValue.value = 0;
+        renderModifiers();
+        renderQueue();
+      }
+
+      function rollDie(sides) {
+        return Math.floor(Math.random() * sides) + 1;
+      }
+
+      function startRollAnimation() {
+        isRolling = true;
+        rollingTick = 0;
+        setInputsDisabled(true);
+        queueDisplay.classList.add('rolling');
+        resultDisplay.classList.add('rolling');
+        document.querySelectorAll('.die-btn').forEach((btn) => btn.classList.add('rolling'));
+        renderRollingPreview();
+        rollingInterval = window.setInterval(renderRollingPreview, 120);
+      }
+
+      function stopRollAnimation() {
+        isRolling = false;
+        window.clearInterval(rollingInterval);
+        rollingInterval = null;
+        window.clearTimeout(rollingTimeout);
+        rollingTimeout = null;
+        queueDisplay.classList.remove('rolling');
+        resultDisplay.classList.remove('rolling');
+        document.querySelectorAll('.die-btn').forEach((btn) => btn.classList.remove('rolling'));
+        setInputsDisabled(false);
+      }
+
+      function finalizeRoll() {
+        let total = 0;
+        const diceResults = [];
+
+        queue.forEach((sides) => {
+          const roll = rollDie(sides);
+          diceResults.push({ sides, roll });
+          total += roll;
+        });
+
+        const modifierTotal = getModifierTotal();
+        total += modifierTotal;
+
+        const diceText = diceResults.length > 0
+          ? `(${diceResults.map((d) => `<span class="rolled-num pulse" style="color:${getDieColor(d.sides)}">${d.roll}</span>`).join(' + ')})`
+          : '';
+
+        const modifierText = modifiers
+          .map((value) => `<span class="queue-mod-text">${value > 0 ? '+' : '-'}${Math.abs(value)}</span>`)
+          .join(' ');
+
+        const fullExpression = [diceText, modifierText].filter(Boolean).join(' ');
+
+        resultDisplay.innerHTML = `
+          <div class="total final">${total}</div>
+          <div class="formula">${fullExpression || total} = ${total}</div>
+        `;
+
+        const grouped = groupDice(queue);
+        const orderedSides = Object.keys(grouped).map(Number).sort((a, b) => a - b);
+        const groupedText = orderedSides.map((sides) => `${grouped[sides]}d${sides}`).join(' + ');
+        const modifierLabel = modifiers.map((value) => `${value > 0 ? '+' : '-'}${Math.abs(value)}`).join(' ');
+        const labelText = [groupedText ? `(${groupedText})` : '', modifierLabel].filter(Boolean).join(' ');
+
+        history.unshift({
+          label: labelText || 'Modifiers only',
+          modifierTotal,
+          total,
+          formula: `${fullExpression.replace(/<[^>]*>/g, '') || total} = ${total}`
+        });
+
+        if (history.length > 8) history.length = 8;
+
+        renderQueue();
+        renderHistory();
+      }
+
+      function rollDice() {
+        if (isRolling) return;
+        if (queue.length === 0 && modifiers.length === 0) {
+          resultDisplay.innerHTML = '<div class="empty">Queue some dice or add some modifiers first.</div>';
+          return;
+        }
+
+        startRollAnimation();
+        rollingTimeout = window.setTimeout(() => {
+          stopRollAnimation();
+          finalizeRoll();
+        }, 820);
+      }
+
+      function renderHistory() {
+        if (history.length === 0) {
+          historyList.innerHTML = '<div class="empty">No rolls yet.</div>';
+          return;
+        }
+
+        historyList.innerHTML = history.map((entry) => `
+          <div class="history-item">
+            <strong>${entry.total}</strong> — ${entry.label} == ${entry.formula}
+          </div>
+        `).join('');
+      }
+
+      function clearAll() {
+        if (isRolling) return;
+        queue.length = 0;
+        modifiers.length = 0;
+        modifierValue.value = 0;
+        renderQueue();
+        renderModifiers();
+        resultDisplay.innerHTML = '<div class="empty">Your result will appear here.</div>';
+      }
+
+      function runSelfTests() {
+        console.assert(JSON.stringify(groupDice([6, 6, 8])) === JSON.stringify({ 6: 2, 8: 1 }), 'groupDice should group identical dice');
+
+        modifiers.push(4, -2);
+        console.assert(getModifierTotal() === 2, 'getModifierTotal should sum positive and negative modifiers');
+        modifiers.length = 0;
+
+        queue.push(6, 6, 8);
+        modifiers.push(4, -2);
+        renderQueue();
+        console.assert(queueDisplay.textContent.trim() === '(2d6 + 1d8) +4 -2', 'Queued roll text should match expected format');
+
+        modifierValue.value = '3';
+        addModifier();
+        console.assert(modifiers.length === 3 && modifiers[2] === 3, 'addModifier should append positive values');
+
+        modifierValue.value = '-5';
+        addModifier();
+        console.assert(modifiers[3] === -5, 'addModifier should append negative values');
+
+        rollingTick = 0;
+        renderRollingPreview();
+        const firstPreview = resultDisplay.textContent;
+        renderRollingPreview();
+        const secondPreview = resultDisplay.textContent;
+        console.assert(firstPreview !== secondPreview, 'rolling preview should change between frames');
+
+        modifiers.length = 0;
+        queue.length = 0;
+        renderQueue();
+        renderModifiers();
+      }
+
+      decModBtn.addEventListener('click', () => {
+        if (isRolling) return;
+        const current = parseInt(modifierValue.value || '0', 10) || 0;
+        modifierValue.value = current - 1;
+      });
+
+      incModBtn.addEventListener('click', () => {
+        if (isRolling) return;
+        const current = parseInt(modifierValue.value || '0', 10) || 0;
+        modifierValue.value = current + 1;
+      });
+
+      addModifierBtn.addEventListener('click', addModifier);
+      modifierValue.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          addModifier();
+        }
+      });
+      rollBtn.addEventListener('click', rollDice);
+      clearBtn.addEventListener('click', clearAll);
+
+      createDiceButtons();
+      renderQueue();
+      renderModifiers();
+      renderHistory();
+      runSelfTests();
+    })();
+  </script>
+</body>
+</html>
