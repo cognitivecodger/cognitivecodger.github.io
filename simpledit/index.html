@@ -1,829 +1,109 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-
-const DEFAULT_COLORS = [
-  "#ffffff",
-  "#000000",
-  "#ef4444",
-  "#f97316",
-  "#eab308",
-  "#22c55e",
-  "#06b6d4",
-  "#3b82f6",
-  "#8b5cf6",
-  "#ec4899",
-];
-
-const CANVAS_WIDTH = 1000;
-const CANVAS_HEIGHT = 700;
-const FILE_VERSION = 1;
-
-type Tool = "line" | "rect" | "polyline" | "select";
-
-type Point = {
-  x: number;
-  y: number;
-};
-
-type BaseShape = {
-  id: string;
-  color: string;
-  strokeWidth: number;
-};
-
-type LineShape = BaseShape & {
-  type: "line";
-  x1: number;
-  y1: number;
-  x2: number;
-  y2: number;
-};
-
-type RectShape = BaseShape & {
-  type: "rect";
-  x1: number;
-  y1: number;
-  x2: number;
-  y2: number;
-};
-
-type PolylineShape = BaseShape & {
-  type: "polyline";
-  points: Point[];
-};
-
-type Shape = LineShape | RectShape | PolylineShape;
-
-type ProjectData = {
-  type: "simple-grid-editor-project";
-  version: number;
-  canvas: {
-    width: number;
-    height: number;
-    background: string;
-    gridSize: number;
-    subDivisions: number;
-    showGrid: boolean;
-  };
-  shapes: Shape[];
-};
-
-function uid(): string {
-  return Math.random().toString(36).slice(2, 10);
-}
-
-function snapValue(value: number, step: number): number {
-  return Math.round(value / step) * step;
-}
-
-function getSnapStep(gridSize: number, subDivisions: number, snapToGrid: boolean): number {
-  return snapToGrid ? gridSize / Math.max(1, subDivisions) : 1;
-}
-
-function normalisePoint(point: Point, gridSize: number, subDivisions: number, snapToGrid: boolean): Point {
-  const step = getSnapStep(gridSize, subDivisions, snapToGrid);
-  return {
-    x: snapValue(point.x, step),
-    y: snapValue(point.y, step),
-  };
-}
-
-function getMousePosition(evt: React.PointerEvent<SVGSVGElement>, svgEl: SVGSVGElement): Point {
-  const rect = svgEl.getBoundingClientRect();
-  const scaleX = CANVAS_WIDTH / rect.width;
-  const scaleY = CANVAS_HEIGHT / rect.height;
-  return {
-    x: (evt.clientX - rect.left) * scaleX,
-    y: (evt.clientY - rect.top) * scaleY,
-  };
-}
-
-function escapeXml(value: string | number): string {
-  return String(value)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/\"/g, "&quot;")
-    .replace(/'/g, "&apos;");
-}
-
-function buildProjectData(
-  background: string,
-  gridSize: number,
-  subDivisions: number,
-  showGrid: boolean,
-  shapes: Shape[]
-): ProjectData {
-  return {
-    type: "simple-grid-editor-project",
-    version: FILE_VERSION,
-    canvas: {
-      width: CANVAS_WIDTH,
-      height: CANVAS_HEIGHT,
-      background,
-      gridSize,
-      subDivisions,
-      showGrid,
-    },
-    shapes,
-  };
-}
-
-function makeSvgMarkup(args: {
-  shapes: Shape[];
-  width: number;
-  height: number;
-  gridSize: number;
-  subDivisions: number;
-  showGrid: boolean;
-  background: string;
-}): string {
-  const { shapes, width, height, gridSize, subDivisions, showGrid, background } = args;
-  const step = gridSize / Math.max(1, subDivisions);
-  const parts: string[] = [];
-
-  parts.push('<?xml version="1.0" encoding="UTF-8"?>');
-  parts.push(
-    `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">`
-  );
-  parts.push(`<rect x="0" y="0" width="${width}" height="${height}" fill="${escapeXml(background)}" />`);
-
-  if (showGrid) {
-    for (let x = 0; x <= width; x += step) {
-      const major = Math.abs(x % gridSize) < 0.001;
-      const stroke = major ? "rgba(148,163,184,0.55)" : "rgba(148,163,184,0.18)";
-      parts.push(`<line x1="${x}" y1="0" x2="${x}" y2="${height}" stroke="${stroke}" stroke-width="1" />`);
-    }
-    for (let y = 0; y <= height; y += step) {
-      const major = Math.abs(y % gridSize) < 0.001;
-      const stroke = major ? "rgba(148,163,184,0.55)" : "rgba(148,163,184,0.18)";
-      parts.push(`<line x1="0" y1="${y}" x2="${width}" y2="${y}" stroke="${stroke}" stroke-width="1" />`);
-    }
-  }
-
-  for (const shape of shapes) {
-    const common = `stroke="${escapeXml(shape.color)}" stroke-width="${shape.strokeWidth}" fill="none" stroke-linecap="round" stroke-linejoin="round"`;
-    if (shape.type === "line") {
-      parts.push(`<line x1="${shape.x1}" y1="${shape.y1}" x2="${shape.x2}" y2="${shape.y2}" ${common} />`);
-    } else if (shape.type === "rect") {
-      const x = Math.min(shape.x1, shape.x2);
-      const y = Math.min(shape.y1, shape.y2);
-      const w = Math.abs(shape.x2 - shape.x1);
-      const h = Math.abs(shape.y2 - shape.y1);
-      parts.push(`<rect x="${x}" y="${y}" width="${w}" height="${h}" ${common} />`);
-    } else if (shape.type === "polyline") {
-      const points = shape.points.map((p) => `${p.x},${p.y}`).join(" ");
-      parts.push(`<polyline points="${points}" ${common} />`);
-    }
-  }
-
-  parts.push("</svg>");
-  return parts.join("\n");
-}
-
-function downloadTextFile(filename: string, content: string, mimeType: string): void {
-  const blob = new Blob([content], { type: mimeType });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(url);
-}
-
-function downloadBlob(filename: string, blob: Blob): void {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(url);
-}
-
-function isValidColor(value: string): boolean {
-  return /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(value.trim());
-}
-
-function runSelfTests(): void {
-  console.assert(snapValue(23, 10) === 20, "snapValue should round to nearest step");
-  console.assert(snapValue(26, 10) === 30, "snapValue should round upward when nearer next step");
-
-  const snapped = normalisePoint({ x: 33, y: 47 }, 40, 2, true);
-  console.assert(snapped.x === 40 && snapped.y === 40, "normalisePoint should snap to sub-grid");
-
-  const free = normalisePoint({ x: 33, y: 47 }, 40, 2, false);
-  console.assert(free.x === 33 && free.y === 47, "normalisePoint should preserve raw values when snapping is off");
-
-  const project = buildProjectData("#000000", 40, 2, true, []);
-  console.assert(project.type === "simple-grid-editor-project", "project data should use the expected file type");
-  console.assert(project.canvas.width === CANVAS_WIDTH, "project data should include canvas width");
-
-  const svg = makeSvgMarkup({
-    shapes: [
-      { id: "a", type: "line", x1: 0, y1: 0, x2: 10, y2: 10, color: "#ffffff", strokeWidth: 2 },
-    ],
-    width: 100,
-    height: 100,
-    gridSize: 20,
-    subDivisions: 2,
-    showGrid: true,
-    background: "#000000",
-  });
-  console.assert(svg.includes("<svg"), "SVG export should create SVG markup");
-  console.assert(svg.includes("<line"), "SVG export should include drawn line shapes");
-}
-
-export default function SimpleGridEditor(): React.JSX.Element {
-  const svgRef = useRef<SVGSVGElement | null>(null);
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
-
-  const [tool, setTool] = useState<Tool>("line");
-  const [gridSize, setGridSize] = useState<number>(40);
-  const [subDivisions, setSubDivisions] = useState<number>(2);
-  const [showGrid, setShowGrid] = useState<boolean>(true);
-  const [snapToGrid, setSnapToGrid] = useState<boolean>(true);
-  const [strokeWidth, setStrokeWidth] = useState<number>(3);
-  const [color, setColor] = useState<string>("#06b6d4");
-  const [background, setBackground] = useState<string>("#0f172a");
-  const [shapes, setShapes] = useState<Shape[]>([]);
-  const [previewShape, setPreviewShape] = useState<Shape | null>(null);
-  const [draftPolyline, setDraftPolyline] = useState<Point[]>([]);
-  const [isDrawing, setIsDrawing] = useState<boolean>(false);
-  const [startPoint, setStartPoint] = useState<Point | null>(null);
-  const [filename, setFilename] = useState<string>("grid-drawing");
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-
-  const subGridStep = useMemo(() => gridSize / Math.max(1, subDivisions), [gridSize, subDivisions]);
-
-  useEffect(() => {
-    runSelfTests();
-  }, []);
-
-  const handlePointerDown = useCallback(
-    (evt: React.PointerEvent<SVGSVGElement>) => {
-      if (!svgRef.current) return;
-      const raw = getMousePosition(evt, svgRef.current);
-      const point = normalisePoint(raw, gridSize, subDivisions, snapToGrid);
-
-      if (tool === "select") {
-        setSelectedId(null);
-        return;
-      }
-
-      if (tool === "polyline") {
-        if (evt.detail === 2) {
-          if (draftPolyline.length >= 2) {
-            const newShape: PolylineShape = {
-              id: uid(),
-              type: "polyline",
-              points: [...draftPolyline, point],
-              color,
-              strokeWidth,
-            };
-            setShapes((prev) => [...prev, newShape]);
-          }
-          setDraftPolyline([]);
-          setPreviewShape(null);
-          return;
-        }
-
-        setDraftPolyline((prev) => [...prev, point]);
-        return;
-      }
-
-      setIsDrawing(true);
-      setStartPoint(point);
-      if (tool === "line") {
-        setPreviewShape({
-          id: "preview",
-          type: "line",
-          x1: point.x,
-          y1: point.y,
-          x2: point.x,
-          y2: point.y,
-          color,
-          strokeWidth,
-        });
-      } else if (tool === "rect") {
-        setPreviewShape({
-          id: "preview",
-          type: "rect",
-          x1: point.x,
-          y1: point.y,
-          x2: point.x,
-          y2: point.y,
-          color,
-          strokeWidth,
-        });
-      }
-    },
-    [tool, gridSize, subDivisions, snapToGrid, draftPolyline, color, strokeWidth]
-  );
-
-  const handlePointerMove = useCallback(
-    (evt: React.PointerEvent<SVGSVGElement>) => {
-      if (!svgRef.current) return;
-      const raw = getMousePosition(evt, svgRef.current);
-      const point = normalisePoint(raw, gridSize, subDivisions, snapToGrid);
-
-      if (tool === "polyline" && draftPolyline.length > 0) {
-        setPreviewShape({
-          id: "preview-polyline",
-          type: "polyline",
-          points: [...draftPolyline, point],
-          color,
-          strokeWidth,
-        });
-        return;
-      }
-
-      if (!isDrawing || !startPoint) return;
-
-      if (tool === "line") {
-        setPreviewShape({
-          id: "preview",
-          type: "line",
-          x1: startPoint.x,
-          y1: startPoint.y,
-          x2: point.x,
-          y2: point.y,
-          color,
-          strokeWidth,
-        });
-      } else if (tool === "rect") {
-        setPreviewShape({
-          id: "preview",
-          type: "rect",
-          x1: startPoint.x,
-          y1: startPoint.y,
-          x2: point.x,
-          y2: point.y,
-          color,
-          strokeWidth,
-        });
-      }
-    },
-    [tool, draftPolyline, color, strokeWidth, isDrawing, startPoint, gridSize, subDivisions, snapToGrid]
-  );
-
-  const handlePointerUp = useCallback(
-    (evt: React.PointerEvent<SVGSVGElement>) => {
-      if (!isDrawing || !startPoint || !svgRef.current) return;
-
-      const raw = getMousePosition(evt, svgRef.current);
-      const point = normalisePoint(raw, gridSize, subDivisions, snapToGrid);
-
-      const samePoint = startPoint.x === point.x && startPoint.y === point.y;
-      if (!samePoint) {
-        if (tool === "line") {
-          setShapes((prev) => [
-            ...prev,
-            {
-              id: uid(),
-              type: "line",
-              x1: startPoint.x,
-              y1: startPoint.y,
-              x2: point.x,
-              y2: point.y,
-              color,
-              strokeWidth,
-            },
-          ]);
-        } else if (tool === "rect") {
-          setShapes((prev) => [
-            ...prev,
-            {
-              id: uid(),
-              type: "rect",
-              x1: startPoint.x,
-              y1: startPoint.y,
-              x2: point.x,
-              y2: point.y,
-              color,
-              strokeWidth,
-            },
-          ]);
-        }
-      }
-
-      setIsDrawing(false);
-      setStartPoint(null);
-      setPreviewShape(null);
-    },
-    [isDrawing, startPoint, tool, color, strokeWidth, gridSize, subDivisions, snapToGrid]
-  );
-
-  const handleUndo = useCallback(() => {
-    if (draftPolyline.length > 0) {
-      setDraftPolyline((prev) => prev.slice(0, -1));
-      return;
-    }
-    setShapes((prev) => prev.slice(0, -1));
-    setSelectedId(null);
-  }, [draftPolyline.length]);
-
-  const handleDeleteSelected = useCallback(() => {
-    if (!selectedId) return;
-    setShapes((prev) => prev.filter((shape) => shape.id !== selectedId));
-    setSelectedId(null);
-  }, [selectedId]);
-
-  const handleClear = useCallback(() => {
-    setShapes([]);
-    setDraftPolyline([]);
-    setPreviewShape(null);
-    setIsDrawing(false);
-    setStartPoint(null);
-    setSelectedId(null);
-  }, []);
-
-  const handleSaveProject = useCallback(() => {
-    const payload = buildProjectData(background, gridSize, subDivisions, showGrid, shapes);
-    downloadTextFile(`${filename || "grid-drawing"}.grid.json`, JSON.stringify(payload, null, 2), "application/json");
-  }, [background, gridSize, subDivisions, showGrid, shapes, filename]);
-
-  const handleExportSvg = useCallback(() => {
-    const svg = makeSvgMarkup({
-      shapes,
-      width: CANVAS_WIDTH,
-      height: CANVAS_HEIGHT,
-      gridSize,
-      subDivisions,
-      showGrid,
-      background,
-    });
-    downloadTextFile(`${filename || "grid-drawing"}.svg`, svg, "image/svg+xml");
-  }, [shapes, gridSize, subDivisions, showGrid, background, filename]);
-
-  const handleExportPng = useCallback(() => {
-    const markup = makeSvgMarkup({
-      shapes,
-      width: CANVAS_WIDTH,
-      height: CANVAS_HEIGHT,
-      gridSize,
-      subDivisions,
-      showGrid,
-      background,
-    });
-
-    const blob = new Blob([markup], { type: "image/svg+xml;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const img = new Image();
-    img.onload = () => {
-      const canvas = document.createElement("canvas");
-      canvas.width = CANVAS_WIDTH;
-      canvas.height = CANVAS_HEIGHT;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) {
-        URL.revokeObjectURL(url);
-        return;
-      }
-      ctx.drawImage(img, 0, 0);
-      canvas.toBlob((pngBlob) => {
-        if (pngBlob) {
-          downloadBlob(`${filename || "grid-drawing"}.png`, pngBlob);
-        }
-        URL.revokeObjectURL(url);
-      }, "image/png");
-    };
-    img.onerror = () => {
-      URL.revokeObjectURL(url);
-      window.alert("PNG export failed.");
-    };
-    img.src = url;
-  }, [shapes, gridSize, subDivisions, showGrid, background, filename]);
-
-  const handleLoadProject = useCallback((evt: React.ChangeEvent<HTMLInputElement>) => {
-    const file = evt.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      try {
-        const parsed = JSON.parse(String(reader.result)) as Partial<ProjectData>;
-        if (parsed.type !== "simple-grid-editor-project") {
-          throw new Error("Invalid project type");
-        }
-        setShapes(Array.isArray(parsed.shapes) ? (parsed.shapes as Shape[]) : []);
-        setBackground(parsed.canvas?.background || "#0f172a");
-        setGridSize(parsed.canvas?.gridSize || 40);
-        setSubDivisions(parsed.canvas?.subDivisions || 2);
-        setShowGrid(typeof parsed.canvas?.showGrid === "boolean" ? parsed.canvas.showGrid : true);
-        setSnapToGrid(true);
-        setDraftPolyline([]);
-        setPreviewShape(null);
-        setIsDrawing(false);
-        setStartPoint(null);
-        setSelectedId(null);
-      } catch {
-        window.alert("Could not load that file.");
-      }
-    };
-    reader.readAsText(file);
-    evt.target.value = "";
-  }, []);
-
-  useEffect(() => {
-    const onKeyDown = (evt: KeyboardEvent) => {
-      if ((evt.ctrlKey || evt.metaKey) && evt.key.toLowerCase() === "z") {
-        evt.preventDefault();
-        handleUndo();
-      }
-      if (evt.key === "Escape") {
-        setDraftPolyline([]);
-        setPreviewShape(null);
-        setIsDrawing(false);
-        setStartPoint(null);
-      }
-      if (evt.key === "Delete" || evt.key === "Backspace") {
-        handleDeleteSelected();
-      }
-    };
-
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [handleUndo, handleDeleteSelected]);
-
-  const renderShape = (shape: Shape, isPreview = false): React.JSX.Element => {
-    const selected = shape.id === selectedId;
-    const opacity = isPreview ? 0.75 : 1;
-    const common = {
-      stroke: shape.color,
-      strokeWidth: shape.strokeWidth,
-      fill: "none",
-      strokeLinecap: "round" as const,
-      strokeLinejoin: "round" as const,
-      opacity,
-      onClick: (evt: React.MouseEvent<SVGElement>) => {
-        evt.stopPropagation();
-        if (tool === "select") {
-          setSelectedId(shape.id);
-        }
-      },
-    };
-
-    if (shape.type === "line") {
-      return (
-        <g key={shape.id}>
-          {selected && (
-            <line
-              x1={shape.x1}
-              y1={shape.y1}
-              x2={shape.x2}
-              y2={shape.y2}
-              stroke="#ffffff"
-              strokeWidth={shape.strokeWidth + 4}
-              opacity={0.25}
-            />
-          )}
-          <line x1={shape.x1} y1={shape.y1} x2={shape.x2} y2={shape.y2} {...common} />
-        </g>
-      );
-    }
-
-    if (shape.type === "rect") {
-      const x = Math.min(shape.x1, shape.x2);
-      const y = Math.min(shape.y1, shape.y2);
-      const width = Math.abs(shape.x2 - shape.x1);
-      const height = Math.abs(shape.y2 - shape.y1);
-      return (
-        <g key={shape.id}>
-          {selected && <rect x={x} y={y} width={width} height={height} stroke="#ffffff" strokeWidth={shape.strokeWidth + 4} fill="none" opacity={0.25} />}
-          <rect x={x} y={y} width={width} height={height} {...common} />
-        </g>
-      );
-    }
-
-    const points = shape.points.map((p) => `${p.x},${p.y}`).join(" ");
-    return (
-      <g key={shape.id}>
-        {selected && <polyline points={points} stroke="#ffffff" strokeWidth={shape.strokeWidth + 4} fill="none" opacity={0.25} />}
-        <polyline points={points} {...common} />
-      </g>
-    );
-  };
-
-  const verticalLines: React.JSX.Element[] = [];
-  const horizontalLines: React.JSX.Element[] = [];
-  for (let x = 0; x <= CANVAS_WIDTH; x += subGridStep) {
-    const major = Math.abs(x % gridSize) < 0.001;
-    verticalLines.push(
-      <line
-        key={`vx-${x}`}
-        x1={x}
-        y1={0}
-        x2={x}
-        y2={CANVAS_HEIGHT}
-        stroke={major ? "rgba(148,163,184,0.55)" : "rgba(148,163,184,0.18)"}
-        strokeWidth={1}
-      />
-    );
-  }
-  for (let y = 0; y <= CANVAS_HEIGHT; y += subGridStep) {
-    const major = Math.abs(y % gridSize) < 0.001;
-    horizontalLines.push(
-      <line
-        key={`hy-${y}`}
-        x1={0}
-        y1={y}
-        x2={CANVAS_WIDTH}
-        y2={y}
-        stroke={major ? "rgba(148,163,184,0.55)" : "rgba(148,163,184,0.18)"}
-        strokeWidth={1}
-      />
-    );
-  }
-
-  const setSafeColor = (value: string, setter: (value: string) => void, fallback: string): void => {
-    setter(isValidColor(value) ? value : fallback);
-  };
-
-  return (
-    <div style={{ minHeight: "100vh", background: "#020617", color: "#e5e7eb", fontFamily: "Arial, Helvetica, sans-serif", padding: 16 }}>
-      <style>{`
-        * { box-sizing: border-box; }
-        .app { display: grid; grid-template-columns: 320px 1fr; gap: 16px; min-height: calc(100vh - 32px); }
-        .panel { background: #0f172a; border: 1px solid #334155; border-radius: 16px; padding: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.25); }
-        .canvas-panel { display: flex; flex-direction: column; min-width: 0; }
-        .canvas-wrap { overflow: auto; background: #020617; border: 1px solid #334155; border-radius: 16px; padding: 12px; flex: 1; }
-        .section { margin-bottom: 18px; }
-        .label { display: block; font-size: 0.92rem; margin-bottom: 8px; }
-        .field, .select, .btn { width: 100%; font: inherit; }
-        .field, .select { padding: 10px 12px; border-radius: 10px; border: 1px solid #334155; background: #111827; color: #e5e7eb; }
-        .row { display: flex; gap: 8px; align-items: center; }
-        .tool-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-        .btn-grid { display: grid; gap: 8px; }
-        .btn { background: #1e293b; color: #e5e7eb; border: 1px solid #334155; padding: 10px 12px; border-radius: 10px; cursor: pointer; }
-        .btn:hover { filter: brightness(1.08); }
-        .btn.active { background: #0ea5e9; border-color: #38bdf8; color: white; }
-        .btn.danger { border-color: #7f1d1d; }
-        .swatches { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 10px; }
-        .swatch { height: 34px; border-radius: 10px; border: 2px solid rgba(255,255,255,0.15); cursor: pointer; }
-        .toggle { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; border: 1px solid #334155; border-radius: 12px; background: #111827; margin-bottom: 8px; }
-        .small { font-size: 0.88rem; color: #94a3b8; line-height: 1.4; margin-top: 0; }
-        .svg-canvas { display: block; width: 100%; height: auto; border-radius: 12px; user-select: none; touch-action: none; }
-        @media (max-width: 980px) { .app { grid-template-columns: 1fr; } }
-      `}</style>
-
-      <div className="app">
-        <div className="panel">
-          <h1 style={{ fontSize: "1.35rem", marginTop: 0, marginBottom: 16 }}>Simple Grid Editor</h1>
-
-          <div className="section">
-            <label className="label" htmlFor="filename">Project name</label>
-            <input id="filename" className="field" type="text" value={filename} onChange={(e) => setFilename(e.target.value)} />
-          </div>
-
-          <div className="section">
-            <h2 style={{ fontSize: "1rem", marginTop: 0, marginBottom: 10 }}>Tool</h2>
-            <div className="tool-grid">
-              {(["line", "rect", "polyline", "select"] as Tool[]).map((value) => (
-                <button
-                  key={value}
-                  type="button"
-                  className={`btn ${tool === value ? "active" : ""}`}
-                  onClick={() => {
-                    setTool(value);
-                    setSelectedId(null);
-                  }}
-                >
-                  {value === "polyline" ? "Path" : value.charAt(0).toUpperCase() + value.slice(1)}
-                </button>
-              ))}
-            </div>
-            <p className="small">For Path, click to place points and double-click to finish.</p>
-          </div>
-
-          <div className="section">
-            <label className="label" htmlFor="colorPicker">Colour</label>
-            <div className="row">
-              <input
-                id="colorPicker"
-                type="color"
-                value={color}
-                onChange={(e) => setColor(e.target.value)}
-                style={{ width: 56, height: 42, padding: 2, borderRadius: 10, border: "1px solid #334155", background: "#111827" }}
-              />
-              <input
-                className="field"
-                type="text"
-                value={color}
-                onChange={(e) => setColor(e.target.value)}
-                onBlur={(e) => setSafeColor(e.target.value, setColor, "#06b6d4")}
-              />
-            </div>
-            <div className="swatches">
-              {DEFAULT_COLORS.map((swatch) => (
-                <button
-                  key={swatch}
-                  type="button"
-                  className="swatch"
-                  title={swatch}
-                  style={{ backgroundColor: swatch }}
-                  onClick={() => setColor(swatch)}
-                />
-              ))}
-            </div>
-          </div>
-
-          <div className="section">
-            <label className="label" htmlFor="strokeWidth">Stroke width: {strokeWidth}px</label>
-            <input id="strokeWidth" type="range" min={1} max={12} step={1} value={strokeWidth} onChange={(e) => setStrokeWidth(Number(e.target.value))} style={{ width: "100%" }} />
-          </div>
-
-          <div className="section">
-            <label className="label" htmlFor="gridSize">Grid size: {gridSize}px</label>
-            <input id="gridSize" type="range" min={10} max={100} step={5} value={gridSize} onChange={(e) => setGridSize(Number(e.target.value))} style={{ width: "100%" }} />
-          </div>
-
-          <div className="section">
-            <label className="label" htmlFor="subDivisions">Sub-grid divisions</label>
-            <select id="subDivisions" className="select" value={String(subDivisions)} onChange={(e) => setSubDivisions(Number(e.target.value))}>
-              <option value="1">1 (no sub-grid)</option>
-              <option value="2">2</option>
-              <option value="4">4</option>
-              <option value="5">5</option>
-              <option value="8">8</option>
-            </select>
-          </div>
-
-          <div className="section">
-            <label className="label" htmlFor="backgroundPicker">Background</label>
-            <div className="row">
-              <input
-                id="backgroundPicker"
-                type="color"
-                value={background}
-                onChange={(e) => setBackground(e.target.value)}
-                style={{ width: 56, height: 42, padding: 2, borderRadius: 10, border: "1px solid #334155", background: "#111827" }}
-              />
-              <input
-                className="field"
-                type="text"
-                value={background}
-                onChange={(e) => setBackground(e.target.value)}
-                onBlur={(e) => setSafeColor(e.target.value, setBackground, "#0f172a")}
-              />
-            </div>
-          </div>
-
-          <div className="section">
-            <label className="toggle">
-              <span>Show grid</span>
-              <input type="checkbox" checked={showGrid} onChange={(e) => setShowGrid(e.target.checked)} />
-            </label>
-            <label className="toggle">
-              <span>Snap to grid</span>
-              <input type="checkbox" checked={snapToGrid} onChange={(e) => setSnapToGrid(e.target.checked)} />
-            </label>
-          </div>
-
-          <div className="section btn-grid">
-            <button type="button" className="btn" onClick={handleUndo}>Undo</button>
-            <button type="button" className="btn" onClick={handleDeleteSelected}>Delete selected</button>
-            <button type="button" className="btn danger" onClick={handleClear}>Clear all</button>
-          </div>
-
-          <div className="section btn-grid">
-            <button type="button" className="btn" onClick={handleSaveProject}>Save project JSON</button>
-            <button type="button" className="btn" onClick={() => fileInputRef.current?.click()}>Load project JSON</button>
-            <input ref={fileInputRef} type="file" accept=".json,.grid.json,application/json" onChange={handleLoadProject} style={{ display: "none" }} />
-            <button type="button" className="btn" onClick={handleExportSvg}>Export SVG</button>
-            <button type="button" className="btn" onClick={handleExportPng}>Export PNG</button>
-          </div>
-
-          <p className="small">
-            Ctrl/Cmd+Z undoes. Escape cancels current drawing. Delete removes the selected shape.
-            <br />
-            Save JSON for re-editing later. Export SVG or PNG for finished output.
-          </p>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Simple Grid Editor</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app">
+    <div class="panel">
+      <h1>Simple Grid Editor</h1>
+
+      <div class="section">
+        <label class="label" for="filename">Project name</label>
+        <input id="filename" type="text" value="grid-drawing" />
+      </div>
+
+      <div class="section">
+        <h2>Tool</h2>
+        <div class="tool-grid">
+          <button class="tool-btn active" data-tool="line">Line</button>
+          <button class="tool-btn" data-tool="rect">Rect</button>
+          <button class="tool-btn" data-tool="polyline">Path</button>
+          <button class="tool-btn" data-tool="select">Select</button>
         </div>
+        <p class="small">For Path, click to place points and double-click to finish.</p>
+      </div>
 
-        <div className="panel canvas-panel">
-          <h1 style={{ fontSize: "1.35rem", marginTop: 0, marginBottom: 16 }}>Canvas</h1>
-          <div className="canvas-wrap">
-            <svg
-              ref={svgRef}
-              className="svg-canvas"
-              viewBox={`0 0 ${CANVAS_WIDTH} ${CANVAS_HEIGHT}`}
-              xmlns="http://www.w3.org/2000/svg"
-              onPointerDown={handlePointerDown}
-              onPointerMove={handlePointerMove}
-              onPointerUp={handlePointerUp}
-              onPointerLeave={handlePointerUp}
-              onClick={() => {
-                if (tool !== "select") setSelectedId(null);
-              }}
-              style={{ cursor: tool === "select" ? "default" : "crosshair" }}
-            >
-              <rect x={0} y={0} width={CANVAS_WIDTH} height={CANVAS_HEIGHT} fill={background} />
-              {showGrid && verticalLines}
-              {showGrid && horizontalLines}
-              {shapes.map((shape) => renderShape(shape))}
-              {previewShape ? renderShape(previewShape, true) : null}
-            </svg>
-          </div>
+      <div class="section">
+        <label class="label" for="colorPicker">Colour</label>
+        <div class="row">
+          <input id="colorPicker" type="color" value="#06b6d4" class="color-box" />
+          <input id="colorText" type="text" value="#06b6d4" />
+        </div>
+        <div class="swatches" id="swatches"></div>
+      </div>
+
+      <div class="section">
+        <label class="label" for="strokeWidth">Stroke width: <span id="strokeWidthLabel">3</span>px</label>
+        <input id="strokeWidth" type="range" min="1" max="12" step="1" value="3" class="slider" />
+      </div>
+
+      <div class="section">
+        <label class="label" for="gridSize">Grid size: <span id="gridSizeLabel">40</span>px</label>
+        <input id="gridSize" type="range" min="10" max="100" step="5" value="40" class="slider" />
+      </div>
+
+      <div class="section">
+        <label class="label" for="subDivisions">Sub-grid divisions</label>
+        <select id="subDivisions">
+          <option value="1">1 (no sub-grid)</option>
+          <option value="2" selected>2</option>
+          <option value="4">4</option>
+          <option value="5">5</option>
+          <option value="8">8</option>
+        </select>
+      </div>
+
+      <div class="section">
+        <label class="label" for="backgroundPicker">Background</label>
+        <div class="row">
+          <input id="backgroundPicker" type="color" value="#0f172a" class="color-box" />
+          <input id="backgroundText" type="text" value="#0f172a" />
         </div>
       </div>
+
+      <div class="section">
+        <div class="toggle">
+          <span>Show grid</span>
+          <input id="showGrid" type="checkbox" checked />
+        </div>
+        <div class="toggle">
+          <span>Snap to grid</span>
+          <input id="snapToGrid" type="checkbox" checked />
+        </div>
+      </div>
+
+      <div class="section btn-grid">
+        <button id="undoBtn">Undo</button>
+        <button id="deleteBtn">Delete selected</button>
+        <button id="clearBtn" class="danger">Clear all</button>
+      </div>
+
+      <div class="section btn-grid">
+        <button id="saveProjectBtn">Save project JSON</button>
+        <button id="loadProjectBtn">Load project JSON</button>
+        <input id="loadProjectInput" type="file" accept=".json,.grid.json,application/json" hidden />
+        <button id="exportSvgBtn">Export SVG</button>
+        <button id="exportPngBtn">Export PNG</button>
+      </div>
+
+      <p class="small">
+        Ctrl/Cmd+Z undoes. Escape cancels current drawing. Delete removes the selected shape.<br>
+        Save JSON for re-editing later. Export SVG or PNG for finished output.
+      </p>
     </div>
-  );
-}
+
+    <div class="panel canvas-panel">
+      <h1>Canvas</h1>
+      <div class="canvas-wrap">
+        <svg id="editorSvg" viewBox="0 0 1000 700" xmlns="http://www.w3.org/2000/svg"></svg>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
