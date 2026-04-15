@@ -1,203 +1,523 @@
-:root {
-  --bg: #020617;
-  --panel: #0f172a;
-  --panel-2: #111827;
-  --border: #334155;
-  --text: #e5e7eb;
-  --muted: #94a3b8;
-  --accent: #38bdf8;
-  --accent-2: #0ea5e9;
+// script.js (standalone, no React)
+
+const DEFAULT_COLORS = [
+  "#ffffff", "#000000", "#ef4444", "#f97316", "#eab308",
+  "#22c55e", "#06b6d4", "#3b82f6", "#8b5cf6", "#ec4899"
+];
+
+const CANVAS_WIDTH = 1000;
+const CANVAS_HEIGHT = 700;
+const FILE_VERSION = 1;
+const SVG_NS = "http://www.w3.org/2000/svg";
+
+const state = {
+  tool: "line",
+  gridSize: 40,
+  subDivisions: 2,
+  showGrid: true,
+  snapToGrid: true,
+  strokeWidth: 3,
+  color: "#06b6d4",
+  background: "#0f172a",
+  shapes: [],
+  previewShape: null,
+  draftPolyline: [],
+  isDrawing: false,
+  startPoint: null,
+  selectedId: null,
+};
+
+const els = {
+  svg: document.getElementById("editorSvg"),
+  filename: document.getElementById("filename"),
+  colorPicker: document.getElementById("colorPicker"),
+  colorText: document.getElementById("colorText"),
+  backgroundPicker: document.getElementById("backgroundPicker"),
+  backgroundText: document.getElementById("backgroundText"),
+  strokeWidth: document.getElementById("strokeWidth"),
+  strokeWidthLabel: document.getElementById("strokeWidthLabel"),
+  gridSize: document.getElementById("gridSize"),
+  gridSizeLabel: document.getElementById("gridSizeLabel"),
+  subDivisions: document.getElementById("subDivisions"),
+  showGrid: document.getElementById("showGrid"),
+  snapToGrid: document.getElementById("snapToGrid"),
+  undoBtn: document.getElementById("undoBtn"),
+  deleteBtn: document.getElementById("deleteBtn"),
+  clearBtn: document.getElementById("clearBtn"),
+  saveProjectBtn: document.getElementById("saveProjectBtn"),
+  loadProjectBtn: document.getElementById("loadProjectBtn"),
+  loadProjectInput: document.getElementById("loadProjectInput"),
+  exportSvgBtn: document.getElementById("exportSvgBtn"),
+  exportPngBtn: document.getElementById("exportPngBtn"),
+  swatches: document.getElementById("swatches"),
+  toolButtons: Array.from(document.querySelectorAll(".tool-btn")),
+};
+
+function uid() {
+  return Math.random().toString(36).slice(2, 10);
 }
 
-* {
-  box-sizing: border-box;
+function escapeXml(value) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/\"/g, "&quot;")
+    .replace(/'/g, "&apos;");
 }
 
-body {
-  margin: 0;
-  font-family: Arial, Helvetica, sans-serif;
-  background: var(--bg);
-  color: var(--text);
+function snapValue(value, step) {
+  return Math.round(value / step) * step;
 }
 
-.app {
-  display: grid;
-  grid-template-columns: 320px 1fr;
-  gap: 16px;
-  padding: 16px;
-  min-height: 100vh;
+function getSnapStep() {
+  return state.snapToGrid ? state.gridSize / Math.max(1, state.subDivisions) : 1;
 }
 
-.panel {
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 16px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+function normalisePoint(point) {
+  const step = getSnapStep();
+  return {
+    x: snapValue(point.x, step),
+    y: snapValue(point.y, step),
+  };
 }
 
-h1, h2, p {
-  margin-top: 0;
+function getMousePosition(evt, svgEl) {
+  const rect = svgEl.getBoundingClientRect();
+  const scaleX = CANVAS_WIDTH / rect.width;
+  const scaleY = CANVAS_HEIGHT / rect.height;
+  return {
+    x: (evt.clientX - rect.left) * scaleX,
+    y: (evt.clientY - rect.top) * scaleY,
+  };
 }
 
-h1 {
-  font-size: 1.35rem;
-  margin-bottom: 16px;
+function isValidColor(value) {
+  return /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(String(value).trim());
 }
 
-h2 {
-  font-size: 1rem;
-  margin-bottom: 10px;
-}
+function makeSvgMarkup() {
+  const step = state.gridSize / Math.max(1, state.subDivisions);
+  const parts = [];
 
-.section {
-  margin-bottom: 18px;
-}
+  parts.push('<?xml version="1.0" encoding="UTF-8"?>');
+  parts.push(`<svg xmlns="http://www.w3.org/2000/svg" width="${CANVAS_WIDTH}" height="${CANVAS_HEIGHT}" viewBox="0 0 ${CANVAS_WIDTH} ${CANVAS_HEIGHT}">`);
+  parts.push(`<rect x="0" y="0" width="${CANVAS_WIDTH}" height="${CANVAS_HEIGHT}" fill="${escapeXml(state.background)}" />`);
 
-.label {
-  display: block;
-  font-size: 0.92rem;
-  margin-bottom: 8px;
-  color: var(--text);
-}
-
-input[type="text"],
-input[type="number"],
-select,
-button {
-  font: inherit;
-}
-
-input[type="text"],
-input[type="number"],
-select {
-  width: 100%;
-  padding: 10px 12px;
-  border-radius: 10px;
-  border: 1px solid var(--border);
-  background: var(--panel-2);
-  color: var(--text);
-}
-
-.row {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.row > * {
-  min-width: 0;
-}
-
-.tool-grid,
-.btn-grid {
-  display: grid;
-  gap: 8px;
-}
-
-.tool-grid {
-  grid-template-columns: 1fr 1fr;
-}
-
-.btn-grid {
-  grid-template-columns: 1fr;
-}
-
-button {
-  background: #1e293b;
-  color: var(--text);
-  border: 1px solid var(--border);
-  padding: 10px 12px;
-  border-radius: 10px;
-  cursor: pointer;
-}
-
-button:hover {
-  filter: brightness(1.08);
-}
-
-button.active {
-  background: var(--accent-2);
-  border-color: var(--accent);
-  color: white;
-}
-
-button.danger {
-  border-color: #7f1d1d;
-}
-
-.swatches {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 8px;
-  margin-top: 10px;
-}
-
-.swatch {
-  height: 34px;
-  border-radius: 10px;
-  border: 2px solid rgba(255,255,255,0.15);
-  cursor: pointer;
-}
-
-.toggle {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 10px 12px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: var(--panel-2);
-  margin-bottom: 8px;
-}
-
-.canvas-panel {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-
-.canvas-wrap {
-  overflow: auto;
-  background: #020617;
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 12px;
-  flex: 1;
-}
-
-svg {
-  display: block;
-  width: 100%;
-  height: auto;
-  border-radius: 12px;
-  user-select: none;
-  touch-action: none;
-  cursor: crosshair;
-}
-
-.small {
-  font-size: 0.88rem;
-  color: var(--muted);
-  line-height: 1.4;
-}
-
-.color-box {
-  width: 56px;
-  height: 42px;
-  padding: 2px;
-  border-radius: 10px;
-  border: 1px solid var(--border);
-  background: var(--panel-2);
-}
-
-.slider {
-  width: 100%;
-}
-
-@media (max-width: 980px) {
-  .app {
-    grid-template-columns: 1fr;
+  if (state.showGrid) {
+    for (let x = 0; x <= CANVAS_WIDTH; x += step) {
+      const major = Math.abs(x % state.gridSize) < 0.001;
+      const stroke = major ? "rgba(148,163,184,0.55)" : "rgba(148,163,184,0.18)";
+      parts.push(`<line x1="${x}" y1="0" x2="${x}" y2="${CANVAS_HEIGHT}" stroke="${stroke}" stroke-width="1" />`);
+    }
+    for (let y = 0; y <= CANVAS_HEIGHT; y += step) {
+      const major = Math.abs(y % state.gridSize) < 0.001;
+      const stroke = major ? "rgba(148,163,184,0.55)" : "rgba(148,163,184,0.18)";
+      parts.push(`<line x1="0" y1="${y}" x2="${CANVAS_WIDTH}" y2="${y}" stroke="${stroke}" stroke-width="1" />`);
+    }
   }
+
+  for (const shape of state.shapes) {
+    const common = `stroke="${escapeXml(shape.color)}" stroke-width="${shape.strokeWidth}" fill="none" stroke-linecap="round" stroke-linejoin="round"`;
+    if (shape.type === "line") {
+      parts.push(`<line x1="${shape.x1}" y1="${shape.y1}" x2="${shape.x2}" y2="${shape.y2}" ${common} />`);
+    } else if (shape.type === "rect") {
+      const x = Math.min(shape.x1, shape.x2);
+      const y = Math.min(shape.y1, shape.y2);
+      const w = Math.abs(shape.x2 - shape.x1);
+      const h = Math.abs(shape.y2 - shape.y1);
+      parts.push(`<rect x="${x}" y="${y}" width="${w}" height="${h}" ${common} />`);
+    } else if (shape.type === "polyline") {
+      const points = shape.points.map((p) => `${p.x},${p.y}`).join(" ");
+      parts.push(`<polyline points="${points}" ${common} />`);
+    }
+  }
+
+  parts.push("</svg>");
+  return parts.join("\n");
 }
+
+function downloadTextFile(filename, content, mimeType) {
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function downloadBlob(filename, blob) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function buildProjectData() {
+  return {
+    type: "simple-grid-editor-project",
+    version: FILE_VERSION,
+    canvas: {
+      width: CANVAS_WIDTH,
+      height: CANVAS_HEIGHT,
+      background: state.background,
+      gridSize: state.gridSize,
+      subDivisions: state.subDivisions,
+      showGrid: state.showGrid,
+    },
+    shapes: state.shapes,
+  };
+}
+
+function setTool(tool) {
+  state.tool = tool;
+  state.selectedId = null;
+  els.toolButtons.forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.tool === tool);
+  });
+  els.svg.style.cursor = tool === "select" ? "default" : "crosshair";
+  render();
+}
+
+function renderShape(shape, isPreview = false) {
+  const group = document.createElementNS(SVG_NS, "g");
+  const selected = shape.id === state.selectedId;
+  const opacity = isPreview ? "0.75" : "1";
+
+  let main;
+  if (shape.type === "line") {
+    main = document.createElementNS(SVG_NS, "line");
+    main.setAttribute("x1", shape.x1);
+    main.setAttribute("y1", shape.y1);
+    main.setAttribute("x2", shape.x2);
+    main.setAttribute("y2", shape.y2);
+  } else if (shape.type === "rect") {
+    main = document.createElementNS(SVG_NS, "rect");
+    main.setAttribute("x", Math.min(shape.x1, shape.x2));
+    main.setAttribute("y", Math.min(shape.y1, shape.y2));
+    main.setAttribute("width", Math.abs(shape.x2 - shape.x1));
+    main.setAttribute("height", Math.abs(shape.y2 - shape.y1));
+  } else if (shape.type === "polyline") {
+    main = document.createElementNS(SVG_NS, "polyline");
+    main.setAttribute("points", shape.points.map((p) => `${p.x},${p.y}`).join(" "));
+  }
+
+  if (!main) return group;
+
+  main.setAttribute("stroke", shape.color);
+  main.setAttribute("stroke-width", shape.strokeWidth);
+  main.setAttribute("fill", "none");
+  main.setAttribute("stroke-linecap", "round");
+  main.setAttribute("stroke-linejoin", "round");
+  main.setAttribute("opacity", opacity);
+
+  main.addEventListener("click", (evt) => {
+    evt.stopPropagation();
+    if (state.tool === "select") {
+      state.selectedId = shape.id;
+      render();
+    }
+  });
+
+  if (selected) {
+    let outline;
+    if (shape.type === "line") {
+      outline = document.createElementNS(SVG_NS, "line");
+      outline.setAttribute("x1", shape.x1);
+      outline.setAttribute("y1", shape.y1);
+      outline.setAttribute("x2", shape.x2);
+      outline.setAttribute("y2", shape.y2);
+    } else if (shape.type === "rect") {
+      outline = document.createElementNS(SVG_NS, "rect");
+      outline.setAttribute("x", Math.min(shape.x1, shape.x2));
+      outline.setAttribute("y", Math.min(shape.y1, shape.y2));
+      outline.setAttribute("width", Math.abs(shape.x2 - shape.x1));
+      outline.setAttribute("height", Math.abs(shape.y2 - shape.y1));
+    } else if (shape.type === "polyline") {
+      outline = document.createElementNS(SVG_NS, "polyline");
+      outline.setAttribute("points", shape.points.map((p) => `${p.x},${p.y}`).join(" "));
+    }
+
+    if (outline) {
+      outline.setAttribute("stroke", "#ffffff");
+      outline.setAttribute("stroke-width", Number(shape.strokeWidth) + 4);
+      outline.setAttribute("fill", "none");
+      outline.setAttribute("opacity", "0.25");
+      group.appendChild(outline);
+    }
+  }
+
+  group.appendChild(main);
+  return group;
+}
+
+function render() {
+  while (els.svg.firstChild) els.svg.removeChild(els.svg.firstChild);
+
+  const bg = document.createElementNS(SVG_NS, "rect");
+  bg.setAttribute("x", "0");
+  bg.setAttribute("y", "0");
+  bg.setAttribute("width", CANVAS_WIDTH);
+  bg.setAttribute("height", CANVAS_HEIGHT);
+  bg.setAttribute("fill", state.background);
+  els.svg.appendChild(bg);
+
+  if (state.showGrid) {
+    const subGridStep = state.gridSize / Math.max(1, state.subDivisions);
+    for (let x = 0; x <= CANVAS_WIDTH; x += subGridStep) {
+      const major = Math.abs(x % state.gridSize) < 0.001;
+      const line = document.createElementNS(SVG_NS, "line");
+      line.setAttribute("x1", x);
+      line.setAttribute("y1", 0);
+      line.setAttribute("x2", x);
+      line.setAttribute("y2", CANVAS_HEIGHT);
+      line.setAttribute("stroke", major ? "rgba(148,163,184,0.55)" : "rgba(148,163,184,0.18)");
+      line.setAttribute("stroke-width", "1");
+      els.svg.appendChild(line);
+    }
+    for (let y = 0; y <= CANVAS_HEIGHT; y += subGridStep) {
+      const major = Math.abs(y % state.gridSize) < 0.001;
+      const line = document.createElementNS(SVG_NS, "line");
+      line.setAttribute("x1", 0);
+      line.setAttribute("y1", y);
+      line.setAttribute("x2", CANVAS_WIDTH);
+      line.setAttribute("y2", y);
+      line.setAttribute("stroke", major ? "rgba(148,163,184,0.55)" : "rgba(148,163,184,0.18)");
+      line.setAttribute("stroke-width", "1");
+      els.svg.appendChild(line);
+    }
+  }
+
+  state.shapes.forEach((shape) => els.svg.appendChild(renderShape(shape)));
+  if (state.previewShape) els.svg.appendChild(renderShape(state.previewShape, true));
+}
+
+function syncInputs() {
+  els.colorPicker.value = isValidColor(state.color) ? state.color : "#06b6d4";
+  els.colorText.value = state.color;
+  els.backgroundPicker.value = isValidColor(state.background) ? state.background : "#0f172a";
+  els.backgroundText.value = state.background;
+  els.strokeWidth.value = state.strokeWidth;
+  els.strokeWidthLabel.textContent = state.strokeWidth;
+  els.gridSize.value = state.gridSize;
+  els.gridSizeLabel.textContent = state.gridSize;
+  els.subDivisions.value = String(state.subDivisions);
+  els.showGrid.checked = state.showGrid;
+  els.snapToGrid.checked = state.snapToGrid;
+}
+
+function undo() {
+  if (state.draftPolyline.length > 0) {
+    state.draftPolyline.pop();
+    if (state.draftPolyline.length === 0) state.previewShape = null;
+    render();
+    return;
+  }
+  state.shapes.pop();
+  state.selectedId = null;
+  render();
+}
+
+function deleteSelected() {
+  if (!state.selectedId) return;
+  state.shapes = state.shapes.filter((shape) => shape.id !== state.selectedId);
+  state.selectedId = null;
+  render();
+}
+
+function clearAll() {
+  state.shapes = [];
+  state.draftPolyline = [];
+  state.previewShape = null;
+  state.isDrawing = false;
+  state.startPoint = null;
+  state.selectedId = null;
+  render();
+}
+
+function handlePointerDown(evt) {
+  const raw = getMousePosition(evt, els.svg);
+  const point = normalisePoint(raw);
+
+  if (state.tool === "select") {
+    state.selectedId = null;
+    render();
+    return;
+  }
+
+  if (state.tool === "polyline") {
+    if (evt.detail === 2) {
+      if (state.draftPolyline.length >= 2) {
+        state.shapes.push({
+          id: uid(),
+          type: "polyline",
+          points: [...state.draftPolyline, point],
+          color: state.color,
+          strokeWidth: state.strokeWidth,
+        });
+      }
+      state.draftPolyline = [];
+      state.previewShape = null;
+      render();
+      return;
+    }
+
+    state.draftPolyline.push(point);
+    render();
+    return;
+  }
+
+  state.isDrawing = true;
+  state.startPoint = point;
+  state.previewShape = {
+    id: "preview",
+    type: state.tool,
+    x1: point.x,
+    y1: point.y,
+    x2: point.x,
+    y2: point.y,
+    color: state.color,
+    strokeWidth: state.strokeWidth,
+  };
+  render();
+}
+
+function handlePointerMove(evt) {
+  const raw = getMousePosition(evt, els.svg);
+  const point = normalisePoint(raw);
+
+  if (state.tool === "polyline" && state.draftPolyline.length > 0) {
+    state.previewShape = {
+      id: "preview-polyline",
+      type: "polyline",
+      points: [...state.draftPolyline, point],
+      color: state.color,
+      strokeWidth: state.strokeWidth,
+    };
+    render();
+    return;
+  }
+
+  if (!state.isDrawing || !state.startPoint) return;
+
+  state.previewShape = {
+    id: "preview",
+    type: state.tool,
+    x1: state.startPoint.x,
+    y1: state.startPoint.y,
+    x2: point.x,
+    y2: point.y,
+    color: state.color,
+    strokeWidth: state.strokeWidth,
+  };
+  render();
+}
+
+function handlePointerUp(evt) {
+  if (!state.isDrawing || !state.startPoint) return;
+  const raw = getMousePosition(evt, els.svg);
+  const point = normalisePoint(raw);
+
+  const next = {
+    id: uid(),
+    type: state.tool,
+    x1: state.startPoint.x,
+    y1: state.startPoint.y,
+    x2: point.x,
+    y2: point.y,
+    color: state.color,
+    strokeWidth: state.strokeWidth,
+  };
+
+  const samePoint = next.x1 === next.x2 && next.y1 === next.y2;
+  if (!samePoint) state.shapes.push(next);
+
+  state.isDrawing = false;
+  state.startPoint = null;
+  state.previewShape = null;
+  render();
+}
+
+function saveProject() {
+  downloadTextFile(`${els.filename.value || "grid-drawing"}.grid.json`, JSON.stringify(buildProjectData(), null, 2), "application/json");
+}
+
+function loadProjectFile(file) {
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const parsed = JSON.parse(String(reader.result));
+      if (parsed.type !== "simple-grid-editor-project") throw new Error("Invalid file");
+      state.shapes = Array.isArray(parsed.shapes) ? parsed.shapes : [];
+      state.background = parsed.canvas?.background || "#0f172a";
+      state.gridSize = parsed.canvas?.gridSize || 40;
+      state.subDivisions = parsed.canvas?.subDivisions || 2;
+      state.showGrid = typeof parsed.canvas?.showGrid === "boolean" ? parsed.canvas.showGrid : true;
+      state.snapToGrid = true;
+      state.draftPolyline = [];
+      state.previewShape = null;
+      state.isDrawing = false;
+      state.startPoint = null;
+      state.selectedId = null;
+      syncInputs();
+      render();
+    } catch {
+      alert("Could not load that file.");
+    }
+  };
+  reader.readAsText(file);
+}
+
+function exportSvg() {
+  downloadTextFile(`${els.filename.value || "grid-drawing"}.svg`, makeSvgMarkup(), "image/svg+xml");
+}
+
+function exportPng() {
+  const markup = makeSvgMarkup();
+  const blob = new Blob([markup], { type: "image/svg+xml;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const img = new Image();
+  img.onload = () => {
+    const canvas = document.createElement("canvas");
+    canvas.width = CANVAS_WIDTH;
+    canvas.height = CANVAS_HEIGHT;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.drawImage(img, 0, 0);
+    canvas.toBlob((pngBlob) => {
+      if (pngBlob) downloadBlob(`${els.filename.value || "grid-drawing"}.png`, pngBlob);
+      URL.revokeObjectURL(url);
+    }, "image/png");
+  };
+  img.src = url;
+}
+
+// Init UI
+DEFAULT_COLORS.forEach((color) => {
+  const btn = document.createElement("button");
+  btn.className = "swatch";
+  btn.style.backgroundColor = color;
+  btn.onclick = () => { state.color = color; syncInputs(); };
+  els.swatches.appendChild(btn);
+});
+
+els.toolButtons.forEach((btn) => btn.onclick = () => setTool(btn.dataset.tool));
+els.undoBtn.onclick = undo;
+els.deleteBtn.onclick = deleteSelected;
+els.clearBtn.onclick = clearAll;
+els.saveProjectBtn.onclick = saveProject;
+els.loadProjectBtn.onclick = () => els.loadProjectInput.click();
+els.loadProjectInput.onchange = () => loadProjectFile(els.loadProjectInput.files[0]);
+els.exportSvgBtn.onclick = exportSvg;
+els.exportPngBtn.onclick = exportPng;
+
+els.svg.addEventListener("pointerdown", handlePointerDown);
+els.svg.addEventListener("pointermove", handlePointerMove);
+els.svg.addEventListener("pointerup", handlePointerUp);
+els.svg.addEventListener("pointerleave", handlePointerUp);
+
+syncInputs();
+render();
