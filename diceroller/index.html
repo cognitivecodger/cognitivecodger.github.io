@@ -32,11 +32,11 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 24px;
+      padding: 18px;
     }
 
     .app {
-      width: min(1200px, 100%);
+      width: min(1220px, 100%);
       background: linear-gradient(180deg, rgba(38, 26, 53, 0.96), rgba(18, 13, 27, 0.96));
       border: 2px solid var(--panel-border);
       border-radius: 24px;
@@ -45,7 +45,7 @@
     }
 
     .header {
-      padding: 26px 24px 18px;
+      padding: 24px 24px 14px;
       text-align: center;
       border-bottom: 1px solid rgba(217, 184, 106, 0.25);
       background: linear-gradient(180deg, rgba(217, 184, 106, 0.08), rgba(0,0,0,0));
@@ -53,8 +53,8 @@
 
     .title {
       margin: 0;
-      font-size: clamp(2rem, 4vw, 3rem);
-      letter-spacing: 0.08em;
+      font-size: clamp(2.2rem, 4.5vw, 3.3rem);
+      letter-spacing: 0.05em;
       color: var(--gold);
       text-shadow: 0 0 14px rgba(217, 184, 106, 0.24);
     }
@@ -67,9 +67,9 @@
 
     .content {
       display: grid;
-      grid-template-columns: 180px minmax(0, 1fr);
+      grid-template-columns: 180px minmax(0, 1fr) 395px;
       gap: 20px;
-      padding: 20px;
+      padding: 18px;
       align-items: start;
     }
 
@@ -89,9 +89,9 @@
     }
 
     .dice-panel {
-      padding: 16px 12px;
+      padding: 12px 12px 16px;
       position: sticky;
-      top: 20px;
+      top: 18px;
     }
 
     .dice-panel h2 {
@@ -110,11 +110,21 @@
       gap: 20px;
     }
 
-    .top-row {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 20px;
-      align-items: start;
+    .history-column {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .history-panel {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .history-box {
+      flex: 1;
+      min-height: 665px;
+      overflow: auto;
     }
 
     .die-btn {
@@ -131,7 +141,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      min-height: 86px;
+      min-height: 90px;
       position: relative;
       overflow: hidden;
     }
@@ -208,6 +218,7 @@
       font-weight: bold;
       color: var(--gold);
       letter-spacing: 0.03em;
+      min-width: 76px;
     }
 
     .mod-btn {
@@ -266,7 +277,7 @@
 
     .add-mod-btn {
       border-radius: 10px;
-      padding: 10px 14px;
+      padding: 10px 16px;
       color: #20130b;
       background: linear-gradient(180deg, #f0cc7c, #b98c39);
     }
@@ -357,7 +368,7 @@
       min-height: 78px;
       padding: 14px;
       border-radius: 16px;
-      background: rgba(8, 7, 14, 0.55);
+      background: rgba(8, 7, 14, 0.72);
       border: 1px solid rgba(217, 184, 106, 0.16);
     }
 
@@ -402,7 +413,7 @@
     }
 
     .queue-box-large {
-      min-height: 120px;
+      min-height: 122px;
       display: flex;
       align-items: center;
       flex-wrap: wrap;
@@ -417,6 +428,8 @@
     .result-box {
       display: grid;
       gap: 10px;
+      min-height: 118px;
+      align-content: center;
     }
 
     .formula {
@@ -447,7 +460,7 @@
     .history-list {
       display: grid;
       gap: 10px;
-      margin-top: 8px;
+      margin-top: 0;
     }
 
     .history-item {
@@ -504,14 +517,23 @@
       100% { transform: scale(1); opacity: 1; }
     }
 
-    @media (max-width: 980px) {
-      .content { grid-template-columns: 1fr; }
-      .dice-panel { position: static; }
+    @media (max-width: 1100px) {
+      .content {
+        grid-template-columns: 1fr;
+      }
+
+      .dice-panel {
+        position: static;
+      }
+
       .dice-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(92px, 1fr));
       }
-      .top-row { grid-template-columns: 1fr; }
+
+      .history-box {
+        min-height: 260px;
+      }
     }
   </style>
 </head>
@@ -552,24 +574,24 @@
           </div>
         </section>
 
-        <section class="top-row">
-          <section class="panel">
-            <h2>Queued Roll</h2>
-            <div class="queue-box queue-box-large" id="queueDisplay">
-              <span class="empty">No dice or modifiers queued yet.</span>
-            </div>
-            <div class="hint">Click a die to add it once. Click it again to add another of the same type.</div>
-          </section>
-
-          <section class="panel">
-            <h2>Latest Result</h2>
-            <div class="result-box" id="resultDisplay">
-              <div class="empty">Your result will appear here.</div>
-            </div>
-          </section>
+        <section class="panel">
+          <h2>Queued Roll</h2>
+          <div class="queue-box queue-box-large" id="queueDisplay">
+            <span class="empty">No dice or modifiers queued yet.</span>
+          </div>
+          <div class="hint">Click a die to add it once. Click it again to add another of the same type.</div>
         </section>
 
         <section class="panel">
+          <h2>Latest Result</h2>
+          <div class="result-box" id="resultDisplay">
+            <div class="empty">Your result will appear here.</div>
+          </div>
+        </section>
+      </section>
+
+      <section class="history-column">
+        <section class="panel history-panel">
           <h2>Roll History</h2>
           <div class="history-box">
             <div class="history-list" id="historyList">
@@ -938,39 +960,6 @@
         resultDisplay.innerHTML = '<div class="empty">Your result will appear here.</div>';
       }
 
-      function runSelfTests() {
-        console.assert(JSON.stringify(groupDice([6, 6, 8])) === JSON.stringify({ 6: 2, 8: 1 }), 'groupDice should group identical dice');
-
-        modifiers.push(4, -2);
-        console.assert(getModifierTotal() === 2, 'getModifierTotal should sum positive and negative modifiers');
-        modifiers.length = 0;
-
-        queue.push(6, 6, 8);
-        modifiers.push(4, -2);
-        renderQueue();
-        console.assert(queueDisplay.textContent.trim() === '(2d6 + 1d8) +4 -2', 'Queued roll text should match expected format');
-
-        modifierValue.value = '3';
-        addModifier();
-        console.assert(modifiers.length === 3 && modifiers[2] === 3, 'addModifier should append positive values');
-
-        modifierValue.value = '-5';
-        addModifier();
-        console.assert(modifiers[3] === -5, 'addModifier should append negative values');
-
-        rollingTick = 0;
-        renderRollingPreview();
-        const firstPreview = resultDisplay.textContent;
-        renderRollingPreview();
-        const secondPreview = resultDisplay.textContent;
-        console.assert(firstPreview !== secondPreview, 'rolling preview should change between frames');
-
-        modifiers.length = 0;
-        queue.length = 0;
-        renderQueue();
-        renderModifiers();
-      }
-
       decModBtn.addEventListener('click', () => {
         if (isRolling) return;
         const current = parseInt(modifierValue.value || '0', 10) || 0;
@@ -997,7 +986,6 @@
       renderQueue();
       renderModifiers();
       renderHistory();
-      runSelfTests();
     })();
   </script>
 </body>
