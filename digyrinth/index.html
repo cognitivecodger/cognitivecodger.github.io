@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Digyrinth — Procedural Map Generator</title>
+  <link rel="stylesheet" href="css/app.css">
+</head>
+
+<body>
+  <header>
+    <h1>Digyrinth</h1>
+    <div class="sub">Seeded RNG • Step-by-step digging • Auto-scaling tiles • Solvable doors &amp; keys</div>
+  </header>
+
+  <main>
+    <aside id="sidebar">
+      <div class="sidebar-top">
+        <button id="toggleSidebar" type="button" aria-label="Toggle sidebar">☰</button>
+        <button class="primary generate-btn" id="btnGenerate" type="button">GENERATE</button>
+      </div>
+
+      <form id="controls">
+        <div class="section open">
+          <button class="section-header" type="button">Map Size</button>
+          <div class="section-content">
+            <div class="form-row">
+              <label for="Gmapx">Map Width</label>
+              <input id="Gmapx" type="number" min="4" max="512" value="50" />
+            </div>
+
+            <div class="form-row">
+              <label for="Gmapy">Map Height</label>
+              <input id="Gmapy" type="number" min="4" max="512" value="30" />
+            </div>
+          </div>
+        </div>
+
+        <div class="section open">
+          <button class="section-header" type="button">Randomizer</button>
+          <div class="section-content">
+            <div class="form-row seed-row">
+              <label for="seed">Seed (Blank = Random)</label>
+              <input id="seed" type="text" placeholder="e.g. 56 or any text" />
+            </div>
+
+            <div class="form-row seed-row">
+              <label for="configCode">Share Code</label>
+              <input id="configCode" type="text" placeholder="Paste a code here or copy this to share" />
+            </div>
+
+            <div class="code-tools">
+              <button id="btnApplyCode" type="button">Apply Code</button>
+              <button id="btnCopyCode" type="button">Copy Code</button>
+            </div>
+
+            <div class="code-help">
+              Compact code includes the seed and all current settings. Changing any setting updates the code.
+            </div>
+          </div>
+        </div>
+
+        <div class="section open">
+          <button class="section-header" type="button">Statistical Influence</button>
+          <div class="section-content">
+            <label class="checklabel" for="edgeStart">
+              <input id="edgeStart" type="checkbox" />
+              Start from edge
+            </label>
+
+            <div class="form-row">
+              <label for="GPOMF">Undiggable %</label>
+              <input id="GPOMF" type="number" min="0" max="90" value="0" />
+            </div>
+
+            <div class="form-row">
+              <label for="GCOBR">Block Room (1/N)</label>
+              <input id="GCOBR" type="number" min="0" max="10000" value="40" />
+            </div>
+
+            <div class="form-row">
+              <label for="blockMin">Block Room Min Cells</label>
+              <input id="blockMin" type="number" min="2" value="6" />
+            </div>
+
+            <div class="form-row">
+              <label for="blockMax">Block Room Max Cells</label>
+              <input id="blockMax" type="number" min="2" value="18" />
+            </div>
+
+            <div class="form-row">
+              <label for="GCORR">Random Room (1/N)</label>
+              <input id="GCORR" type="number" min="0" max="10000" value="40" />
+            </div>
+
+            <div class="form-row">
+              <label for="randMin">Random Room Min Digs</label>
+              <input id="randMin" type="number" min="5" value="5" />
+            </div>
+
+            <div class="form-row">
+              <label for="randMax">Random Room Max Digs</label>
+              <input id="randMax" type="number" min="5" value="50" />
+            </div>
+
+            <div class="form-row">
+              <label for="GCOFA">Flooded (1/N)</label>
+              <input id="GCOFA" type="number" min="0" max="10000" value="10" />
+            </div>
+
+            <div class="form-row">
+              <label for="GCOJJ">Jump Chance (1/N)</label>
+              <input id="GCOJJ" type="number" min="0" max="100000" value="1000" />
+            </div>
+
+            <div class="form-row">
+              <label for="GMAXFJ">Max Failed Jumps</label>
+              <input id="GMAXFJ" type="number" min="1" max="1000" value="10" />
+            </div>
+
+            <div class="form-row">
+              <label for="GCKSD">Keep Direction Weight</label>
+              <input id="GCKSD" type="number" min="1" max="100" value="10" />
+            </div>
+          </div>
+        </div>
+
+        <div class="section open">
+          <button class="section-header" type="button">Doors &amp; Keys</button>
+          <div class="section-content">
+            <div class="form-row">
+              <label for="targetDoors">Total Doors</label>
+              <input id="targetDoors" type="number" min="0" max="500" value="40" />
+            </div>
+
+            <div class="form-row">
+              <label for="lockedDoorPct">Locked Doors %</label>
+              <input id="lockedDoorPct" type="number" min="0" max="100" value="35" />
+            </div>
+
+            <div class="form-row">
+              <label for="maxKeyId">Max Key Numbers</label>
+              <input id="maxKeyId" type="number" min="1" max="99" value="9" />
+            </div>
+
+            <div class="form-row">
+              <label for="doorPlacementAttempts">Door Attempts</label>
+              <input id="doorPlacementAttempts" type="number" min="1" max="1000" value="100" />
+            </div>
+
+            <div class="form-row">
+              <label for="doorSpacing">Door Spacing</label>
+              <input id="doorSpacing" type="number" min="0" max="20" value="3" />
+            </div>
+          </div>
+        </div>
+
+        <div class="section open">
+          <button class="section-header" type="button">Display</button>
+          <div class="section-content">
+            <label class="checklabel" for="showProcess">
+              <input id="showProcess" type="checkbox" />
+              Show process (tile-by-tile)
+            </label>
+
+            <label class="checklabel" for="showArrows">
+              <input id="showArrows" type="checkbox" checked />
+              Show route arrows
+            </label>
+
+            <label class="checklabel" for="showTint">
+              <input id="showTint" type="checkbox" checked />
+              Show tile tint (discoloured tiles)
+            </label>
+
+            <label class="checklabel" for="showWater">
+              <input id="showWater" type="checkbox" checked />
+              Show water (flooded rooms)
+            </label>
+
+            <label class="checklabel" for="showDoors">
+              <input id="showDoors" type="checkbox" checked />
+              Show doors &amp; keys
+            </label>
+
+            <label class="checklabel" for="showExit">
+              <input id="showExit" type="checkbox" />
+              Display Exit
+            </label>
+          </div>
+        </div>
+  </div>
+</div>
+
+<div class="section open">
+  <button class="section-header" type="button">Export</button>
+  <div class="section-content">
+    <div class="form-row seed-row">
+      <label for="exportStyle">Export Style</label>
+      <select id="exportStyle">
+        <option value="current">Current Visible View</option>
+        <option value="print" selected>Printable B/W</option>
+        <option value="vtt">VTT Clean Dungeon</option>
+      </select>
+    </div>
+
+    <div class="form-row">
+      <label for="exportTileSize">Export Tile Size</label>
+      <input id="exportTileSize" type="number" min="8" max="256" value="72" />
+    </div>
+
+    <label class="checklabel" for="exportShowDoors">
+      <input id="exportShowDoors" type="checkbox" checked />
+      Include doors &amp; keys
+    </label>
+
+    <label class="checklabel" for="exportShowStartExit">
+      <input id="exportShowStartExit" type="checkbox" checked />
+      Include start &amp; exit
+    </label>
+
+    <div class="code-tools">
+        <button id="btnPreviewRender" type="button">Preview</button>
+        <button id="btnExportPng" type="button">Export PNG</button>
+    </div>
+  </div>
+</div>
+
+        <div class="section open">
+          <button class="section-header" type="button">Stats</button>
+          <div class="section-content">
+            <div id="statsPanel" class="stats-panel"></div>
+          </div>
+        </div>
+
+        <div class="section open">
+          <button class="section-header" type="button">Status</button>
+          <div class="section-content">
+            <div id="currentStatus" aria-live="polite">Ready</div>
+          </div>
+        </div>
+      </form>
+    </aside>
+
+    <section id="view">
+      <canvas id="c"></canvas>
+    </section>
+  </main>
+
+  <script defer src="js/main.js"></script>
+  <script defer src="js/renderers.js"></script>
+  <script defer src="js/export.js"></script></body>
+
+</html>
