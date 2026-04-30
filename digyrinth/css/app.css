@@ -255,6 +255,24 @@ button.primary {
   font-size: 12px;
 }
 
+/* ---------- export checkboxes ---------- */
+.export-shadow-options {
+    display: grid;
+    grid-template-columns: auto repeat(4, auto);
+    gap: 8px;
+    align-items: center;
+    margin-top: 10px;
+}
+
+.export-shadow-title {
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.export-shadow-options .checklabel {
+    margin: 0;
+}
+
 /* ---------- Accordion Sections ---------- */
 
 .section {
