@@ -117,6 +117,13 @@
     const showDoors = !!document.getElementById("exportShowDoors")?.checked;
     const showStartExit = !!document.getElementById("exportShowStartExit")?.checked;
     const showGrid = !!document.getElementById("exportShowGrid")?.checked;
+      const texturedFloors = !!document.getElementById("exportTexturedFloors")?.checked;
+      const shadowDirections = {
+          n: !!document.getElementById("exportShadowN")?.checked,
+          e: !!document.getElementById("exportShadowE")?.checked,
+          s: !!document.getElementById("exportShadowS")?.checked,
+          w: !!document.getElementById("exportShadowW")?.checked
+      };
 
     let canvas;
 
