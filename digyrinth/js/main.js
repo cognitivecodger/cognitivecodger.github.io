@@ -81,6 +81,7 @@
     randMin: document.getElementById("randMin"),
     randMax: document.getElementById("randMax"),
     targetDoors: document.getElementById("targetDoors"),
+    edgeRoughness: document.getElementById("edgeRoughness"),
     lockedDoorPct: document.getElementById("lockedDoorPct"),
     maxKeyId: document.getElementById("maxKeyId"),
     doorPlacementAttempts: document.getElementById("doorPlacementAttempts"),
@@ -123,9 +124,14 @@
       ["Tiles", `${G.Gts ?? 0}px`],
       ["Failed Jumps", `${G.Gflops ?? 0}/${G.GMAXFJ ?? 0}`],
       ["POMF", `${G._pomfPlaced ?? 0}/${G._pomfTarget ?? 0}`],
+      ["Mini-gaps", `${G._filledHoleCount ?? 0}/${G._fillableHoleCount ?? 0} filled`],
+      ["Edge Roughness", `${G.edgeRoughness ?? 0}%`],
       ["Door tiles", `${G._doorCandidateCount ?? 0}`],
-      ["Doors", `${G._doorCount ?? 0}/${G.targetDoors ?? 0} (${G._lockedDoorCount ?? 0}L)`],
-      ["Keys", `${G._keyCount ?? 0}`],
+      ["Block Rooms", `${G._blockRoomCount ?? 0}`],
+      ["Random Rooms", `${G._randomRoomCount ?? 0}`],
+      ["Doors", `${G._doorCount ?? 0}/${G.targetDoors ?? 0}`],
+      ["Unlocked Doors", `${G._unlockedDoorCount ?? 0}`],
+      ["Locked Doors", `${G._lockedDoorCount ?? 0}`],      ["Keys", `${G._keyCount ?? 0}`],
       ["Solvable locks", `${G._solvableLockedDoorCount ?? 0}`],
     ];
 
@@ -135,18 +141,33 @@
   }
 
   function base64UrlEncode(str) {
-    return btoa(unescape(encodeURIComponent(str)))
-      .replace(/\+/g, "-")
-      .replace(/\//g, "_")
-      .replace(/=+$/g, "");
+        const bytes = new TextEncoder().encode(str);
+        let binary = "";
+
+        for (let i = 0; i < bytes.length; i++) {
+            binary += String.fromCharCode(bytes[i]);
+        }
+
+        return btoa(binary)
+            .replace(/\+/g, "-")
+            .replace(/\//g, "_")
+            .replace(/=+$/g, "");
   }
 
-  function base64UrlDecode(str) {
-    const normalized = str.replace(/-/g, "+").replace(/_/g, "/");
-    const pad = normalized.length % 4;
-    const padded = normalized + (pad ? "=".repeat(4 - pad) : "");
-    return decodeURIComponent(escape(atob(padded)));
-  }
+    function base64UrlDecode(str) {
+        const normalized = str.replace(/-/g, "+").replace(/_/g, "/");
+        const pad = normalized.length % 4;
+        const padded = normalized + (pad ? "=".repeat(4 - pad) : "");
+
+        const binary = atob(padded);
+        const bytes = new Uint8Array(binary.length);
+
+        for (let i = 0; i < binary.length; i++) {
+            bytes[i] = binary.charCodeAt(i);
+        }
+
+        return new TextDecoder().decode(bytes);
+    }
 
   function toB36(v) {
     return Math.max(0, Number(v) || 0).toString(36);
@@ -209,6 +230,7 @@
       GCORR: parseInt(getFieldValue("GCORR", "40")) || 40,
       randMin: parseInt(getFieldValue("randMin", "5")) || 5,
       randMax: parseInt(getFieldValue("randMax", "50")) || 50,
+      edgeRoughness: parseInt(getFieldValue("edgeRoughness", "0")) || 0,
       GCOFA: parseInt(getFieldValue("GCOFA", "10")) || 10,
       GCOJJ: parseInt(getFieldValue("GCOJJ", "1000")) || 1000,
       GMAXFJ: parseInt(getFieldValue("GMAXFJ", "10")) || 10,
@@ -277,6 +299,7 @@
       toB36(cfg.maxKeyId),
       toB36(cfg.doorPlacementAttempts),
       toB36(cfg.doorSpacing),
+      toB36(cfg.edgeRoughness),
       toB36(packFlags(cfg)),
     ];
 
@@ -311,6 +334,7 @@
     setFieldValue("GCORR", cfg.GCORR);
     setFieldValue("randMin", cfg.randMin);
     setFieldValue("randMax", cfg.randMax);
+    setFieldValue("edgeRoughness", cfg.edgeRoughness ?? 0);
     setFieldValue("GCOFA", cfg.GCOFA);
     setFieldValue("GCOJJ", cfg.GCOJJ);
     setFieldValue("GMAXFJ", cfg.GMAXFJ);
@@ -344,9 +368,9 @@
     const payload = code.startsWith("MG2-") ? code.slice(4) : code;
     const parts = payload.split(".");
 
-    if (parts.length < 20) throw new Error("Invalid compact code");
+    if (parts.length < 21) throw new Error("Invalid compact code");
 
-    const flags = unpackFlags(fromB36(parts[19], 0));
+    const flags = unpackFlags(fromB36(parts[20], 0));
 
     return {
       v: 2,
@@ -369,6 +393,7 @@
       maxKeyId: fromB36(parts[16], 9),
       doorPlacementAttempts: fromB36(parts[17], 100),
       doorSpacing: fromB36(parts[18], 3),
+      edgeRoughness: fromB36(parts[19], 0),
       ...flags,
     };
   }
@@ -423,6 +448,7 @@
 
     G.randMin = rMin;
     G.randMax = rMax;
+    G.edgeRoughness = clamp(parseInt(els.edgeRoughness.value) || 0, 0, 100);
 
     const s = els.seed.value.trim();
 
@@ -985,64 +1011,111 @@
   }
 
   // ---------- Post-process ----------
-  function solo_hole_filler() {
-    for (let yy = 1; yy <= G.Gmapy; yy++) {
-      for (let xx = 1; xx <= G.Gmapx; xx++) {
-        if (wallcount(xx, yy) === 3) {
-          let nx = xx;
-          let ny = yy;
+    function solo_hole_filler() {
+        const fillableHoles = [];
 
-          switch (map[xx][yy].dir) {
-            case 1:
-              nx = nx - 1;
-              break;
-            case 2:
-              nx = nx + 1;
-              break;
-            case 3:
-              ny = ny - 1;
-              break;
-            case 4:
-              ny = ny + 1;
-              break;
-          }
+        // First collect every mini-gap that could be filled.
+        for (let yy = 1; yy <= G.Gmapy; yy++) {
+            for (let xx = 1; xx <= G.Gmapx; xx++) {
+                if (wallcount(xx, yy) === 3) {
+                    let nx = xx;
+                    let ny = yy;
 
-          if (wallcount(nx, ny) < 2) undig(xx, yy);
+                    switch (map[xx][yy].dir) {
+                        case 1:
+                            nx = nx - 1;
+                            break;
+                        case 2:
+                            nx = nx + 1;
+                            break;
+                        case 3:
+                            ny = ny - 1;
+                            break;
+                        case 4:
+                            ny = ny + 1;
+                            break;
+                    }
+
+                    if (wallcount(nx, ny) < 2) {
+                        fillableHoles.push({ x: xx, y: yy });
+                    }
+                }
+            }
         }
-      }
-    }
-  }
 
-  function computeExitTile() {
-    let bestId = -1;
-    let bx = 0;
-    let by = 0;
+        // Edge Roughness %
+        // 0   = fill all mini-gaps
+        // 100 = keep all mini-gaps
+        const keepChance = (G.edgeRoughness ?? 0) / 100;
 
-    for (let y = 1; y <= G.Gmapy; y++) {
-      for (let x = 1; x <= G.Gmapx; x++) {
-        const b = map[x][y];
-
-        if (!b || b.flr <= 0) continue;
-        if (x === G.Gstartx && y === G.Gstarty) continue;
-
-        const id = b.id || 0;
-
-        if (id > bestId) {
-          bestId = id;
-          bx = x;
-          by = y;
+        for (const hole of fillableHoles) {
+            if (rng() < keepChance) continue;
+            undig(hole.x, hole.y);
         }
-      }
+
+        G._fillableHoleCount = fillableHoles.length;
+        G._filledHoleCount = fillableHoles.length - Math.round(fillableHoles.length * keepChance);
     }
 
-    if (bestId > 0) {
-      G._exitX = bx;
-      G._exitY = by;
-    } else {
-      G._exitX = 0;
-      G._exitY = 0;
+    function computeExitTile() {
+        let bestId = -1;
+        let bx = 0;
+        let by = 0;
+
+        // Prefer an existing floor tile that is a dead-end:
+        // exactly one neighbouring floor tile, meaning three adjacent walls.
+        for (let y = 1; y <= G.Gmapy; y++) {
+            for (let x = 1; x <= G.Gmapx; x++) {
+                const b = map[x][y];
+                if (!b || b.flr <= 0) continue;
+                if (x === G.Gstartx && y === G.Gstarty) continue;
+
+                const openNeighbours =
+                    (isFloorTile(x + 1, y) ? 1 : 0) +
+                    (isFloorTile(x - 1, y) ? 1 : 0) +
+                    (isFloorTile(x, y + 1) ? 1 : 0) +
+                    (isFloorTile(x, y - 1) ? 1 : 0);
+
+                if (openNeighbours !== 1) continue;
+
+                const id = b.id || 0;
+
+                if (id > bestId) {
+                    bestId = id;
+                    bx = x;
+                    by = y;
+                }
+            }
+        }
+
+        // Fallback: if no dead-end exists, use the old behaviour.
+        // This keeps the generator robust.
+        if (bestId < 0) {
+            for (let y = 1; y <= G.Gmapy; y++) {
+                for (let x = 1; x <= G.Gmapx; x++) {
+                    const b = map[x][y];
+                    if (!b || b.flr <= 0) continue;
+                    if (x === G.Gstartx && y === G.Gstarty) continue;
+
+                    const id = b.id || 0;
+
+                    if (id > bestId) {
+                        bestId = id;
+                        bx = x;
+                        by = y;
+                    }
+                }
+            }
+        }
+
+        if (bestId > 0) {
+            G._exitX = bx;
+            G._exitY = by;
+        } else {
+            G._exitX = 0;
+            G._exitY = 0;
+        }
     }
-  }
 
   // ---------- Main generation phase ----------
   function DiggerPhase(showprocess = false, stepLimit = 1e6) {
@@ -1130,11 +1203,12 @@
 
         if (plan) {
           setCurrentStatus("Block room");
+          G._blockRoomCount++;
 
           for (const [X, Y] of plan.cells) {
-            dig(X, Y);
-            map[X][Y].flood = plan.flood;
-          }
+          dig(X, Y);
+          map[X][Y].flood = plan.flood;
+        }
 
           G.Gdx = plan.end[0];
           G.Gdy = plan.end[1];
@@ -1146,6 +1220,7 @@
 
         if (plan) {
           setCurrentStatus("Random room");
+          G._randomRoomCount++;
 
           for (let i = 0; i < plan.remain; i++) {
             G.Gprevious = 0;
@@ -1569,6 +1644,7 @@
     if (!candidates.length || G.targetDoors <= 0) {
       G._doorCount = 0;
       G._lockedDoorCount = 0;
+      G._unlockedDoorCount = 0;
       G._keyCount = 0;
       return;
     }
@@ -1606,10 +1682,11 @@
       }
     }
 
-    G._doorCount = placed;
-    G._lockedDoorCount = lockedPlaced;
-    G._solvableLockedDoorCount = lockedPlaced;
-    G._keyCount = keyCount;
+      G._doorCount = placed;
+      G._lockedDoorCount = lockedPlaced;
+      G._unlockedDoorCount = Math.max(0, placed - lockedPlaced);
+      G._solvableLockedDoorCount = lockedPlaced;
+      G._keyCount = keyCount;
   }
 
   // ---------- Drawing ----------
@@ -2041,17 +2118,19 @@
         } else if (mv === 5) {
           const plan = planBlockRoom(G.Gdx, G.Gdy);
 
-          if (plan) {
-            G._roomPlan = plan;
-          } else {
+            if (plan) {
+                G._blockRoomCount++;
+                G._roomPlan = plan;
+            } else {
             G.Gflops++;
           }
         } else if (mv === 6) {
           const plan = planRandRoom(G.Gdx, G.Gdy);
 
-          if (plan) {
-            G._roomPlan = plan;
-          } else {
+            if (plan) {
+                G._randomRoomCount++;
+                G._roomPlan = plan;
+            } else {
             G.Gflops++;
           }
         }
@@ -2089,7 +2168,10 @@
     G._finished = false;
     G._exitX = 0;
     G._exitY = 0;
-
+    G._blockRoomCount = 0;
+    G._randomRoomCount = 0;
+    G._unlockedDoorCount = 0;
+    G._lockedDoorCount = 0;
     setup_notouchzones();
     initialize_digger(!!G.edgeStart);
 
