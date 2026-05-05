@@ -364,10 +364,11 @@
         for (let y = 0; y <= G.Gmapy + 1; y++) {
             for (let x = 0; x <= G.Gmapx + 1; x++) {
                 if (!isFloorTile(G, map, x, y)) {
-                    if (options.texturedFloors) {
-                        drawStoneHatch(ctx, x * ts, y * ts, ts, x, y, seed);
-                    } else {
+                    if (options.wallTileStyle === "plain") {
                         drawPrintPlainWall(ctx, x * ts, y * ts, ts);
+                    } else {
+                        // For print, both "textured" and "crosshatch" currently use the ink hatch style.
+                        drawStoneHatch(ctx, x * ts, y * ts, ts, x, y, seed);
                     }
                 }
             }
@@ -383,7 +384,7 @@
 
                 drawFloorTileInk(ctx, nx, ny, ts, options.showGrid);
 
-                if (map[x][y].flood) {
+                if (options.showWater && map[x][y].flood) {
                     ctx.fillStyle = `rgba(0,0,0,${printWaterOverlayOpacity})`;
                     ctx.fillRect(nx, ny, ts, ts);
 

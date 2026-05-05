@@ -38,7 +38,10 @@
         const showDoors = !!document.getElementById("exportShowDoors")?.checked;
         const showStartExit = !!document.getElementById("exportShowStartExit")?.checked;
         const showGrid = !!document.getElementById("exportShowGrid")?.checked;
-        const texturedFloors = !!document.getElementById("exportTexturedFloors")?.checked;
+        const showWater = !!document.getElementById("exportShowWater")?.checked;
+        const floorStyle = document.getElementById("optFloorStyle")?.value || "cobble";
+        const wallTileStyle = document.getElementById("optWallTileStyle")?.value || "textured";
+        const wallEdgeStyle = document.getElementById("optWallEdgeStyle")?.value || "brick";
         const shadowDirections = {
             n: !!document.getElementById("exportShadowN")?.checked,
             e: !!document.getElementById("exportShadowE")?.checked,
@@ -58,7 +61,10 @@
                 showDoors,
                 showStartExit,
                 showGrid,
-                texturedFloors,
+                showWater,
+                floorStyle,
+                wallTileStyle,
+                wallEdgeStyle,
                 shadowDirections,
             });
         }
@@ -116,8 +122,11 @@
     const tileSize = Math.max(8, Math.min(256, parseInt(document.getElementById("exportTileSize")?.value, 10) || 72));
     const showDoors = !!document.getElementById("exportShowDoors")?.checked;
     const showStartExit = !!document.getElementById("exportShowStartExit")?.checked;
-    const showGrid = !!document.getElementById("exportShowGrid")?.checked;
-      const texturedFloors = !!document.getElementById("exportTexturedFloors")?.checked;
+      const showGrid = !!document.getElementById("exportShowGrid")?.checked;
+      const showWater = !!document.getElementById("exportShowWater")?.checked;
+      const floorStyle = document.getElementById("optFloorStyle")?.value || "cobble";
+      const wallTileStyle = document.getElementById("optWallTileStyle")?.value || "textured";
+      const wallEdgeStyle = document.getElementById("optWallEdgeStyle")?.value || "brick";
       const shadowDirections = {
           n: !!document.getElementById("exportShadowN")?.checked,
           e: !!document.getElementById("exportShadowE")?.checked,
@@ -132,14 +141,17 @@
     } else {
       canvas = document.createElement("canvas");
 
-      window.DigyrinthRenderers.renderMapToCanvas(canvas, state, style, {
-        tileSize,
-        showDoors,
-        showStartExit,
-        showGrid,
-        texturedFloors,
-        shadowDirections,
-      });
+        window.DigyrinthRenderers.renderMapToCanvas(canvas, state, style, {
+            tileSize,
+            showDoors,
+            showStartExit,
+            showGrid,
+            showWater,
+            floorStyle,
+            wallTileStyle,
+            wallEdgeStyle,
+            shadowDirections,
+        });
     }
 
     const seed = safeFilenamePart(state.G._seedUsed || "random");

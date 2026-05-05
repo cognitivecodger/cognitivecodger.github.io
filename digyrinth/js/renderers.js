@@ -1,4 +1,4 @@
-(() => {
+﻿(() => {
 
     /* =========================================================
        DIGYRINTH RENDERERS
@@ -310,54 +310,129 @@
     ========================================================= */
 
     function drawStartExit(ctx, G, map, ts, style) {
-        // TWEAK: Start/exit marker size and label size.
-        const markerRadiusRatio = 0.28;
-        const markerLineWidthRatio = 0.055;
-        const markerFontRatio = 0.28;
-        const markerMinFontSize = 10;
+        // TWEAK: Stair symbol sizing.
+        const stairWidthRatio = 0.68;
+        const stairHeightRatio = 0.68;
+        const stairSteps = 5;
+        const stairLineWidthRatio = 0.04;
 
-        if (G.Gstartx > 0) {
-            const x = G.Gstartx * ts;
-            const y = G.Gstarty * ts;
+        function getOpenDirection(x, y) {
+            if (isFloorTile(G, map, x, y - 1)) return "north";
+            if (isFloorTile(G, map, x + 1, y)) return "east";
+            if (isFloorTile(G, map, x, y + 1)) return "south";
+            if (isFloorTile(G, map, x - 1, y)) return "west";
+            return "south";
+        }
 
-            ctx.fillStyle = style === "print" ? "#fff" : "#2ecc71";
-            ctx.strokeStyle = "#000";
-            ctx.lineWidth = Math.max(2, ts * markerLineWidthRatio);
+        function rotationForDirection(dir) {
+            if (dir === "north") return 0;
+            if (dir === "east") return Math.PI / 2;
+            if (dir === "south") return Math.PI;
+            if (dir === "west") return -Math.PI / 2;
+            return 0;
+        }
 
+        function drawStairs(xTile, yTile, type) {
+            const nx = xTile * ts;
+            const ny = yTile * ts;
+            const cx = nx + ts / 2;
+            const cy = ny + ts / 2;
+
+            const w = ts * stairWidthRatio;
+            const h = ts * stairHeightRatio;
+
+            const dir = getOpenDirection(xTile, yTile);
+            const rotation = rotationForDirection(dir);
+
+            ctx.save();
+            ctx.translate(cx, cy);
+            ctx.rotate(rotation);
+
+            ctx.lineWidth = Math.max(2, ts * stairLineWidthRatio);
+            ctx.lineCap = "square";
+            ctx.lineJoin = "round";
+
+            const x0 = -w / 2;
+            const y0 = -h / 2;
+
+            // Print uses greys only.
+            // UP = lighter at top, darker inward.
+            // DOWN = darker at top, lighter inward.
+            const grad = ctx.createLinearGradient(0, -h / 2, 0, h / 2);
+
+            if (style === "print") {
+                if (type === "up") {
+                    grad.addColorStop(0, "#eeeeee");
+                    grad.addColorStop(1, "#9a9a9a");
+                } else {
+                    grad.addColorStop(0, "#777777");
+                    grad.addColorStop(1, "#dddddd");
+                }
+
+                ctx.strokeStyle = "#000000";
+            } else {
+                // VTT greyscale stairs:
+                // UP = mid → light
+                // DOWN = mid → dark
+
+                if (type === "up") {
+                    grad.addColorStop(0, "#404040");  // mid grey
+                    grad.addColorStop(1, "#909090");  // light grey
+                } else {
+                    grad.addColorStop(0, "#808080");  // mid grey
+                    grad.addColorStop(1, "#101010");  // dark grey
+                }
+
+                ctx.strokeStyle = "#111111";
+            }
+
+            ctx.fillStyle = grad;
+
+            // Back plate.
             ctx.beginPath();
-            ctx.arc(x + ts / 2, y + ts / 2, ts * markerRadiusRatio, 0, Math.PI * 2);
+            ctx.rect(x0, y0, w, h);
             ctx.fill();
             ctx.stroke();
 
-            if (ts >= 18) {
-                ctx.fillStyle = "#000";
-                ctx.font = `${Math.max(markerMinFontSize, Math.floor(ts * markerFontRatio))}px system-ui`;
-                ctx.textAlign = "center";
-                ctx.textBaseline = "middle";
-                ctx.fillText("S", x + ts / 2, y + ts / 2);
+            // Stair treads.
+            for (let i = 1; i < stairSteps; i++) {
+                const t = i / stairSteps;
+                const yy = y0 + h * t;
+
+                ctx.beginPath();
+                ctx.moveTo(x0, yy);
+                ctx.lineTo(x0 + w, yy);
+                ctx.stroke();
             }
+
+            // Direction marker triangle.
+            ctx.fillStyle = style === "print" ? "#000000" : "#111111";
+            const arrowSize = ts * 0.13;
+
+            ctx.beginPath();
+
+            if (type === "up") {
+                ctx.moveTo(0, y0 + ts * 0.08);
+                ctx.lineTo(-arrowSize, y0 + ts * 0.08 + arrowSize);
+                ctx.lineTo(arrowSize, y0 + ts * 0.08 + arrowSize);
+            } else {
+                ctx.moveTo(0, y0 + h - ts * 0.08);
+                ctx.lineTo(-arrowSize, y0 + h - ts * 0.08 - arrowSize);
+                ctx.lineTo(arrowSize, y0 + h - ts * 0.08 - arrowSize);
+            }
+
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.restore();
+        }
+
+        if (G.Gstartx > 0) {
+            drawStairs(G.Gstartx, G.Gstarty, "up");
         }
 
         if (G._exitX > 0) {
-            const x = G._exitX * ts;
-            const y = G._exitY * ts;
-
-            ctx.fillStyle = style === "print" ? "#fff" : "#e74c3c";
-            ctx.strokeStyle = "#000";
-            ctx.lineWidth = Math.max(2, ts * markerLineWidthRatio);
-
-            ctx.beginPath();
-            ctx.arc(x + ts / 2, y + ts / 2, ts * markerRadiusRatio, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.stroke();
-
-            if (ts >= 18) {
-                ctx.fillStyle = "#000";
-                ctx.font = `${Math.max(markerMinFontSize, Math.floor(ts * markerFontRatio))}px system-ui`;
-                ctx.textAlign = "center";
-                ctx.textBaseline = "middle";
-                ctx.fillText("E", x + ts / 2, y + ts / 2);
-            }
+            drawStairs(G._exitX, G._exitY, "down");
         }
     }
 
@@ -379,7 +454,10 @@
             showDoors: options.showDoors !== false,
             showStartExit: options.showStartExit !== false,
             showGrid: options.showGrid !== false,
-            texturedFloors: options.texturedFloors !== false,
+            showWater: options.showWater !== false,
+            floorStyle: options.floorStyle || "cobble",
+            wallTileStyle: options.wallTileStyle || "textured",
+            wallEdgeStyle: options.wallEdgeStyle || "brick",
             shadowDirections: options.shadowDirections || {
                 n: true,
                 e: true,

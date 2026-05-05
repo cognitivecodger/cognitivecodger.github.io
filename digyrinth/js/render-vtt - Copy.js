@@ -70,295 +70,114 @@ function drawVttWallTile(ctx, nx, ny, ts, x, y, seed) {
 
 
 
-    /* =========================================================
-       VTT EXPOSED BRICK WALL EDGES
-       ---------------------------------------------------------
-       Draws small grey outlined bricks along exposed wall edges.
-       This replaces the current pipe-like bevel wall edges.
-    ========================================================= */
+/* =========================================================
+   VTT BEVELLED STONE WALL EDGE
+   ---------------------------------------------------------
+   Kept for compatibility with the current VTT wall system.
+========================================================= */
 
-    function drawVttBrickWallRuns(ctx, G, map, ts, shadowDirections = { n: true, e: true, s: false, w: false }) {
-        const seed = G._seedUsed || 0;
+function drawVttBevelWallEdge(ctx, nx, ny, ts, side, bevelStart, bevelEnd, seed = 0) {
+    // TWEAK: VTT wall lip thickness and bevel offset.
+    const vttWallThickMin = 6;
+    const vttWallThickRatio = 0.16;
+    const vttWallOffsetMin = 3;
+    const vttWallOffsetRatio = 0.075;
+    const vttWallInsetMin = 4;
+    const vttWallInsetRatio = 0.10;
 
-        // TWEAKS
-        const brickDepth = ts * 0.24;
-        const brickDepthVariation = ts * 0.08; // tiny per-brick thickness variation
-        const brickOutline = Math.max(1, ts * 0.02);
-        const brickGap = 0; // Math.max(1, ts * 0.005);
+    const thick = Math.max(vttWallThickMin, ts * vttWallThickRatio);
+    const offset = Math.max(vttWallOffsetMin, ts * vttWallOffsetRatio);
+    const inset = Math.max(vttWallInsetMin, ts * vttWallInsetRatio);
 
-        function drawBrick(ctx, x, y, w, h, hash, side) {
-    const shade = 105 + Math.floor(hashRand(hash) * 38);
+    const startInset = bevelStart ? inset : 0;
+    const endInset = bevelEnd ? inset : 0;
 
-    // TWEAK: how much each brick corner can wobble.
-    const cornerVariation = ts * 0.035;
+    const light = "rgba(205,200,175,0.90)";
+    const mid = "rgba(92,88,76,0.98)";
+    const dark = "rgba(8,7,6,0.98)";
 
-    // TWEAK: bevel strength.
-    const bevelOpacity = 0.50;
-    const bevelWidth = Math.max(2, ts * 0.05);
+    let x1, y1, x2, y2;
+    let lx1, ly1, lx2, ly2;
+    let dx1, dy1, dx2, dy2;
 
-    // Each corner gets its own independent x/y wobble.
-    const tlx = (hashRand(hash + 101) - 0.5) * cornerVariation;
-    const tly = (hashRand(hash + 102) - 0.5) * cornerVariation;
+    if (side === "top") {
+        x1 = nx + startInset;
+        y1 = ny;
+        x2 = nx + ts - endInset;
+        y2 = ny;
 
-    const trx = (hashRand(hash + 103) - 0.5) * cornerVariation;
-    const try_ = (hashRand(hash + 104) - 0.5) * cornerVariation;
+        lx1 = x1; ly1 = ny - offset * 0.35;
+        lx2 = x2; ly2 = ny - offset * 0.35;
 
-    const brx = (hashRand(hash + 105) - 0.5) * cornerVariation;
-    const bry = (hashRand(hash + 106) - 0.5) * cornerVariation;
+        dx1 = x1; dy1 = ny + offset;
+        dx2 = x2; dy2 = ny + offset;
+    }
 
-    const blx = (hashRand(hash + 107) - 0.5) * cornerVariation;
-    const bly = (hashRand(hash + 108) - 0.5) * cornerVariation;
+    if (side === "bottom") {
+        x1 = nx + startInset;
+        y1 = ny + ts;
+        x2 = nx + ts - endInset;
+        y2 = ny + ts;
 
-    const x1 = x + brickGap;
-    const y1 = y + brickGap;
-    const x2 = x + w - brickGap;
-    const y2 = y + h - brickGap;
+        lx1 = x1; ly1 = ny + ts - offset;
+        lx2 = x2; ly2 = ny + ts - offset;
 
-    const pTL = { x: x1 + tlx, y: y1 + tly };
-    const pTR = { x: x2 + trx, y: y1 + try_ };
-    const pBR = { x: x2 + brx, y: y2 + bry };
-    const pBL = { x: x1 + blx, y: y2 + bly };
+        dx1 = x1; dy1 = ny + ts + offset * 0.35;
+        dx2 = x2; dy2 = ny + ts + offset * 0.35;
+    }
 
-    // Decide light side from shadow direction checkboxes.
-    // Shadow direction = side that should be dark.
-    // Light comes from the opposite side.
-    const lightFromN = shadowDirections.n;
-    const lightFromE = shadowDirections.e;
-    const lightFromS = shadowDirections.s;
-    const lightFromW = shadowDirections.w;
+    if (side === "left") {
+        x1 = nx;
+        y1 = ny + startInset;
+        x2 = nx;
+        y2 = ny + ts - endInset;
+
+        lx1 = nx - offset * 0.35; ly1 = y1;
+        lx2 = nx - offset * 0.35; ly2 = y2;
+
+        dx1 = nx + offset; dy1 = y1;
+        dx2 = nx + offset; dy2 = y2;
+    }
+
+    if (side === "right") {
+        x1 = nx + ts;
+        y1 = ny + startInset;
+        x2 = nx + ts;
+        y2 = ny + ts - endInset;
+
+        lx1 = nx + ts - offset; ly1 = y1;
+        lx2 = nx + ts - offset; ly2 = y2;
+
+        dx1 = nx + ts + offset * 0.35; dy1 = y1;
+        dx2 = nx + ts + offset * 0.35; dy2 = y2;
+    }
 
     ctx.save();
+    ctx.lineCap = "square";
 
-    // Brick body.
-    ctx.fillStyle = `rgb(${shade},${shade},${shade - 4})`;
-    ctx.strokeStyle = "rgba(0,0,0,0.85)";
-    ctx.lineWidth = brickOutline;
-
+    ctx.lineWidth = thick;
+    ctx.strokeStyle = mid;
     ctx.beginPath();
-    ctx.moveTo(pTL.x, pTL.y);
-    ctx.lineTo(pTR.x, pTR.y);
-    ctx.lineTo(pBR.x, pBR.y);
-    ctx.lineTo(pBL.x, pBL.y);
-    ctx.closePath();
-
-    ctx.fill();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
     ctx.stroke();
 
-    // Clip bevels to the brick shape.
-    ctx.clip();
+    ctx.lineWidth = Math.max(2, ts * 0.04);
 
-    ctx.lineWidth = bevelWidth;
-    ctx.lineCap = "round";
+    ctx.strokeStyle = light;
+    ctx.beginPath();
+    ctx.moveTo(lx1, ly1);
+    ctx.lineTo(lx2, ly2);
+    ctx.stroke();
 
-    // Highlight edges.
-    ctx.strokeStyle = `rgba(255,255,255,${bevelOpacity})`;
-
-    if (lightFromN) {
-        ctx.beginPath();
-        ctx.moveTo(pTL.x, pTL.y);
-        ctx.lineTo(pTR.x, pTR.y);
-        ctx.stroke();
-    }
-
-    if (lightFromE) {
-        ctx.beginPath();
-        ctx.moveTo(pTR.x, pTR.y);
-        ctx.lineTo(pBR.x, pBR.y);
-        ctx.stroke();
-    }
-
-    if (lightFromS) {
-        ctx.beginPath();
-        ctx.moveTo(pBL.x, pBL.y);
-        ctx.lineTo(pBR.x, pBR.y);
-        ctx.stroke();
-    }
-
-    if (lightFromW) {
-        ctx.beginPath();
-        ctx.moveTo(pTL.x, pTL.y);
-        ctx.lineTo(pBL.x, pBL.y);
-        ctx.stroke();
-    }
-
-    // Shadow edges: opposite of the light edges.
-    ctx.strokeStyle = `rgba(0,0,0,${bevelOpacity})`;
-
-    if (!lightFromN) {
-        ctx.beginPath();
-        ctx.moveTo(pTL.x, pTL.y);
-        ctx.lineTo(pTR.x, pTR.y);
-        ctx.stroke();
-    }
-
-    if (!lightFromE) {
-        ctx.beginPath();
-        ctx.moveTo(pTR.x, pTR.y);
-        ctx.lineTo(pBR.x, pBR.y);
-        ctx.stroke();
-    }
-
-    if (!lightFromS) {
-        ctx.beginPath();
-        ctx.moveTo(pBL.x, pBL.y);
-        ctx.lineTo(pBR.x, pBR.y);
-        ctx.stroke();
-    }
-
-    if (!lightFromW) {
-        ctx.beginPath();
-        ctx.moveTo(pTL.x, pTL.y);
-        ctx.lineTo(pBL.x, pBL.y);
-        ctx.stroke();
-    }
+    ctx.strokeStyle = dark;
+    ctx.beginPath();
+    ctx.moveTo(dx1, dy1);
+    ctx.lineTo(dx2, dy2);
+    ctx.stroke();
 
     ctx.restore();
-        }
-
-        function drawBrickCell(x, y, w, h, hash, side) {
-            const r = hashRand(hash);
-
-            if (r < 0.10) {
-                // One large brick
-                drawBrick(ctx, x, y, w, h, hash + 1, side);
-            } else if (r < 0.50) {
-                // Two side-by-side bricks
-                drawBrick(ctx, x, y, w / 2, h, hash + 2, side);
-                drawBrick(ctx, x + w / 2, y, w / 2, h, hash + 3, side);
-            } else if (r < 0.75) {
-                // Two stacked bricks
-                drawBrick(ctx, x, y, w, h / 2, hash + 4, side);
-                drawBrick(ctx, x, y + h / 2, w, h / 2, hash + 5, side);
-            } else {
-                // Three-brick mixed pattern
-                if (hashRand(hash + 6) < 0.5) {
-                    drawBrick(ctx, x, y, w / 2, h / 2, hash + 7, side);
-                    drawBrick(ctx, x + w / 2, y, w / 2, h / 2, hash + 8, side);
-                    drawBrick(ctx, x, y + h / 2, w, h / 2, hash + 9, side);
-                } else {
-                    drawBrick(ctx, x, y, w, h / 2, hash + 10, side);
-                    drawBrick(ctx, x, y + h / 2, w / 2, h / 2, hash + 11,side);
-                    drawBrick(ctx, x + w / 2, y + h / 2, w / 2, h / 2, hash + 12,side);
-                }
-            }
-        }
-
-        function drawHorizontalRun(x1, x2, y, hashBase, side) {
-            const cell = brickDepth;
-            let x = x1;
-
-            while (x < x2) {
-                const w = Math.min(cell, x2 - x);
-
-                drawBrickCell(
-                    x,
-                    y - brickDepth / 2,
-                    w,
-                    brickDepth,
-                    tileHash(Math.floor(x), Math.floor(y), hashBase),
-                    side
-                );
-
-                x += cell;
-            }
-        }
-
-        function drawVerticalRun(x, y1, y2, hashBase, side) {
-            const cell = brickDepth;
-            let y = y1;
-
-            while (y < y2) {
-                const h = Math.min(cell, y2 - y);
-
-                drawBrickCell(
-                    x - brickDepth / 2,
-                    y,
-                    brickDepth,
-                    h,
-                    tileHash(Math.floor(x), Math.floor(y), hashBase),
-                    side
-                );
-
-                y += cell;
-            }
-        }
-
-        // TOP edges
-        for (let y = 1; y <= G.Gmapy; y++) {
-            let runStart = null;
-
-            for (let x = 1; x <= G.Gmapx + 1; x++) {
-                const exposed =
-                    x <= G.Gmapx &&
-                    isFloorTile(G, map, x, y) &&
-                    isWallTile(G, map, x, y - 1);
-
-                if (exposed && runStart === null) runStart = x;
-
-                if ((!exposed || x === G.Gmapx + 1) && runStart !== null) {
-                    drawHorizontalRun(runStart * ts, x * ts, y * ts, tileHash(runStart, y, seed), "top");
-                    runStart = null;
-                }
-            }
-        }
-
-        // BOTTOM edges
-        for (let y = 1; y <= G.Gmapy; y++) {
-            let runStart = null;
-
-            for (let x = 1; x <= G.Gmapx + 1; x++) {
-                const exposed =
-                    x <= G.Gmapx &&
-                    isFloorTile(G, map, x, y) &&
-                    isWallTile(G, map, x, y + 1);
-
-                if (exposed && runStart === null) runStart = x;
-
-                if ((!exposed || x === G.Gmapx + 1) && runStart !== null) {
-                    drawHorizontalRun(runStart * ts, x * ts, (y + 1) * ts, tileHash(runStart, y + 99, seed), "bottom");
-                    runStart = null;
-                }
-            }
-        }
-
-        // LEFT edges
-        for (let x = 1; x <= G.Gmapx; x++) {
-            let runStart = null;
-
-            for (let y = 1; y <= G.Gmapy + 1; y++) {
-                const exposed =
-                    y <= G.Gmapy &&
-                    isFloorTile(G, map, x, y) &&
-                    isWallTile(G, map, x - 1, y);
-
-                if (exposed && runStart === null) runStart = y;
-
-                if ((!exposed || y === G.Gmapy + 1) && runStart !== null) {
-                    drawVerticalRun(x * ts, runStart * ts, y * ts, tileHash(x, runStart + 199, seed), "left");
-                    runStart = null;
-                }
-            }
-        }
-
-        // RIGHT edges
-        for (let x = 1; x <= G.Gmapx; x++) {
-            let runStart = null;
-
-            for (let y = 1; y <= G.Gmapy + 1; y++) {
-                const exposed =
-                    y <= G.Gmapy &&
-                    isFloorTile(G, map, x, y) &&
-                    isWallTile(G, map, x + 1, y);
-
-                if (exposed && runStart === null) runStart = y;
-
-                if ((!exposed || y === G.Gmapy + 1) && runStart !== null) {
-                    drawVerticalRun((x + 1) * ts, runStart * ts, y * ts, tileHash(x + 299, runStart, seed), "right");
-                    runStart = null;
-                }
-            }
-        }
-    }
+}
 
 /* =========================================================
 VTT PLAIN FLOOR TILE
@@ -717,79 +536,159 @@ function drawVttDirectionalWallShadows(ctx, G, map, ts, dirs) {
 }
 
 
-    function drawVttPlainWallTile(ctx, nx, ny, ts) {
-        ctx.fillStyle = "#252525";
-        ctx.fillRect(nx, ny, ts, ts);
-    }
+    /* =========================================================
+       VTT EXPOSED BRICK WALL EDGES
+       ---------------------------------------------------------
+       Draws small grey outlined bricks along exposed wall edges.
+       This replaces the current pipe-like bevel wall edges.
+    ========================================================= */
 
-    function drawVttCrosshatchWallTile(ctx, nx, ny, ts, x, y, seed) {
-        const h = tileHash(x, y, seed);
+    function drawVttBrickWallRuns(ctx, G, map, ts) {
+        const seed = G._seedUsed || 0;
 
-        ctx.fillStyle = "#2b2b2b";
-        ctx.fillRect(nx, ny, ts, ts);
+        // TWEAKS
+        const brickDepth = ts * 0.24;
+        const brickOutline = Math.max(1, ts * 0.018);
+        const brickGap = Math.max(1, ts * 0.015);
 
-        ctx.strokeStyle = "rgba(0,0,0,0.45)";
-        ctx.lineWidth = Math.max(1, ts * 0.018);
+        function drawBrick(ctx, x, y, w, h, hash) {
+            const shade = 105 + Math.floor(hashRand(hash) * 38);
 
-        const spacing = Math.max(6, ts * 0.18);
+            ctx.fillStyle = `rgb(${shade},${shade},${shade - 4})`;
+            ctx.strokeStyle = "rgba(0,0,0,0.85)";
+            ctx.lineWidth = brickOutline;
 
-        for (let i = -ts; i < ts * 2; i += spacing) {
-            ctx.beginPath();
-            ctx.moveTo(nx + i, ny + ts);
-            ctx.lineTo(nx + i + ts, ny);
-            ctx.stroke();
+            ctx.fillRect(x + brickGap, y + brickGap, w - brickGap * 2, h - brickGap * 2);
+            ctx.strokeRect(x + brickGap, y + brickGap, w - brickGap * 2, h - brickGap * 2);
         }
 
-        if (hashRand(h + 1) > 0.5) {
-            ctx.strokeStyle = "rgba(255,255,255,0.06)";
+        function drawBrickCell(x, y, w, h, hash) {
+            const r = hashRand(hash);
 
-            for (let i = -ts; i < ts * 2; i += spacing * 1.4) {
-                ctx.beginPath();
-                ctx.moveTo(nx + i, ny);
-                ctx.lineTo(nx + i + ts, ny + ts);
-                ctx.stroke();
+            if (r < 0.25) {
+                // One large brick
+                drawBrick(ctx, x, y, w, h, hash + 1);
+            } else if (r < 0.50) {
+                // Two side-by-side bricks
+                drawBrick(ctx, x, y, w / 2, h, hash + 2);
+                drawBrick(ctx, x + w / 2, y, w / 2, h, hash + 3);
+            } else if (r < 0.75) {
+                // Two stacked bricks
+                drawBrick(ctx, x, y, w, h / 2, hash + 4);
+                drawBrick(ctx, x, y + h / 2, w, h / 2, hash + 5);
+            } else {
+                // Three-brick mixed pattern
+                if (hashRand(hash + 6) < 0.5) {
+                    drawBrick(ctx, x, y, w / 2, h / 2, hash + 7);
+                    drawBrick(ctx, x + w / 2, y, w / 2, h / 2, hash + 8);
+                    drawBrick(ctx, x, y + h / 2, w, h / 2, hash + 9);
+                } else {
+                    drawBrick(ctx, x, y, w, h / 2, hash + 10);
+                    drawBrick(ctx, x, y + h / 2, w / 2, h / 2, hash + 11);
+                    drawBrick(ctx, x + w / 2, y + h / 2, w / 2, h / 2, hash + 12);
+                }
             }
         }
-    }
 
-    function drawVttDarkWallLines(ctx, G, map, ts) {
-        ctx.strokeStyle = "rgba(0,0,0,0.85)";
-        ctx.lineWidth = Math.max(3, ts * 0.08);
-        ctx.lineCap = "square";
+        function drawHorizontalRun(x1, x2, y, hashBase) {
+            const cell = brickDepth;
+            let x = x1;
 
+            while (x < x2) {
+                const w = Math.min(cell, x2 - x);
+                drawBrickCell(x, y - brickDepth / 2, w, brickDepth, tileHash(Math.floor(x), Math.floor(y), hashBase));
+                x += cell;
+            }
+        }
+
+        function drawVerticalRun(x, y1, y2, hashBase) {
+            const cell = brickDepth;
+            let y = y1;
+
+            while (y < y2) {
+                const h = Math.min(cell, y2 - y);
+                drawBrickCell(x - brickDepth / 2, y, brickDepth, h, tileHash(Math.floor(x), Math.floor(y), hashBase));
+                y += cell;
+            }
+        }
+
+        // TOP edges
         for (let y = 1; y <= G.Gmapy; y++) {
-            for (let x = 1; x <= G.Gmapx; x++) {
-                if (!isFloorTile(G, map, x, y)) continue;
+            let runStart = null;
 
-                const nx = x * ts;
-                const ny = y * ts;
+            for (let x = 1; x <= G.Gmapx + 1; x++) {
+                const exposed =
+                    x <= G.Gmapx &&
+                    isFloorTile(G, map, x, y) &&
+                    isWallTile(G, map, x, y - 1);
 
-                ctx.beginPath();
+                if (exposed && runStart === null) runStart = x;
 
-                if (isWallTile(G, map, x, y - 1)) {
-                    ctx.moveTo(nx, ny);
-                    ctx.lineTo(nx + ts, ny);
+                if ((!exposed || x === G.Gmapx + 1) && runStart !== null) {
+                    drawHorizontalRun(runStart * ts, x * ts, y * ts, tileHash(runStart, y, seed));
+                    runStart = null;
                 }
+            }
+        }
 
-                if (isWallTile(G, map, x + 1, y)) {
-                    ctx.moveTo(nx + ts, ny);
-                    ctx.lineTo(nx + ts, ny + ts);
+        // BOTTOM edges
+        for (let y = 1; y <= G.Gmapy; y++) {
+            let runStart = null;
+
+            for (let x = 1; x <= G.Gmapx + 1; x++) {
+                const exposed =
+                    x <= G.Gmapx &&
+                    isFloorTile(G, map, x, y) &&
+                    isWallTile(G, map, x, y + 1);
+
+                if (exposed && runStart === null) runStart = x;
+
+                if ((!exposed || x === G.Gmapx + 1) && runStart !== null) {
+                    drawHorizontalRun(runStart * ts, x * ts, (y + 1) * ts, tileHash(runStart, y + 99, seed));
+                    runStart = null;
                 }
+            }
+        }
 
-                if (isWallTile(G, map, x, y + 1)) {
-                    ctx.moveTo(nx, ny + ts);
-                    ctx.lineTo(nx + ts, ny + ts);
+        // LEFT edges
+        for (let x = 1; x <= G.Gmapx; x++) {
+            let runStart = null;
+
+            for (let y = 1; y <= G.Gmapy + 1; y++) {
+                const exposed =
+                    y <= G.Gmapy &&
+                    isFloorTile(G, map, x, y) &&
+                    isWallTile(G, map, x - 1, y);
+
+                if (exposed && runStart === null) runStart = y;
+
+                if ((!exposed || y === G.Gmapy + 1) && runStart !== null) {
+                    drawVerticalRun(x * ts, runStart * ts, y * ts, tileHash(x, runStart + 199, seed));
+                    runStart = null;
                 }
+            }
+        }
 
-                if (isWallTile(G, map, x - 1, y)) {
-                    ctx.moveTo(nx, ny);
-                    ctx.lineTo(nx, ny + ts);
+        // RIGHT edges
+        for (let x = 1; x <= G.Gmapx; x++) {
+            let runStart = null;
+
+            for (let y = 1; y <= G.Gmapy + 1; y++) {
+                const exposed =
+                    y <= G.Gmapy &&
+                    isFloorTile(G, map, x, y) &&
+                    isWallTile(G, map, x + 1, y);
+
+                if (exposed && runStart === null) runStart = y;
+
+                if ((!exposed || y === G.Gmapy + 1) && runStart !== null) {
+                    drawVerticalRun((x + 1) * ts, runStart * ts, y * ts, tileHash(x + 299, runStart, seed));
+                    runStart = null;
                 }
-
-                ctx.stroke();
             }
         }
     }
+
 
 /* =========================================================
    VTT RENDERER
@@ -803,23 +702,8 @@ function drawVttMap(ctx, G, map, tileSize, options) {
     const ts = tileSize;
     const seed = G._seedUsed || 0;
 
-    // Wall/rock background.
-    for (let y = 0; y <= G.Gmapy + 1; y++) {
-        for (let x = 0; x <= G.Gmapx + 1; x++) {
-            if (isWallTile(G, map, x, y)) {
-                const nx = x * ts;
-                const ny = y * ts;
-
-                if (options.wallTileStyle === "plain") {
-                    drawVttPlainWallTile(ctx, nx, ny, ts);
-                } else if (options.wallTileStyle === "crosshatch") {
-                    drawVttCrosshatchWallTile(ctx, nx, ny, ts, x, y, seed);
-                } else {
-                    drawVttWallTile(ctx, nx, ny, ts, x, y, seed);
-                }
-            }
-        }
-    }
+    // Exposed brick wall edges.
+    drawVttBrickWallRuns(ctx, G, map, ts);
 
     // Floors and water.
     for (let y = 0; y <= G.Gmapy + 1; y++) {
@@ -829,12 +713,11 @@ function drawVttMap(ctx, G, map, tileSize, options) {
 
             const nx = x * ts;
             const ny = y * ts;
-            const showAsFlooded = options.showWater && b.flood;
 
-            if (options.floorStyle === "plain") {
-                drawVttPlainFloor(ctx, nx, ny, ts, showAsFlooded, options.showGrid);
+            if (options.texturedFloors) {
+                drawVttCobbleFloor(ctx, nx, ny, ts, x, y, seed, b.flood);
             } else {
-                drawVttCobbleFloor(ctx, nx, ny, ts, x, y, seed, showAsFlooded);
+                drawVttPlainFloor(ctx, nx, ny, ts, b.flood, options.showGrid);
             }
 
             if (options.showGrid) {
@@ -848,11 +731,84 @@ function drawVttMap(ctx, G, map, tileSize, options) {
     // Soft shadows over the cobble floor.
     drawVttDirectionalWallShadows(ctx, G, map, ts, options.shadowDirections);
 
-    // Exposed brick wall edges.
-    if (options.wallEdgeStyle === "lines") {
-        drawVttDarkWallLines(ctx, G, map, ts);
-    } else {
-        drawVttBrickWallRuns(ctx, G, map, ts, options.shadowDirections);
+    // Current VTT wall edges.
+    // This is still the per-tile bevel system.
+    for (let y = 1; y <= G.Gmapy; y++) {
+        for (let x = 1; x <= G.Gmapx; x++) {
+            if (!isFloorTile(G, map, x, y)) continue;
+
+            const nx = x * ts;
+            const ny = y * ts;
+
+            const top = isWallTile(G, map, x, y - 1);
+            const right = isWallTile(G, map, x + 1, y);
+            const bottom = isWallTile(G, map, x, y + 1);
+            const left = isWallTile(G, map, x - 1, y);
+
+            if (top) {
+                const continuesLeft = isFloorTile(G, map, x - 1, y) && isWallTile(G, map, x - 1, y - 1);
+                const continuesRight = isFloorTile(G, map, x + 1, y) && isWallTile(G, map, x + 1, y - 1);
+
+                drawVttBevelWallEdge(
+                    ctx,
+                    nx,
+                    ny,
+                    ts,
+                    "top",
+                    !continuesLeft,
+                    !continuesRight,
+                    tileHash(x, y, seed)
+                );
+            }
+
+            if (bottom) {
+                const continuesLeft = isFloorTile(G, map, x - 1, y) && isWallTile(G, map, x - 1, y + 1);
+                const continuesRight = isFloorTile(G, map, x + 1, y) && isWallTile(G, map, x + 1, y + 1);
+
+                drawVttBevelWallEdge(
+                    ctx,
+                    nx,
+                    ny,
+                    ts,
+                    "bottom",
+                    !continuesLeft,
+                    !continuesRight,
+                    tileHash(x, y + 11, seed)
+                );
+            }
+
+            if (left) {
+                const continuesUp = isFloorTile(G, map, x, y - 1) && isWallTile(G, map, x - 1, y - 1);
+                const continuesDown = isFloorTile(G, map, x, y + 1) && isWallTile(G, map, x - 1, y + 1);
+
+                drawVttBevelWallEdge(
+                    ctx,
+                    nx,
+                    ny,
+                    ts,
+                    "left",
+                    !continuesUp,
+                    !continuesDown,
+                    tileHash(x - 11, y, seed)
+                );
+            }
+
+            if (right) {
+                const continuesUp = isFloorTile(G, map, x, y - 1) && isWallTile(G, map, x + 1, y - 1);
+                const continuesDown = isFloorTile(G, map, x, y + 1) && isWallTile(G, map, x + 1, y + 1);
+
+                drawVttBevelWallEdge(
+                    ctx,
+                    nx,
+                    ny,
+                    ts,
+                    "right",
+                    !continuesUp,
+                    !continuesDown,
+                    tileHash(x + 11, y, seed)
+                );
+            }
+        }
     }
 
     if (options.showDoors) {

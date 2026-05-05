@@ -208,6 +208,25 @@
                             </select>
                         </div>
 
+                        <label>Floor Style:</label>
+                        <select id="optFloorStyle">
+                            <option value="cobble">Cobble</option>
+                            <option value="plain">Plain</option>
+                        </select>
+
+                        <label>Wall Tile Style:</label>
+                        <select id="optWallTileStyle">
+                            <option value="textured">Textured</option>
+                            <option value="plain">Plain</option>
+                            <option value="crosshatch">Crosshatch</option>
+                        </select>
+
+                        <label>Wall Edge Style:</label>
+                        <select id="optWallEdgeStyle">
+                            <option value="brick">Stone Brick</option>
+                            <option value="lines">Dark Lines</option>
+                        </select>
+
                         <div class="form-row">
                             <label for="exportTileSize">Export Tile Size</label>
                             <input id="exportTileSize" type="number" min="8" max="256" value="72" />
@@ -228,9 +247,9 @@
                             Include grid
                         </label>
 
-                        <label class="checklabel" for="exportTexturedFloors">
-                            <input id="exportTexturedFloors" type="checkbox" checked />
-                            Textured floor tiles
+                        <label class="checklabel" for="exportShowWater">
+                            <input id="exportShowWater" type="checkbox" checked />
+                            Show flooded areas
                         </label>
 
                         <div class="export-shadow-options">
@@ -256,7 +275,6 @@
                                 W
                             </label>
                         </div>
-
                         <div class="code-tools">
                             <button id="btnPreviewRender" type="button">Preview</button>
                             <button id="btnExportPng" type="button">Export PNG</button>
