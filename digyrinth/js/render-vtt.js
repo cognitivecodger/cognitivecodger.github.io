@@ -587,7 +587,7 @@ function drawVttCobbleFloor(ctx, nx, ny, ts, x, y, seed, isFlood = false, floorS
        VTT Cracked  FLOOR TILE
     ========================================================= */
 
-    function drawVttCrackedFloor(ctx, nx, ny, ts, x, y, seed, isFlood = false, showGrid = true, floorScale = 0.5) {
+    function drawVttCrackedFloor(ctx, nx, ny, ts, x, y, seed, isFlood = false, showGrid = true, floorScale = 0.5, shadowDirections = { n: true, e: true, s: false, w: false }) {
         if (isFlood) {
             ctx.fillStyle = "#243f52";
             ctx.fillRect(nx, ny, ts, ts);
@@ -597,138 +597,323 @@ function drawVttCobbleFloor(ctx, nx, ny, ts, x, y, seed, isFlood = false, floorS
 
         const h = tileHash(x, y, seed);
 
-        const base = 100 + Math.floor(hashRand(h + 1) * 18);
+        // TWEAKS
+        const grout = "#24231f";
+        const inset = Math.max(1, ts * 0.015);
+        const cornerRadius = ts * 0.08;
 
-        ctx.fillStyle = `rgb(${base},${base},${base - 5})`;
+        const baseGrey = 82 + Math.floor(hashRand(h + 1) * 24);
+        const patchCount = 7 + Math.floor(hashRand(h + 2) * 8);
+        const pitCount = 5 + Math.floor(hashRand(h + 3) * 8);
+
+        ctx.fillStyle = grout;
         ctx.fillRect(nx, ny, ts, ts);
 
-        // Subtle stone variation.
-        ctx.fillStyle = `rgba(255,255,255,${0.04 + hashRand(h + 2) * 0.04})`;
-        ctx.fillRect(nx + ts * 0.08, ny + ts * 0.08, ts * 0.55, ts * 0.18);
+        const sx = nx + inset;
+        const sy = ny + inset;
+        const sw = ts - inset * 2;
+        const sh = ts - inset * 2;
+        const slabPoints = makeSlabPoints(sx, sy, sw, sh, cornerRadius, h + 9000);
 
-        ctx.fillStyle = `rgba(0,0,0,${0.05 + hashRand(h + 3) * 0.06})`;
-        ctx.fillRect(nx + ts * 0.18, ny + ts * 0.66, ts * 0.62, ts * 0.18);
-
-        ctx.save();
-        ctx.beginPath();
-        ctx.rect(nx, ny, ts, ts);
-        ctx.clip();
-
-        // Cracks: fewer and edge-led, like the print version.
-        const r = hashRand(h + 20);
-
-        ctx.strokeStyle = "rgba(20,20,20,0.65)";
-        ctx.lineWidth = Math.max(1.4, ts * 0.026);
-        ctx.lineCap = "round";
-        ctx.lineJoin = "round";
-
-        function edgePoint(edge, hh) {
-            if (edge === 0) return { x: nx + hashRand(hh + 1) * ts, y: ny };
-            if (edge === 1) return { x: nx + ts, y: ny + hashRand(hh + 2) * ts };
-            if (edge === 2) return { x: nx + hashRand(hh + 3) * ts, y: ny + ts };
-            return { x: nx, y: ny + hashRand(hh + 4) * ts };
+        function roundedRectPath(x0, y0, w, h, r) {
+            ctx.beginPath();
+            ctx.moveTo(x0 + r, y0);
+            ctx.lineTo(x0 + w - r, y0);
+            ctx.quadraticCurveTo(x0 + w, y0, x0 + w, y0 + r);
+            ctx.lineTo(x0 + w, y0 + h - r);
+            ctx.quadraticCurveTo(x0 + w, y0 + h, x0 + w - r, y0 + h);
+            ctx.lineTo(x0 + r, y0 + h);
+            ctx.quadraticCurveTo(x0, y0 + h, x0, y0 + h - r);
+            ctx.lineTo(x0, y0 + r);
+            ctx.quadraticCurveTo(x0, y0, x0 + r, y0);
+            ctx.closePath();
         }
 
-        if (r > 0.55) {
-            const startEdge = Math.floor(hashRand(h + 21) * 4);
-            const start = edgePoint(startEdge, h + 30);
+        function makeSlabPoints(x0, y0, w, h, r, hashBase) {
 
-            let px = start.x;
-            let py = start.y;
+            // TWEAKS
+            const minPts = 7;
+            const maxPts = 12;
 
-            let angle = (startEdge * Math.PI / 2) + Math.PI + (hashRand(h + 31) - 0.5) * 1.2;
-            const length = r > 0.85 ? ts * 0.72 : ts * 0.36;
-            const segments = r > 0.85 ? 4 : 2;
+            const edgeInset = ts * 0.10;
+            const wobble = ts * 0.045;
+
+            const pts = [];
+
+            function rand(i) {
+                return hashRand(hashBase + i);
+            }
+
+            // Create uneven divisions around the perimeter.
+
+            const topPts = minPts + Math.floor(rand(1) * (maxPts - minPts));
+            const rightPts = minPts + Math.floor(rand(2) * (maxPts - minPts));
+            const bottomPts = minPts + Math.floor(rand(3) * (maxPts - minPts));
+            const leftPts = minPts + Math.floor(rand(4) * (maxPts - minPts));
+
+            // TOP
+            for (let i = 0; i <= topPts; i++) {
+                const t = i / topPts;
+
+                pts.push({
+                    x:
+                        x0 +
+                        edgeInset +
+                        (w - edgeInset * 2) * t +
+                        (rand(100 + i) - 0.5) * wobble,
+
+                    y:
+                        y0 +
+                        (rand(200 + i) - 0.5) * wobble,
+
+                    side: "n"
+                });
+            }
+
+            // RIGHT
+            for (let i = 1; i <= rightPts; i++) {
+                const t = i / rightPts;
+
+                pts.push({
+                    x:
+                        x0 + w +
+                        (rand(300 + i) - 0.5) * wobble,
+
+                    y:
+                        y0 +
+                        edgeInset +
+                        (h - edgeInset * 2) * t +
+                        (rand(400 + i) - 0.5) * wobble,
+
+                    side: "e"
+                });
+            }
+
+            // BOTTOM
+            for (let i = 1; i <= bottomPts; i++) {
+                const t = i / bottomPts;
+
+                pts.push({
+                    x:
+                        x0 + w -
+                        edgeInset -
+                        (w - edgeInset * 2) * t +
+                        (rand(500 + i) - 0.5) * wobble,
+
+                    y:
+                        y0 + h +
+                        (rand(600 + i) - 0.5) * wobble,
+
+                    side: "s"
+                });
+            }
+
+            // LEFT
+            for (let i = 1; i <= leftPts; i++) {
+                const t = i / leftPts;
+
+                pts.push({
+                    x:
+                        x0 +
+                        (rand(700 + i) - 0.5) * wobble,
+
+                    y:
+                        y0 + h -
+                        edgeInset -
+                        (h - edgeInset * 2) * t +
+                        (rand(800 + i) - 0.5) * wobble,
+
+                    side: "w"
+                });
+            }
+
+            return pts;
+        }
+
+        function slabPath(points) {
+            ctx.beginPath();
+            ctx.moveTo(points[0].x, points[0].y);
+
+            for (let i = 1; i < points.length; i++) {
+                ctx.lineTo(points[i].x, points[i].y);
+            }
+
+            ctx.closePath();
+        }
+
+        function strokeSlabSide(points, side, color, width) {
+            const sidePts = points.filter(p => p.side === side);
+            if (sidePts.length < 2) return;
+
+            ctx.strokeStyle = color;
+            ctx.lineWidth = width;
+            ctx.lineCap = "round";
+            ctx.lineJoin = "round";
+
+            ctx.beginPath();
+            ctx.moveTo(sidePts[0].x, sidePts[0].y);
+
+            for (let i = 1; i < sidePts.length; i++) {
+                ctx.lineTo(sidePts[i].x, sidePts[i].y);
+            }
+
+            ctx.stroke();
+        }
+
+          // Base slab with soft directional shading.
+        const grad = ctx.createLinearGradient(sx, sy, sx + sw, sy + sh);
+        grad.addColorStop(0, `rgb(${baseGrey + 20},${baseGrey + 20},${baseGrey + 16})`);
+        grad.addColorStop(1, `rgb(${baseGrey - 20},${baseGrey - 20},${baseGrey - 24})`);
+
+        slabPath(slabPoints);
+        ctx.fillStyle = grad;
+        ctx.fill();
+
+        // Clip all wear to slab face.
+        ctx.save();
+        slabPath(slabPoints);
+        ctx.clip();
+
+        // Mottled grime patches.
+        for (let i = 0; i < patchCount; i++) {
+            const ph = h + 100 + i * 31;
+
+            const px = sx + hashRand(ph + 1) * sw;
+            const py = sy + hashRand(ph + 2) * sh;
+            const rw = ts * (0.06 + hashRand(ph + 3) * 0.16);
+            const rh = ts * (0.035 + hashRand(ph + 4) * 0.12);
+
+            ctx.save();
+            ctx.translate(px, py);
+            ctx.rotate(hashRand(ph + 5) * Math.PI * 2);
+
+            ctx.fillStyle =
+                hashRand(ph + 6) > 0.35
+                    ? "rgba(20,30,20,0.20)"
+                    : "rgba(255,255,255,0.08)";
+
+            ctx.beginPath();
+            ctx.ellipse(0, 0, rw, rh, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Grain inside the mottle so it blends into the slab instead of looking like a flat blob.
+            const grainCount = 14 + Math.floor(hashRand(ph + 20) * 16);
+
+            for (let g = 0; g < grainCount; g++) {
+                const gx = (hashRand(ph + 30 + g) - 0.5) * rw * 1.5;
+                const gy = (hashRand(ph + 50 + g) - 0.5) * rh * 1.5;
+                const gr = Math.max(0.7, ts * (0.003 + hashRand(ph + 70 + g) * 0.005));
+
+                ctx.fillStyle = hashRand(ph + 90 + g) > 0.5
+                    ? "rgba(0,0,0,0.10)"
+                    : "rgba(255,255,255,0.07)";
+
+                ctx.beginPath();
+                ctx.arc(gx, gy, gr, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            ctx.restore();
+        }
+
+        // Small pits / chips.
+        ctx.fillStyle = "rgba(0,0,0,0.20)";
+        for (let i = 0; i < pitCount; i++) {
+            const ph = h + 400 + i * 17;
+            const px = sx + hashRand(ph + 1) * sw;
+            const py = sy + hashRand(ph + 2) * sh;
+            const r = Math.max(1, ts * (0.008 + hashRand(ph + 3) * 0.018));
+
+            ctx.beginPath();
+            ctx.arc(px, py, r, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Rare, subtle cracks.
+        if (hashRand(h + 700) > 0.55) {
+            const edge = Math.floor(hashRand(h + 701) * 4);
+
+            let px;
+            let py;
+
+            if (edge === 0) {
+                px = sx + hashRand(h + 702) * sw;
+                py = sy;
+            } else if (edge === 1) {
+                px = sx + sw;
+                py = sy + hashRand(h + 703) * sh;
+            } else if (edge === 2) {
+                px = sx + hashRand(h + 704) * sw;
+                py = sy + sh;
+            } else {
+                px = sx;
+                py = sy + hashRand(h + 705) * sh;
+            }
+
+            let angle = hashRand(h + 706) * Math.PI * 2;
+            const length = ts * (0.18 + hashRand(h + 707) * 0.22);
+            const segments = 2 + Math.floor(hashRand(h + 708) * 3);
+
+            ctx.strokeStyle = "rgba(10,10,10,0.45)";
+            ctx.lineWidth = Math.max(1.2, ts * 0.018);
+            ctx.lineCap = "round";
+            ctx.lineJoin = "round";
 
             ctx.beginPath();
             ctx.moveTo(px, py);
 
-            for (let i = 0; i < segments; i++) {
+            for (let s = 0; s < segments; s++) {
                 px += Math.cos(angle) * length / segments;
                 py += Math.sin(angle) * length / segments;
 
-                angle += (hashRand(h + 40 + i) - 0.5) * 0.7;
+                angle += (hashRand(h + 720 + s) - 0.5) * 0.8;
 
-                px = Math.max(nx + ts * 0.08, Math.min(nx + ts * 0.92, px));
-                py = Math.max(ny + ts * 0.08, Math.min(ny + ts * 0.92, py));
+                px = Math.max(sx + sw * 0.08, Math.min(sx + sw * 0.92, px));
+                py = Math.max(sy + sh * 0.08, Math.min(sy + sh * 0.92, py));
 
                 ctx.lineTo(px, py);
             }
 
             ctx.stroke();
-
-            if (r > 0.97) {
-                const branchAngle = angle + (hashRand(h + 80) < 0.5 ? 1 : -1) * 1.1;
-
-                ctx.beginPath();
-                ctx.moveTo(px, py);
-                ctx.lineTo(
-                    px + Math.cos(branchAngle) * ts * 0.20,
-                    py + Math.sin(branchAngle) * ts * 0.20
-                );
-                ctx.stroke();
-            }
         }
 
-        // Dirt clusters, not spray.
-        const clusterCount = Math.max(1, Math.round(1 / floorScale));
-
-        ctx.fillStyle = "rgba(20,20,20,0.42)";
-
-        for (let c = 0; c < clusterCount; c++) {
-            const ch = h + 200 + c * 47;
-
-            const cx = nx + ts * (0.18 + hashRand(ch + 1) * 0.64);
-            const cy = ny + ts * (0.18 + hashRand(ch + 2) * 0.64);
-            const dotCount = 2 + Math.floor(hashRand(ch + 3) * 4);
-            const angle = hashRand(ch + 4) * Math.PI * 2;
-            const spacing = ts * (0.04 + floorScale * 0.07);
-
-            for (let i = 0; i < dotCount; i++) {
-                const along = (i - dotCount / 2) * spacing;
-                const scatter = (hashRand(ch + 10 + i) - 0.5) * ts * 0.07;
-
-                const dx =
-                    cx +
-                    Math.cos(angle) * along +
-                    Math.cos(angle + Math.PI / 2) * scatter;
-
-                const dy =
-                    cy +
-                    Math.sin(angle) * along +
-                    Math.sin(angle + Math.PI / 2) * scatter;
-
-                const radius = Math.max(1, ts * (0.010 + hashRand(ch + 30 + i) * 0.012));
-
-                ctx.beginPath();
-                ctx.arc(dx, dy, radius, 0, Math.PI * 2);
-                ctx.fill();
-            }
-        }
+        function strokeEdge(side, color) { strokeSlabSide(slabPoints, side, color, edgeLineWidth); }
 
         ctx.restore();
 
-        if (showGrid) {
-            const divisions = Math.max(1, Math.round(1 / floorScale));
+        // Wobbled slab outline / grout edge.
+        slabPath(slabPoints);
+        ctx.strokeStyle = "rgba(5,5,5,0.80)";
+        ctx.lineWidth = Math.max(1, ts * 0.025);
+        ctx.lineJoin = "round";
+        ctx.stroke();
 
-            ctx.strokeStyle = "rgba(0,0,0,0.22)";
-            ctx.lineWidth = Math.max(1, ts * 0.018);
+        // Directional slab bevel.
+        // Checked shadow directions = dark sides.
+        // Opposite sides become highlights.
+        const edgeLightOpacity = 0.55;
+        const edgeDarkOpacity = 0.70;
+        const edgeLineWidth = Math.max(1.5, ts * 0.035);
+        const edgeWobble = ts * 0.012;
 
-            for (let i = 1; i < divisions; i++) {
-                const p = i / divisions;
+        const shadowN = !!shadowDirections.s;
+        const shadowE = !!shadowDirections.w;
+        const shadowS = !!shadowDirections.n;
+        const shadowW = !!shadowDirections.e;
 
-                ctx.beginPath();
-                ctx.moveTo(nx + ts * p, ny);
-                ctx.lineTo(nx + ts * p, ny + ts);
-                ctx.stroke();
+        // Highlight sides are opposite the shadow direction.
+        if (!shadowN) strokeEdge("n", `rgba(255,255,255,${edgeLightOpacity})`);
+        if (!shadowE) strokeEdge("e", `rgba(255,255,255,${edgeLightOpacity})`);
+        if (!shadowS) strokeEdge("s", `rgba(255,255,255,${edgeLightOpacity})`);
+        if (!shadowW) strokeEdge("w", `rgba(255,255,255,${edgeLightOpacity})`);
 
-                ctx.beginPath();
-                ctx.moveTo(nx, ny + ts * p);
-                ctx.lineTo(nx + ts, ny + ts * p);
-                ctx.stroke();
-            }
-        }
+        if (shadowN) strokeEdge("n", `rgba(0,0,0,${edgeDarkOpacity})`);
+        if (shadowE) strokeEdge("e", `rgba(0,0,0,${edgeDarkOpacity})`);
+        if (shadowS) strokeEdge("s", `rgba(0,0,0,${edgeDarkOpacity})`);
+        if (shadowW) strokeEdge("w", `rgba(0,0,0,${edgeDarkOpacity})`);
     }
+
+    
 
     /* =========================================================
        VTT ORGANIC STONE FLOOR World scale
@@ -1202,7 +1387,7 @@ function drawVttMap(ctx, G, map, tileSize, options) {
             if (options.floorStyle === "stone") {
                 drawVttPlainFloor(ctx, nx, ny, ts, showAsFlooded, false, options.floorScale);
             } else if (options.floorStyle === "cracked") {
-                drawVttCrackedFloor(ctx, nx, ny, ts, x, y, seed, showAsFlooded, options.showGrid, options.floorScale);
+                drawVttCrackedFloor(ctx, nx, ny, ts, x, y, seed, showAsFlooded, options.showGrid, options.floorScale, options.shadowDirections);
             } else if (options.floorStyle === "plain") {
                 drawVttPlainFloor(ctx, nx, ny, ts, showAsFlooded, options.showGrid, options.floorScale);
             } else {
