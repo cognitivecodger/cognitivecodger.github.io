@@ -367,7 +367,7 @@ Used when "Textured floor tiles" is unticked.
 Gives a simple mid-grey floor, lighter than the walls.
 ========================================================= */
 
-function drawVttPlainFloor(ctx, nx, ny, ts, isFlood = false, showGrid = true) {
+    function drawVttPlainFloor(ctx, nx, ny, ts, isFlood = false, showGrid = true, floorScale = 0.5) {
     if (isFlood) {
         ctx.fillStyle = "#243f52";
         ctx.fillRect(nx, ny, ts, ts);
@@ -386,6 +386,27 @@ function drawVttPlainFloor(ctx, nx, ny, ts, isFlood = false, showGrid = true) {
 
         ctx.fillStyle = grad;
         ctx.fillRect(nx, ny, ts, ts);
+        }
+
+    if (showGrid) {
+        const divisions = Math.max(1, Math.round(1 / floorScale));
+
+        ctx.strokeStyle = "rgba(0,0,0,0.18)";
+        ctx.lineWidth = Math.max(1, ts * 0.018);
+
+        for (let i = 1; i < divisions; i++) {
+            const p = i / divisions;
+
+            ctx.beginPath();
+            ctx.moveTo(nx + ts * p, ny);
+            ctx.lineTo(nx + ts * p, ny + ts);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(nx, ny + ts * p);
+            ctx.lineTo(nx + ts, ny + ts * p);
+            ctx.stroke();
+        }
     }
 }
 
@@ -393,14 +414,14 @@ function drawVttPlainFloor(ctx, nx, ny, ts, isFlood = false, showGrid = true) {
    VTT ORGANIC COBBLESTONE FLOOR TILE
 ========================================================= */
 
-function drawVttCobbleFloor(ctx, nx, ny, ts, x, y, seed, isFlood = false) {
+function drawVttCobbleFloor(ctx, nx, ny, ts, x, y, seed, isFlood = false, floorScale = 0.5) {
     // TWEAK: Water tile colour and wave opacity.
     const vttWaterBaseColor = "#243f52";
     const vttWaterWaveOpacity = 0.35;
 
     // TWEAK: Cobble count per tile.
-    const cobbleCols = 5;
-    const cobbleRows = 5;
+    const cobbleCols = Math.max(2, Math.round(2.5 / floorScale));
+    const cobbleRows = cobbleCols;
 
     // TWEAK: Cobble size within each mini-cell.
     // Higher values = less grout.
@@ -562,6 +583,343 @@ function drawVttCobbleFloor(ctx, nx, ny, ts, x, y, seed, isFlood = false) {
     ctx.restore();
 }
 
+    /* ========================================================
+       VTT Cracked  FLOOR TILE
+    ========================================================= */
+
+    function drawVttCrackedFloor(ctx, nx, ny, ts, x, y, seed, isFlood = false, showGrid = true, floorScale = 0.5) {
+        if (isFlood) {
+            ctx.fillStyle = "#243f52";
+            ctx.fillRect(nx, ny, ts, ts);
+            drawWaterWaves(ctx, nx, ny, ts, "rgba(210,235,255,0.35)");
+            return;
+        }
+
+        const h = tileHash(x, y, seed);
+
+        const base = 100 + Math.floor(hashRand(h + 1) * 18);
+
+        ctx.fillStyle = `rgb(${base},${base},${base - 5})`;
+        ctx.fillRect(nx, ny, ts, ts);
+
+        // Subtle stone variation.
+        ctx.fillStyle = `rgba(255,255,255,${0.04 + hashRand(h + 2) * 0.04})`;
+        ctx.fillRect(nx + ts * 0.08, ny + ts * 0.08, ts * 0.55, ts * 0.18);
+
+        ctx.fillStyle = `rgba(0,0,0,${0.05 + hashRand(h + 3) * 0.06})`;
+        ctx.fillRect(nx + ts * 0.18, ny + ts * 0.66, ts * 0.62, ts * 0.18);
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(nx, ny, ts, ts);
+        ctx.clip();
+
+        // Cracks: fewer and edge-led, like the print version.
+        const r = hashRand(h + 20);
+
+        ctx.strokeStyle = "rgba(20,20,20,0.65)";
+        ctx.lineWidth = Math.max(1.4, ts * 0.026);
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+
+        function edgePoint(edge, hh) {
+            if (edge === 0) return { x: nx + hashRand(hh + 1) * ts, y: ny };
+            if (edge === 1) return { x: nx + ts, y: ny + hashRand(hh + 2) * ts };
+            if (edge === 2) return { x: nx + hashRand(hh + 3) * ts, y: ny + ts };
+            return { x: nx, y: ny + hashRand(hh + 4) * ts };
+        }
+
+        if (r > 0.55) {
+            const startEdge = Math.floor(hashRand(h + 21) * 4);
+            const start = edgePoint(startEdge, h + 30);
+
+            let px = start.x;
+            let py = start.y;
+
+            let angle = (startEdge * Math.PI / 2) + Math.PI + (hashRand(h + 31) - 0.5) * 1.2;
+            const length = r > 0.85 ? ts * 0.72 : ts * 0.36;
+            const segments = r > 0.85 ? 4 : 2;
+
+            ctx.beginPath();
+            ctx.moveTo(px, py);
+
+            for (let i = 0; i < segments; i++) {
+                px += Math.cos(angle) * length / segments;
+                py += Math.sin(angle) * length / segments;
+
+                angle += (hashRand(h + 40 + i) - 0.5) * 0.7;
+
+                px = Math.max(nx + ts * 0.08, Math.min(nx + ts * 0.92, px));
+                py = Math.max(ny + ts * 0.08, Math.min(ny + ts * 0.92, py));
+
+                ctx.lineTo(px, py);
+            }
+
+            ctx.stroke();
+
+            if (r > 0.97) {
+                const branchAngle = angle + (hashRand(h + 80) < 0.5 ? 1 : -1) * 1.1;
+
+                ctx.beginPath();
+                ctx.moveTo(px, py);
+                ctx.lineTo(
+                    px + Math.cos(branchAngle) * ts * 0.20,
+                    py + Math.sin(branchAngle) * ts * 0.20
+                );
+                ctx.stroke();
+            }
+        }
+
+        // Dirt clusters, not spray.
+        const clusterCount = Math.max(1, Math.round(1 / floorScale));
+
+        ctx.fillStyle = "rgba(20,20,20,0.42)";
+
+        for (let c = 0; c < clusterCount; c++) {
+            const ch = h + 200 + c * 47;
+
+            const cx = nx + ts * (0.18 + hashRand(ch + 1) * 0.64);
+            const cy = ny + ts * (0.18 + hashRand(ch + 2) * 0.64);
+            const dotCount = 2 + Math.floor(hashRand(ch + 3) * 4);
+            const angle = hashRand(ch + 4) * Math.PI * 2;
+            const spacing = ts * (0.04 + floorScale * 0.07);
+
+            for (let i = 0; i < dotCount; i++) {
+                const along = (i - dotCount / 2) * spacing;
+                const scatter = (hashRand(ch + 10 + i) - 0.5) * ts * 0.07;
+
+                const dx =
+                    cx +
+                    Math.cos(angle) * along +
+                    Math.cos(angle + Math.PI / 2) * scatter;
+
+                const dy =
+                    cy +
+                    Math.sin(angle) * along +
+                    Math.sin(angle + Math.PI / 2) * scatter;
+
+                const radius = Math.max(1, ts * (0.010 + hashRand(ch + 30 + i) * 0.012));
+
+                ctx.beginPath();
+                ctx.arc(dx, dy, radius, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        ctx.restore();
+
+        if (showGrid) {
+            const divisions = Math.max(1, Math.round(1 / floorScale));
+
+            ctx.strokeStyle = "rgba(0,0,0,0.22)";
+            ctx.lineWidth = Math.max(1, ts * 0.018);
+
+            for (let i = 1; i < divisions; i++) {
+                const p = i / divisions;
+
+                ctx.beginPath();
+                ctx.moveTo(nx + ts * p, ny);
+                ctx.lineTo(nx + ts * p, ny + ts);
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.moveTo(nx, ny + ts * p);
+                ctx.lineTo(nx + ts, ny + ts * p);
+                ctx.stroke();
+            }
+        }
+    }
+
+    /* =========================================================
+       VTT ORGANIC STONE FLOOR World scale
+    ========================================================= */
+    function drawVttWorldStoneFloor(ctx, G, map, ts, seed, shadowDirections, optionsFloorScale = 0.5) {
+        const cellSize = ts * optionsFloorScale;
+        const jitter = 0.38;
+        const neighbourRange = 2;
+
+        const groutColor = "#2b2923";
+        const lineWidth = Math.max(1, ts * 0.018);
+
+        const lightOpacity = 0.22;
+        const shadowOpacity = 0.24;
+
+        function stonePoint(gx, gy) {
+            const h = tileHash(gx, gy, seed);
+            return {
+                x: (gx + 0.5 + (hashRand(h + 1) - 0.5) * jitter) * cellSize,
+                y: (gy + 0.5 + (hashRand(h + 2) - 0.5) * jitter) * cellSize,
+                h
+            };
+        }
+
+        function clipPolygon(poly, a, b) {
+            const out = [];
+
+            const mx = (a.x + b.x) / 2;
+            const my = (a.y + b.y) / 2;
+            const dx = b.x - a.x;
+            const dy = b.y - a.y;
+
+            function inside(p) {
+                return (p.x - mx) * dx + (p.y - my) * dy <= 0;
+            }
+
+            function intersect(p1, p2) {
+                const v1 = (p1.x - mx) * dx + (p1.y - my) * dy;
+                const v2 = (p2.x - mx) * dx + (p2.y - my) * dy;
+                const t = v1 / (v1 - v2);
+
+                return {
+                    x: p1.x + (p2.x - p1.x) * t,
+                    y: p1.y + (p2.y - p1.y) * t
+                };
+            }
+
+            for (let i = 0; i < poly.length; i++) {
+                const cur = poly[i];
+                const prev = poly[(i + poly.length - 1) % poly.length];
+
+                const curIn = inside(cur);
+                const prevIn = inside(prev);
+
+                if (curIn && !prevIn) out.push(intersect(prev, cur));
+                if (curIn) out.push(cur);
+                if (!curIn && prevIn) out.push(intersect(prev, cur));
+            }
+
+            return out;
+        }
+
+        // Convert shadow checkboxes into approximate light direction.
+        const lx = (shadowDirections.e ? -1 : 0) + (shadowDirections.w ? 1 : 0);
+        const ly = (shadowDirections.s ? -1 : 0) + (shadowDirections.n ? 1 : 0);
+
+        ctx.save();
+
+        // Clip to all floor tiles as one continuous floor area.
+        ctx.beginPath();
+
+        for (let y = 1; y <= G.Gmapy; y++) {
+            for (let x = 1; x <= G.Gmapx; x++) {
+                if (isFloorTile(G, map, x, y)) {
+                    ctx.rect(x * ts, y * ts, ts, ts);
+                }
+            }
+        }
+
+        ctx.clip();
+
+        // Grout base under all stones.
+        ctx.fillStyle = groutColor;
+        ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+
+        const maxGX = Math.ceil((G.Gmapx + 2) * ts / cellSize) + 2;
+        const maxGY = Math.ceil((G.Gmapy + 2) * ts / cellSize) + 2;
+
+        const polys = [];
+
+        for (let gy = -2; gy <= maxGY; gy++) {
+            for (let gx = -2; gx <= maxGX; gx++) {
+                const a = stonePoint(gx, gy);
+
+                let poly = [
+                    { x: a.x - cellSize * 2, y: a.y - cellSize * 2 },
+                    { x: a.x + cellSize * 2, y: a.y - cellSize * 2 },
+                    { x: a.x + cellSize * 2, y: a.y + cellSize * 2 },
+                    { x: a.x - cellSize * 2, y: a.y + cellSize * 2 }
+                ];
+
+                for (let oy = -neighbourRange; oy <= neighbourRange; oy++) {
+                    for (let ox = -neighbourRange; ox <= neighbourRange; ox++) {
+                        if (ox === 0 && oy === 0) continue;
+
+                        const b = stonePoint(gx + ox, gy + oy);
+                        poly = clipPolygon(poly, a, b);
+
+                        if (poly.length < 3) break;
+                    }
+
+                    if (poly.length < 3) break;
+                }
+
+                if (poly.length >= 3) {
+                    polys.push({ poly, h: a.h, cx: a.x, cy: a.y });
+                }
+            }
+        }
+
+        for (const item of polys) {
+            const { poly, h, cx, cy } = item;
+
+            const base = 78 + Math.floor(hashRand(h + 50) * 28);
+            const warm = Math.floor(hashRand(h + 51) * 8);
+
+            const lightGrey = base + warm + 18;
+            const darkGrey = base - 18;
+
+            const grad = ctx.createLinearGradient(
+                cx - lx * cellSize,
+                cy - ly * cellSize,
+                cx + lx * cellSize,
+                cy + ly * cellSize
+            );
+
+            grad.addColorStop(0, `rgb(${lightGrey},${lightGrey},${lightGrey - 4})`);
+            grad.addColorStop(1, `rgb(${darkGrey},${darkGrey},${darkGrey - 6})`);
+
+            ctx.beginPath();
+            ctx.moveTo(poly[0].x, poly[0].y);
+
+            for (let i = 1; i < poly.length; i++) {
+                ctx.lineTo(poly[i].x, poly[i].y);
+            }
+
+            ctx.closePath();
+
+            ctx.fillStyle = grad;
+            ctx.fill();
+
+            // Subtle stone outline / grout edge.
+            ctx.strokeStyle = "rgba(10,9,8,0.85)";
+            ctx.lineWidth = lineWidth;
+            ctx.lineJoin = "round";
+            ctx.stroke();
+
+            // Tiny bevel hint: highlight/shadow edges according to light.
+            ctx.save();
+            ctx.clip();
+
+            ctx.lineWidth = Math.max(1, ts * 0.012);
+            ctx.lineCap = "round";
+
+            for (let i = 0; i < poly.length; i++) {
+                const p1 = poly[i];
+                const p2 = poly[(i + 1) % poly.length];
+
+                const ex = p2.x - p1.x;
+                const ey = p2.y - p1.y;
+
+                const nxEdge = -ey;
+                const nyEdge = ex;
+
+                const lit = nxEdge * lx + nyEdge * ly > 0;
+
+                ctx.strokeStyle = lit
+                    ? `rgba(255,255,255,${lightOpacity})`
+                    : `rgba(0,0,0,${shadowOpacity})`;
+
+                ctx.beginPath();
+                ctx.moveTo(p1.x, p1.y);
+                ctx.lineTo(p2.x, p2.y);
+                ctx.stroke();
+            }
+
+            ctx.restore();
+        }
+
+        ctx.restore();
+    }
 
 /* =========================================================
    VTT DIRECTIONAL WALL SHADOWS
@@ -716,12 +1074,18 @@ function drawVttDirectionalWallShadows(ctx, G, map, ts, dirs) {
     }
 }
 
+    /* =========================================================
+       default VTT wall tile "plain"
+    ========================================================= */
 
     function drawVttPlainWallTile(ctx, nx, ny, ts) {
         ctx.fillStyle = "#252525";
         ctx.fillRect(nx, ny, ts, ts);
     }
 
+    /* =========================================================
+        vtt wall tile "crosshatch"
+    ========================================================= */
     function drawVttCrosshatchWallTile(ctx, nx, ny, ts, x, y, seed) {
         const h = tileHash(x, y, seed);
 
@@ -751,6 +1115,10 @@ function drawVttDirectionalWallShadows(ctx, G, map, ts, dirs) {
             }
         }
     }
+
+    /* =========================================================
+       Draw VTT wall edge lines
+    ========================================================= */
 
     function drawVttDarkWallLines(ctx, G, map, ts) {
         ctx.strokeStyle = "rgba(0,0,0,0.85)";
@@ -831,10 +1199,14 @@ function drawVttMap(ctx, G, map, tileSize, options) {
             const ny = y * ts;
             const showAsFlooded = options.showWater && b.flood;
 
-            if (options.floorStyle === "plain") {
-                drawVttPlainFloor(ctx, nx, ny, ts, showAsFlooded, options.showGrid);
+            if (options.floorStyle === "stone") {
+                drawVttPlainFloor(ctx, nx, ny, ts, showAsFlooded, false, options.floorScale);
+            } else if (options.floorStyle === "cracked") {
+                drawVttCrackedFloor(ctx, nx, ny, ts, x, y, seed, showAsFlooded, options.showGrid, options.floorScale);
+            } else if (options.floorStyle === "plain") {
+                drawVttPlainFloor(ctx, nx, ny, ts, showAsFlooded, options.showGrid, options.floorScale);
             } else {
-                drawVttCobbleFloor(ctx, nx, ny, ts, x, y, seed, showAsFlooded);
+                drawVttCobbleFloor(ctx, nx, ny, ts, x, y, seed, showAsFlooded, options.floorScale);
             }
 
             if (options.showGrid) {
@@ -843,6 +1215,11 @@ function drawVttMap(ctx, G, map, tileSize, options) {
                 ctx.strokeRect(nx + 0.5, ny + 0.5, ts - 1, ts - 1);
             }
         }
+    }
+
+    // Apply world-scale stone floor over everything if that option is selected.
+    if (options.floorStyle === "stone") {
+        drawVttWorldStoneFloor(ctx, G, map, ts, seed, options.shadowDirections, options.floorScale);
     }
 
     // Soft shadows over the cobble floor.

@@ -456,6 +456,7 @@
             showGrid: options.showGrid !== false,
             showWater: options.showWater !== false,
             floorStyle: options.floorStyle || "cobble",
+            floorScale: Math.max(0.2, Math.min(1, Number(options.floorScale) || 0.5)),
             wallTileStyle: options.wallTileStyle || "textured",
             wallEdgeStyle: options.wallEdgeStyle || "brick",
             shadowDirections: options.shadowDirections || {
