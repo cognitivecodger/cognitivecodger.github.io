@@ -389,6 +389,59 @@ button.primary {
   min-height: 20px;
 }
 
+/* ---------- Preview Overlay ---------- */
+
+.preview-overlay[hidden] {
+    display: none !important;
+}
+
+.preview-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+    background: rgba(0, 0, 0, 0.72);
+}
+
+.preview-panel {
+    width: min(96vw, 1200px);
+    height: min(92vh, 900px);
+    display: grid;
+    grid-template-rows: auto 1fr;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    box-shadow: 0 20px 80px rgba(0, 0, 0, 0.65);
+    overflow: hidden;
+}
+
+.preview-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--line);
+    background: linear-gradient(180deg, #18202a, #121922);
+}
+
+.preview-body {
+    overflow: auto;
+    display: grid;
+    place-items: center;
+    padding: 16px;
+    background: #111;
+}
+
+    .preview-body img {
+        max-width: 100%;
+        max-height: 100%;
+        image-rendering: pixelated;
+        background: white;
+    }
+
 /* ---------- Responsive ---------- */
 
 @media (max-width: 900px) {

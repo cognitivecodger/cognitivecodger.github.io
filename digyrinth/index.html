@@ -80,13 +80,13 @@
                         </div>
 
                         <div class="form-row">
-                            <label for="blockMin">Block Room Min Cells</label>
-                            <input id="blockMin" type="number" min="2" value="6" />
+                            <label for="blockMin">Block Room Min Edge</label>
+                            <input id="blockMin" type="number" min="2" value="2" />
                         </div>
 
                         <div class="form-row">
-                            <label for="blockMax">Block Room Max Cells</label>
-                            <input id="blockMax" type="number" min="2" value="18" />
+                            <label for="blockMax">Block Room Max Edge</label>
+                            <input id="blockMax" type="number" min="2" value="8" />
                         </div>
 
                         <div class="form-row">
@@ -128,6 +128,27 @@
                             <label for="GCKSD">Keep Direction Weight</label>
                             <input id="GCKSD" type="number" min="1" max="100" value="10" />
                         </div>
+
+                        <div class="form-row">
+                            <label for="GCOTB">Branch Teleport (1/N)</label>
+                            <input id="GCOTB" type="number" min="0" max="100000" value="0" />
+                        </div>
+
+                        <div class="form-row">
+                            <label for="GCOTS">Shortcut Teleport (1/N)</label>
+                            <input id="GCOTS" type="number" min="0" max="100000" value="0" />
+                        </div>
+
+                        <div class="form-row">
+                            <label for="maxBranchTeleports">Max Branch Teleports</label>
+                            <input id="maxBranchTeleports" type="number" min="0" max="99" value="3" />
+                        </div>
+
+                        <div class="form-row">
+                            <label for="maxShortcutTeleports">Max Shortcut Teleports</label>
+                            <input id="maxShortcutTeleports" type="number" min="0" max="99" value="3" />
+                        </div>
+
                     </div>
                 </div>
 
@@ -169,6 +190,15 @@
                             Show process (tile-by-tile)
                         </label>
 
+                        <div class="form-row" id="processSpeedRow">
+                            <label for="processSpeed">Speed</label>
+
+                            <div class="slider-wrap">
+                                <input id="processSpeed" type="range" min="0" max="100" step="1" value="50" />
+                                <output id="processSpeedValue">50%</output>
+                            </div>
+                        </div>
+
                         <label class="checklabel" for="showArrows">
                             <input id="showArrows" type="checkbox" checked />
                             Show route arrows
@@ -189,8 +219,13 @@
                             Show doors &amp; keys
                         </label>
 
+                        <label class="checklabel" for="showTeleports">
+                            <input id="showTeleports" type="checkbox" checked />
+                            Show teleports
+                        </label>
+
                         <label class="checklabel" for="showExit">
-                            <input id="showExit" type="checkbox" />
+                            <input id="showExit" type="checkbox" checked />
                             Display Exit
                         </label>
                     </div>
@@ -316,6 +351,19 @@
             <canvas id="c"></canvas>
         </section>
     </main>
+
+    <div id="previewOverlay" class="preview-overlay" hidden>
+        <div class="preview-panel">
+            <div class="preview-header">
+                <strong>Digyrinth Render Preview</strong>
+                <button id="btnClosePreview" type="button">Close</button>
+            </div>
+
+            <div class="preview-body">
+                <img id="previewImage" alt="Digyrinth render preview" />
+            </div>
+        </div>
+    </div>
 
     <script defer src="js/main.js"></script>
     <script defer src="js/renderers.js"></script>
