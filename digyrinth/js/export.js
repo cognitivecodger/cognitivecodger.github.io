@@ -52,7 +52,10 @@
                 return;
             }
 
-            const state = window.Digyrinth.getState();
+            const state = window.Digyrinth.ensureGenerated();
+
+            window.Digyrinth.ensureGenerated();
+
             const style = document.getElementById("exportStyle")?.value || "current";
             const tileSize = Math.max(8, Math.min(256, parseInt(document.getElementById("exportTileSize")?.value, 10) || 72));
             const showDoors = !!document.getElementById("exportShowDoors")?.checked;
@@ -95,45 +98,23 @@
             }
 
             const dataUrl = canvas.toDataURL("image/png");
-            const previewWindow = window.open();
 
-            if (!previewWindow) {
-                alert("Preview blocked by browser popup settings.");
+            const overlay = document.getElementById("previewOverlay");
+            const image = document.getElementById("previewImage");
+
+            if (!overlay || !image) {
+                alert("Preview panel is missing from the page.");
                 return;
             }
 
-            previewWindow.document.write(`
-    <!doctype html>
-    <html>
-      <head>
-        <title>Digyrinth Render Preview</title>
-        <style>
-          body {
-            margin: 0;
-            background: #111;
-            color: #eee;
-            font-family: system-ui, sans-serif;
-            display: grid;
-            place-items: center;
-            min-height: 100vh;
-          }
-
-          img {
-            max-width: 95vw;
-            max-height: 95vh;
-            image-rendering: pixelated;
-            background: white;
-          }
-        </style>
-      </head>
-      <body>
-        <img src="${dataUrl}" alt="Digyrinth render preview">
-      </body>
-    </html>
-  `);
-
-            previewWindow.document.close();
-        } finally { setExportBusy(false); }
+            image.src = dataUrl;
+            overlay.hidden = false;
+        } catch (err) {
+            console.error(err);
+            alert("Preview failed. Check the browser console for details.");
+        } finally {
+            setExportBusy(false);
+        }
     }
 
     async function exportPng() {
@@ -141,12 +122,15 @@
         await nextFrame();
 
         try {
-        if (!window.Digyrinth) {
-            alert("Digyrinth map state is not available.");
-            return;
-        }
+            if (!window.Digyrinth) {
+                alert("Digyrinth map state is not available.");
+                return;
+            }
 
-        const state = window.Digyrinth.getState();
+            const state = window.Digyrinth.ensureGenerated();
+
+            window.Digyrinth.ensureGenerated();
+
         const style = document.getElementById("exportStyle")?.value || "current";
         const tileSize = Math.max(8, Math.min(256, parseInt(document.getElementById("exportTileSize")?.value, 10) || 72));
         const showDoors = !!document.getElementById("exportShowDoors")?.checked;
@@ -192,7 +176,12 @@
         const filename = `digyrinth-${style}-${seed}.png`;
 
         downloadCanvas(canvas, filename);
-        } finally { setExportBusy(false); }
+        } catch (err) {
+            console.error(err);
+            alert("Export failed. Check the browser console for details.");
+        } finally {
+            setExportBusy(false);
+        }
     }
 
     const btn = document.getElementById("btnExportPng");
@@ -218,4 +207,28 @@
         floorScaleInput.addEventListener("input", updateFloorScaleValue);
         updateFloorScaleValue();
     }
+
+    const closePreviewBtn = document.getElementById("btnClosePreview");
+    const previewOverlay = document.getElementById("previewOverlay");
+
+    if (closePreviewBtn && previewOverlay) {
+        closePreviewBtn.addEventListener("click", () => {
+            previewOverlay.hidden = true;
+        });
+    }
+
+    if (previewOverlay) {
+        previewOverlay.addEventListener("click", (event) => {
+            if (event.target === previewOverlay) {
+                previewOverlay.hidden = true;
+            }
+        });
+    }
+
+    document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && previewOverlay && !previewOverlay.hidden) {
+            previewOverlay.hidden = true;
+        }
+    });
+
 })();

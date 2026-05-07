@@ -589,6 +589,34 @@ function drawVttCobbleFloor(ctx, nx, ny, ts, x, y, seed, isFlood = false, floorS
 
     function drawVttCrackedFloor(ctx, nx, ny, ts, x, y, seed, isFlood = false, showGrid = true, floorScale = 0.5, shadowDirections = { n: true, e: true, s: false, w: false }) {
         if (isFlood) {
+            drawVttCrackedSlab(ctx, nx, ny, ts, x, y, seed, true, showGrid, floorScale, shadowDirections);
+            return;
+        }
+
+        const divisions = Math.max(1, Math.round(1 / floorScale));
+        const subTs = ts / divisions;
+
+        for (let sy = 0; sy < divisions; sy++) {
+            for (let sx = 0; sx < divisions; sx++) {
+                drawVttCrackedSlab(
+                    ctx,
+                    nx + sx * subTs,
+                    ny + sy * subTs,
+                    subTs,
+                    x * 100 + sx,
+                    y * 100 + sy,
+                    seed,
+                    false,
+                    false,
+                    1,
+                    shadowDirections
+                );
+            }
+        }
+    }
+
+    function drawVttCrackedSlab(ctx, nx, ny, ts, x, y, seed, isFlood = false, showGrid = true, floorScale = 0.5, shadowDirections = { n: true, e: true, s: false, w: false }) {
+        if (isFlood) {
             ctx.fillStyle = "#243f52";
             ctx.fillRect(nx, ny, ts, ts);
             drawWaterWaves(ctx, nx, ny, ts, "rgba(210,235,255,0.35)");
@@ -741,9 +769,17 @@ function drawVttCobbleFloor(ctx, nx, ny, ts, x, y, seed, isFlood = false, floorS
             ctx.closePath();
         }
 
-        function strokeSlabSide(points, side, color, width) {
+        function strokeSlabSide(points, side, color, width, inwardOffset = 0) {
             const sidePts = points.filter(p => p.side === side);
             if (sidePts.length < 2) return;
+
+            let ox = 0;
+            let oy = 0;
+
+            if (side === "n") oy = inwardOffset;
+            if (side === "s") oy = -inwardOffset;
+            if (side === "e") ox = -inwardOffset;
+            if (side === "w") ox = inwardOffset;
 
             ctx.strokeStyle = color;
             ctx.lineWidth = width;
@@ -751,10 +787,10 @@ function drawVttCobbleFloor(ctx, nx, ny, ts, x, y, seed, isFlood = false, floorS
             ctx.lineJoin = "round";
 
             ctx.beginPath();
-            ctx.moveTo(sidePts[0].x, sidePts[0].y);
+            ctx.moveTo(sidePts[0].x + ox, sidePts[0].y + oy);
 
             for (let i = 1; i < sidePts.length; i++) {
-                ctx.lineTo(sidePts[i].x, sidePts[i].y);
+                ctx.lineTo(sidePts[i].x + ox, sidePts[i].y + oy);
             }
 
             ctx.stroke();
@@ -830,54 +866,131 @@ function drawVttCobbleFloor(ctx, nx, ny, ts, x, y, seed, isFlood = false, floorS
         }
 
         // Rare, subtle cracks.
-        if (hashRand(h + 700) > 0.55) {
-            const edge = Math.floor(hashRand(h + 701) * 4);
+        // Cracks / grooves.
+        const crackRoll = hashRand(h + 700);
+
+        let crackCount;
+
+        if (crackRoll > 0.05) {
+            crackCount = 1;
+        } else if (crackRoll > 0.52) {
+            crackCount = 2;
+        } else {
+            crackCount = 3;
+        }
+
+        for (let c = 0; c < crackCount; c++) {
+            const ch = h + 700 + c * 100;
+
+            const edge = Math.floor(hashRand(ch + 1) * 4);
 
             let px;
             let py;
 
             if (edge === 0) {
-                px = sx + hashRand(h + 702) * sw;
+                px = sx + hashRand(ch + 2) * sw;
                 py = sy;
             } else if (edge === 1) {
                 px = sx + sw;
-                py = sy + hashRand(h + 703) * sh;
+                py = sy + hashRand(ch + 3) * sh;
             } else if (edge === 2) {
-                px = sx + hashRand(h + 704) * sw;
+                px = sx + hashRand(ch + 4) * sw;
                 py = sy + sh;
             } else {
                 px = sx;
-                py = sy + hashRand(h + 705) * sh;
+                py = sy + hashRand(ch + 5) * sh;
             }
 
-            let angle = hashRand(h + 706) * Math.PI * 2;
-            const length = ts * (0.18 + hashRand(h + 707) * 0.22);
-            const segments = 2 + Math.floor(hashRand(h + 708) * 3);
+            let angle = hashRand(ch + 6) * Math.PI * 2;
+            const length = ts * (0.38 + hashRand(ch + 7) * 0.55);
+            const segments = 3 + Math.floor(hashRand(ch + 8) * 4);
 
-            ctx.strokeStyle = "rgba(10,10,10,0.45)";
-            ctx.lineWidth = Math.max(1.2, ts * 0.018);
-            ctx.lineCap = "round";
-            ctx.lineJoin = "round";
+            const lightX =
+                (shadowDirections.w ? 1 : 0) +
+                (shadowDirections.e ? -1 : 0);
 
-            ctx.beginPath();
-            ctx.moveTo(px, py);
+            const lightY =
+                (shadowDirections.n ? 1 : 0) +
+                (shadowDirections.s ? -1 : 0);
+
+            function strokeCrackGroove(points) {
+                if (points.length < 2) return;
+
+                const offset = ts * 0.012;
+                const width = Math.max(1, ts * 0.010);
+
+                function drawOffsetLine(dx, dy, color) {
+                    ctx.strokeStyle = color;
+                    ctx.lineWidth = width;
+                    ctx.lineCap = "round";
+                    ctx.lineJoin = "round";
+
+                    ctx.beginPath();
+                    ctx.moveTo(points[0].x + dx, points[0].y + dy);
+
+                    for (let i = 1; i < points.length; i++) {
+                        ctx.lineTo(points[i].x + dx, points[i].y + dy);
+                    }
+
+                    ctx.stroke();
+                }
+
+                drawOffsetLine(-lightX * offset, -lightY * offset, "rgba(0,0,0,0.42)");
+                drawOffsetLine(lightX * offset, lightY * offset, "rgba(255,255,255,0.26)");
+                drawOffsetLine(0, 0, "rgba(0,0,0,0.22)");
+            }
+
+            const crackPoints = [{ x: px, y: py }];
 
             for (let s = 0; s < segments; s++) {
                 px += Math.cos(angle) * length / segments;
                 py += Math.sin(angle) * length / segments;
 
-                angle += (hashRand(h + 720 + s) - 0.5) * 0.8;
+                angle += (hashRand(ch + 20 + s) - 0.5) * 0.75;
 
-                px = Math.max(sx + sw * 0.08, Math.min(sx + sw * 0.92, px));
-                py = Math.max(sy + sh * 0.08, Math.min(sy + sh * 0.92, py));
+                px = Math.max(sx + sw * 0.04, Math.min(sx + sw * 0.96, px));
+                py = Math.max(sy + sh * 0.04, Math.min(sy + sh * 0.96, py));
 
-                ctx.lineTo(px, py);
+                crackPoints.push({ x: px, y: py });
             }
 
-            ctx.stroke();
+            strokeCrackGroove(crackPoints);
+
+            // Occasional Y-shaped branch.
+            if (hashRand(ch + 80) > 0.45 && crackPoints.length > 3) {
+                const branchFrom = crackPoints[1 + Math.floor(hashRand(ch + 81) * (crackPoints.length - 2))];
+
+                let branchAngle = angle + (hashRand(ch + 82) < 0.5 ? -1 : 1) * (0.75 + hashRand(ch + 83) * 0.65);
+                const branchLength = ts * (0.18 + hashRand(ch + 84) * 0.32);
+                const branchSegments = 2 + Math.floor(hashRand(ch + 85) * 3);
+
+                let bx = branchFrom.x;
+                let by = branchFrom.y;
+
+                const branchPoints = [{ x: bx, y: by }];
+
+                for (let s = 0; s < branchSegments; s++) {
+                    bx += Math.cos(branchAngle) * branchLength / branchSegments;
+                    by += Math.sin(branchAngle) * branchLength / branchSegments;
+
+                    branchAngle += (hashRand(ch + 90 + s) - 0.5) * 0.55;
+
+                    bx = Math.max(sx + sw * 0.04, Math.min(sx + sw * 0.96, bx));
+                    by = Math.max(sy + sh * 0.04, Math.min(sy + sh * 0.96, by));
+
+                    branchPoints.push({ x: bx, y: by });
+                }
+
+                strokeCrackGroove(branchPoints);
+            }
         }
 
-        function strokeEdge(side, color) { strokeSlabSide(slabPoints, side, color, edgeLineWidth); }
+        function strokeEdge(side, color, isDark = false) {
+            const offset = isDark ? ts * 0.038 : ts * 0.018;
+            const width = isDark ? edgeLineWidth * 1.15 : edgeLineWidth;
+
+            strokeSlabSide(slabPoints, side, color, width, offset);
+        }
 
         ctx.restore();
 
@@ -891,8 +1004,8 @@ function drawVttCobbleFloor(ctx, nx, ny, ts, x, y, seed, isFlood = false, floorS
         // Directional slab bevel.
         // Checked shadow directions = dark sides.
         // Opposite sides become highlights.
-        const edgeLightOpacity = 0.55;
-        const edgeDarkOpacity = 0.70;
+        const edgeLightOpacity = 0.40;
+        const edgeDarkOpacity = 0.50;
         const edgeLineWidth = Math.max(1.5, ts * 0.035);
         const edgeWobble = ts * 0.012;
 
@@ -907,10 +1020,10 @@ function drawVttCobbleFloor(ctx, nx, ny, ts, x, y, seed, isFlood = false, floorS
         if (!shadowS) strokeEdge("s", `rgba(255,255,255,${edgeLightOpacity})`);
         if (!shadowW) strokeEdge("w", `rgba(255,255,255,${edgeLightOpacity})`);
 
-        if (shadowN) strokeEdge("n", `rgba(0,0,0,${edgeDarkOpacity})`);
-        if (shadowE) strokeEdge("e", `rgba(0,0,0,${edgeDarkOpacity})`);
-        if (shadowS) strokeEdge("s", `rgba(0,0,0,${edgeDarkOpacity})`);
-        if (shadowW) strokeEdge("w", `rgba(0,0,0,${edgeDarkOpacity})`);
+        if (shadowN) strokeEdge("n", `rgba(0,0,0,${edgeDarkOpacity})`, true);
+        if (shadowE) strokeEdge("e", `rgba(0,0,0,${edgeDarkOpacity})`, true);
+        if (shadowS) strokeEdge("s", `rgba(0,0,0,${edgeDarkOpacity})`, true);
+        if (shadowW) strokeEdge("w", `rgba(0,0,0,${edgeDarkOpacity})`, true);
     }
 
     
