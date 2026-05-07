@@ -348,8 +348,19 @@
         </aside>
 
         <section id="view">
-            <canvas id="c"></canvas>
+            <div id="mapViewport">
+                <canvas id="c"></canvas>
+            </div>
+
+            <aside id="legendPanel" class="legend-panel" aria-label="Map legend">
+                <button id="toggleLegend" class="legend-toggle" type="button" aria-expanded="true">
+                    Legend
+                </button>
+
+                <div id="legendBody" class="legend-body"></div>
+            </aside>
         </section>
+
     </main>
 
     <div id="previewOverlay" class="preview-overlay" hidden>
@@ -359,9 +370,10 @@
                 <button id="btnClosePreview" type="button">Close</button>
             </div>
 
-            <div class="preview-body">
-                <img id="previewImage" alt="Digyrinth render preview" />
+            <div class="preview-body" id="previewViewer">
+                <img id="previewImage" alt="Digyrinth render preview">
             </div>
+
         </div>
     </div>
 

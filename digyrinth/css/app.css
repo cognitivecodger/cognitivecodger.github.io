@@ -1,182 +1,608 @@
-﻿:root {
-  --bg: #0b0d10;
-  --panel: #12161c;
-  --ink: #e6eef7;
-  --muted: #93a6bb;
-  --line: #223043;
-  --accent: #5cc8ff;
+﻿/* =========================================================
+   DIGYRINTH APP STYLES
+   ---------------------------------------------------------
+   This file controls:
+   - page colours / theme variables
+   - app layout
+   - sidebar behaviour
+   - map canvas area
+   - form controls
+   - accordion sections
+   - stats/status panels
+   - preview overlay
+   - responsive/mobile layout
+
+   Important layout idea:
+   The page is treated like an app rather than a long document.
+   The sidebar scrolls internally, and the map view stays visible.
+========================================================= */
+
+
+/* =========================================================
+   THEME VARIABLES
+   ---------------------------------------------------------
+   These are the main colours used throughout the app.
+   Changing these values is the quickest way to reskin Digyrinth.
+========================================================= */
+
+:root {
+    --bg: #0b0d10;
+    --panel: #12161c;
+    --ink: #e6eef7;
+    --muted: #93a6bb;
+    --line: #223043;
+    --accent: #5cc8ff;
 }
 
+
+/* =========================================================
+   GLOBAL RESET / BASE
+   ---------------------------------------------------------
+   box-sizing: border-box makes layout sizing easier because
+   width/height include padding and borders.
+========================================================= */
+
 * {
-  box-sizing: border-box;
+    box-sizing: border-box;
 }
 
 html,
 body {
-  height: 100%;
+    height: 100%;
 }
 
 body {
-  margin: 0;
-  background: var(--bg);
-  color: var(--ink);
-  font: 14px/1.4 system-ui, Segoe UI, Roboto, Helvetica, Arial;
+    margin: 0;
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    overflow: hidden;
+    background: var(--bg);
+    color: var(--ink);
+    font: 14px/1.4 system-ui, Segoe UI, Roboto, Helvetica, Arial;
 }
 
-/* ---------- Header ---------- */
+
+/* =========================================================
+   HEADER
+   ---------------------------------------------------------
+   The header is intentionally compact so the map workspace
+   has as much vertical space as possible.
+========================================================= */
 
 header {
-  padding: 14px 16px;
-  border-bottom: 1px solid var(--line);
-  background: linear-gradient(180deg,#141a1f,#0f1318);
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--line);
+    background: linear-gradient(180deg, #141a1f, #0f1318);
 }
 
 h1 {
-  font-size: 16px;
-  margin: 0 0 4px;
-  font-weight: 700;
+    font-size: 16px;
+    margin: 0 0 4px;
+    font-weight: 700;
 }
 
 .sub {
-  color: var(--muted);
+    color: var(--muted);
 }
 
-/* ---------- Layout ---------- */
+
+/* =========================================================
+   MAIN APP LAYOUT
+   ---------------------------------------------------------
+   This is the key desktop layout.
+
+   The first column is the sidebar.
+   The second column is the map view.
+
+   height: calc(100vh - 61px)
+   means the app fills the remaining screen below the header.
+
+   overflow: hidden
+   prevents the whole page from scrolling. Instead, the sidebar
+   and map view can scroll independently.
+========================================================= */
 
 main {
-  display: grid;
-  grid-template-columns: 340px 1fr;
-  min-height: calc(100% - 60px);
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    min-height: 0;
+    overflow: hidden;
+    transition: grid-template-columns 0.25s ease;
 }
+
+    /*
+   When the sidebar has the collapsed class, the grid column
+   itself also shrinks.
+
+   Without this rule, the sidebar element gets smaller but the
+   grid column stays 340px wide, leaving dead space and making
+   the collapse look pointless.
+*/
+    main:has(#sidebar.collapsed) {
+        grid-template-columns: 56px 1fr;
+    }
+
+
+/* =========================================================
+   SIDEBAR
+   ---------------------------------------------------------
+   The sidebar is the left control panel.
+
+   It scrolls internally, so the map does not get pushed down
+   or require the whole page to scroll.
+========================================================= */
 
 #sidebar {
-  width: 340px;
-  background: var(--panel);
-  border-right: 1px solid var(--line);
-  padding: 12px 14px;
-  overflow-y: auto;
-  transition: width .25s ease, padding .25s ease;
-  font-size: 13px;
+    width: 340px;
+    height: 100%;
+    min-height: 0;
+    background: var(--panel);
+    border-right: 1px solid var(--line);
+    padding: 12px 14px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    transition: width 0.25s ease, padding 0.25s ease;
+    font-size: 13px;
 }
 
-#sidebar.collapsed {
-  width: 64px;
-  padding: 12px 8px;
+    /*
+   Collapsed sidebar.
+
+   The sidebar shrinks to a slim rail. The grid column is also
+   shrunk by the main:has(#sidebar.collapsed) rule above.
+*/
+    #sidebar.collapsed {
+        width: 56px;
+        padding: 12px 8px;
+    }
+
+        /*
+   Hide the main controls when collapsed.
+
+   The top bar remains visible, so the user can reopen the panel
+   and still use the generate button if desired.
+*/
+        #sidebar.collapsed #controls {
+            display: none;
+        }
+
+
+/* =========================================================
+   SIDEBAR TOP BAR
+   ---------------------------------------------------------
+   Contains:
+   - hamburger/collapse button
+   - Generate button
+
+   Sticky means it stays at the top of the sidebar while the
+   controls scroll underneath.
+========================================================= */
+
+.sidebar-top {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    background: var(--panel);
 }
 
-#sidebar.collapsed #controls,
+/*
+   When collapsed, stack the hamburger button and generate button
+   vertically so they fit neatly inside the slim sidebar rail.
+*/
+#sidebar.collapsed .sidebar-top {
+    flex-direction: column;
+    gap: 8px;
+}
+
+#toggleSidebar {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border-radius: 10px;
+    font-size: 18px;
+    line-height: 1;
+    flex: 0 0 40px;
+}
+
+.generate-btn {
+    flex: 1;
+    letter-spacing: 0.06em;
+}
+
+/*
+   Collapsed Generate button.
+
+   writing-mode makes the text vertical, which fits nicely in
+   the narrow sidebar.
+*/
 #sidebar.collapsed .generate-btn {
-  display: none;
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    display: block;
+    width: 40px;
+    height: 140px;
+    flex: 0 0 auto;
+    padding: 10px 6px;
 }
+
+
+/* =========================================================
+   MAP VIEW / CANVAS AREA / LEGEND
+   ---------------------------------------------------------
+   #view is now split into two areas:
+
+   1. #mapViewport
+      The available fitted space for the canvas.
+
+   2. #legendPanel
+      A compact reserved legend panel.
+
+   The canvas sizing JavaScript should measure #mapViewport,
+   not #view, so the map automatically shrinks enough to make
+   room for the legend.
+========================================================= */
 
 #view {
-  position: relative;
-  display: grid;
-  place-items: center;
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 170px;
+    gap: 12px;
+    align-items: stretch;
+    overflow: hidden;
+    min-height: 0;
+    height: 100%;
+    padding: 12px;
+}
+
+    /*
+   When the legend is collapsed, the legend column shrinks.
+   This gives more space back to the map without overlaying
+   anything on top of it.
+*/
+    #view:has(#legendPanel.collapsed) {
+        grid-template-columns: minmax(0, 1fr) 44px;
+    }
+
+#mapViewport {
+    min-width: 0;
+    min-height: 0;
+    height: 100%;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
 }
 
 canvas {
-  display: block;
-  background: #0a0d11;
+    display: block;
+    background: #0a0d11;
 }
 
-/* ---------- Generic Panels ---------- */
+/* ---------- Legend Panel ---------- */
+
+.legend-panel {
+    min-width: 0;
+    height: 100%;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: #0d1318;
+    overflow: hidden;
+    display: grid;
+    grid-template-rows: auto 1fr;
+}
+
+.legend-toggle {
+    width: 100%;
+    border: 0;
+    border-radius: 0;
+    padding: 10px 12px;
+    background: linear-gradient(180deg, #18202a, #121922);
+    color: var(--ink);
+    font-weight: 700;
+    text-align: left;
+}
+
+    .legend-toggle::before {
+        content: "▾ ";
+        color: var(--accent);
+    }
+
+.legend-panel.collapsed .legend-toggle {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    height: 100%;
+    text-align: center;
+    padding: 10px 6px;
+}
+
+    .legend-panel.collapsed .legend-toggle::before {
+        content: "▸ ";
+    }
+
+.legend-panel.collapsed .legend-body {
+    display: none;
+}
+
+.legend-body {
+    padding: 10px;
+    overflow: hidden;
+    display: grid;
+    align-content: start;
+    gap: 6px;
+}
+
+.legend-group {
+    display: grid;
+    gap: 5px;
+    margin-bottom: 8px;
+}
+
+.legend-group-title {
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-top: 2px;
+}
+
+.legend-item {
+    display: grid;
+    grid-template-columns: 22px 1fr;
+    gap: 7px;
+    align-items: center;
+    min-width: 0;
+    color: var(--ink);
+    font-size: 12px;
+}
+
+.legend-label {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.legend-swatch {
+    width: 18px;
+    height: 18px;
+    display: grid;
+    place-items: center;
+    border: 1px solid rgba(255,255,255,0.22);
+    font-size: 11px;
+    font-weight: 800;
+    line-height: 1;
+}
+
+/* Terrain swatches match the normal debug-map colours. */
+
+.legend-wall {
+    background: rgb(200,150,50);
+}
+
+.legend-floor {
+    background: #000;
+}
+
+.legend-notouch {
+    background: rgb(150,50,0);
+}
+
+.legend-water {
+    background: rgb(0,0,150);
+}
+
+.legend-undiggable {
+    background: rgb(0,100,100);
+}
+
+.legend-undug {
+    background: rgb(175,125,25);
+}
+
+/* Feature swatches. */
+
+.legend-start {
+    background: rgb(0,240,0);
+    border-radius: 50%;
+}
+
+.legend-exit {
+    background: #ff3333;
+    border-radius: 50%;
+}
+
+.legend-door {
+    background: #00ffff;
+}
+
+.legend-locked-door {
+    background: #ff8800;
+}
+
+.legend-key {
+    background: transparent;
+    border: 0;
+    position: relative;
+}
+
+    .legend-key::before {
+        content: "";
+        width: 14px;
+        height: 14px;
+        background: #ff8800;
+        transform: rotate(45deg);
+    }
+
+.legend-teleport-source,
+.legend-teleport-destination {
+    border-radius: 50%;
+    background: transparent;
+    position: relative;
+}
+
+    .legend-teleport-source::before,
+    .legend-teleport-destination::before {
+        content: "";
+        width: 15px;
+        height: 15px;
+        border-radius: 50%;
+        box-shadow: inset 0 0 0 4px currentColor;
+    }
+
+.legend-teleport-source {
+    color: #b000ff;
+}
+
+.legend-teleport-destination {
+    color: #00d7ff;
+}
+
+.legend-arrow {
+    background: transparent;
+    border: 0;
+    color: rgba(200,100,100,0.95);
+    font-size: 18px;
+}
+
+
+/* =========================================================
+   GENERIC PANELS / LABELS
+   ---------------------------------------------------------
+   These are general-purpose styles used by older fieldsets
+   and labels. The newer UI mostly uses .section blocks.
+========================================================= */
 
 fieldset {
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  padding: 10px;
-  margin: 0 0 10px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 10px;
+    margin: 0 0 10px;
 }
 
 legend {
-  padding: 0 6px;
-  color: var(--muted);
+    padding: 0 6px;
+    color: var(--muted);
 }
 
 label {
-  display: block;
-  margin: 8px 0 4px;
-  color: var(--muted);
+    display: block;
+    margin: 8px 0 4px;
+    color: var(--muted);
 }
 
 .pill {
-  padding: 2px 8px;
-  border-radius: 999px;
-  border: 1px solid var(--line);
-  background: #111823;
-  color: var(--muted);
-  font-size: 12px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: #111823;
+    color: var(--muted);
+    font-size: 12px;
 }
 
-/* ---------- Inputs ---------- */
+
+/* =========================================================
+   FORM INPUTS
+   ---------------------------------------------------------
+   Shared styling for text boxes, number inputs, dropdowns,
+   checkboxes, and form rows.
+========================================================= */
 
 input[type="number"],
 input[type="text"] {
-  width: 100%;
-  padding: 8px 10px;
-  border-radius: 10px;
-  border: 1px solid var(--line);
-  background: #0c1117;
-  color: #e6eef7;
+    width: 100%;
+    padding: 8px 10px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: #0c1117;
+    color: #e6eef7;
 }
 
 select {
-  width: 100%;
-  padding: 8px 10px;
-  border-radius: 10px;
-  border: 1px solid var(--line);
-  background: #0c1117;
-  color: #e6eef7;
-
-  appearance: none;
+    width: 100%;
+    padding: 8px 10px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: #0c1117;
+    color: #e6eef7;
+    appearance: none;
 }
 
 input[type="checkbox"] {
-  transform: translateY(1px);
+    transform: translateY(1px);
 }
 
+/*
+   Standard form row.
+
+   Label on the left, compact input on the right.
+*/
 .form-row {
-  display: grid;
-  grid-template-columns: 1fr 92px;
-  gap: 10px;
-  align-items: center;
-  margin: 8px 0;
+    display: grid;
+    grid-template-columns: 1fr 92px;
+    gap: 10px;
+    align-items: center;
+    margin: 8px 0;
 }
 
-.form-row label {
-  margin: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
+    .form-row label {
+        margin: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
 
-.form-row input[type="number"] {
-  width: 80px !important;
-}
+    /*
+   Number inputs are kept narrow so the sidebar stays compact.
+*/
+    .form-row input[type="number"] {
+        width: 80px !important;
+    }
 
-.form-row input[type="text"] {
-  width: 100%;
-}
+    .form-row input[type="text"] {
+        width: 100%;
+    }
 
-.form-row.check-row {
-  grid-template-columns: 1fr;
-}
+    /*
+   Full-width checkbox row variant.
+*/
+    .form-row.check-row {
+        grid-template-columns: 1fr;
+    }
 
-.form-row.check-row label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
+        .form-row.check-row label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
 
-.form-row.seed-row {
-  grid-template-columns: 1fr;
-  align-items: start;
-}
+    /*
+   Full-width text input variant, used for seed/share code rows.
+*/
+    .form-row.seed-row {
+        grid-template-columns: 1fr;
+        align-items: start;
+    }
 
-.form-row.seed-row label {
-  margin-bottom: 4px;
-}
+        .form-row.seed-row label {
+            margin-bottom: 4px;
+        }
+
+
+/* =========================================================
+   SLIDERS
+   ---------------------------------------------------------
+   Used by:
+   - export floor scale
+   - process speed slider
+
+   The output value sits to the right of the slider.
+========================================================= */
 
 .slider-wrap {
     display: grid;
@@ -187,7 +613,7 @@ input[type="checkbox"] {
 
     .slider-wrap input[type="range"] {
         width: 100%;
-        max-width: 180px; /* 👈 keeps it close to label */
+        max-width: 180px;
     }
 
     .slider-wrap output {
@@ -197,91 +623,91 @@ input[type="checkbox"] {
         font-size: 0.9em;
     }
 
-    .export-status {
-        margin-top: 8px;
-        min-height: 1.2em;
-        color: var(--accent);
-        font-size: 0.9rem;
-    }
 
-/* ---------- Utility Rows ---------- */
+/* =========================================================
+   UTILITY ROWS
+   ---------------------------------------------------------
+   Simple helper layouts for two-column, three-column, and
+   inline content.
+========================================================= */
 
 .row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
 }
 
 .row3 {
-  display: grid;
-  grid-template-columns: repeat(3,1fr);
-  gap: 8px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
 }
 
 .inline {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
-/* ---------- Buttons ---------- */
+
+/* =========================================================
+   BUTTONS
+   ---------------------------------------------------------
+   General button styling plus primary button variant.
+========================================================= */
 
 button {
-  cursor: pointer;
-  border: 1px solid #25425f;
-  background: #173049;
-  color: #eaf4ff;
-  border-radius: 10px;
-  padding: 9px 12px;
-  font-weight: 700;
+    cursor: pointer;
+    border: 1px solid #25425f;
+    background: #173049;
+    color: #eaf4ff;
+    border-radius: 10px;
+    padding: 9px 12px;
+    font-weight: 700;
 }
 
-button.primary {
-  background: linear-gradient(180deg,#0f7abf,#0b5a8f);
-  border-color: #0e6cab;
-}
+    button.primary {
+        background: linear-gradient(180deg, #0f7abf, #0b5a8f);
+        border-color: #0e6cab;
+    }
 
-.sidebar-top {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 10px;
-}
 
-#toggleSidebar {
-  width: 40px;
-  height: 40px;
-  padding: 0;
-  border-radius: 10px;
-  font-size: 18px;
-  line-height: 1;
-  flex: 0 0 40px;
-}
-
-.generate-btn {
-  flex: 1;
-  letter-spacing: .06em;
-}
-
-/* ---------- Config Code Buttons ---------- */
+/* =========================================================
+   CONFIG / EXPORT BUTTON ROWS
+   ---------------------------------------------------------
+   Used for Apply/Copy code and Preview/Export buttons.
+========================================================= */
 
 .code-tools {
-  display: flex;
-  gap: 8px;
-  margin-top: 8px;
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
 }
 
-.code-tools button {
-  flex: 1;
-}
+    .code-tools button {
+        flex: 1;
+    }
 
 .code-help {
-  margin-top: 6px;
-  color: var(--muted);
-  font-size: 12px;
+    margin-top: 6px;
+    color: var(--muted);
+    font-size: 12px;
 }
 
-/* ---------- export checkboxes ---------- */
+
+/* =========================================================
+   EXPORT OPTIONS
+   ---------------------------------------------------------
+   Specific layout for export-related controls.
+========================================================= */
+
+.export-status {
+    margin-top: 8px;
+    min-height: 1.2em;
+    color: var(--accent);
+    font-size: 0.9rem;
+}
+
 .export-shadow-options {
     display: grid;
     grid-template-columns: auto repeat(4, auto);
@@ -299,97 +725,127 @@ button.primary {
     margin: 0;
 }
 
-/* ---------- Accordion Sections ---------- */
+
+/* =========================================================
+   ACCORDION SECTIONS
+   ---------------------------------------------------------
+   Each sidebar group is a collapsible section.
+
+   .section.open controls whether the section content is visible.
+========================================================= */
 
 .section {
-  margin: 0 0 10px;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  overflow: hidden;
-  background: #0d1318;
+    margin: 0 0 10px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    overflow: hidden;
+    background: #0d1318;
 }
 
 .section-header {
-  width: 100%;
-  text-align: left;
-  border: 0;
-  border-radius: 0;
-  padding: 10px 12px;
-  background: linear-gradient(180deg,#18202a,#121922);
-  color: var(--ink);
-  font-weight: 700;
+    width: 100%;
+    text-align: left;
+    border: 0;
+    border-radius: 0;
+    padding: 10px 12px;
+    background: linear-gradient(180deg, #18202a, #121922);
+    color: var(--ink);
+    font-weight: 700;
 }
 
-.section-header::before {
-  content: "+ ";
-  color: var(--accent);
-}
+    /*
+   Small plus/minus indicator before accordion headings.
+*/
+    .section-header::before {
+        content: "+ ";
+        color: var(--accent);
+    }
 
 .section.open .section-header::before {
-  content: "- ";
+    content: "- ";
 }
 
 .section-content {
-  display: none;
-  padding: 10px 12px 12px;
+    display: none;
+    padding: 10px 12px 12px;
 }
 
 .section.open .section-content {
-  display: block;
+    display: block;
 }
+
+
+/* =========================================================
+   CHECKBOX LABELS
+   ---------------------------------------------------------
+   Used for checkbox rows where the input and text sit inline.
+========================================================= */
 
 .checklabel {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 8px 0;
-  color: var(--ink);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 8px 0;
+    color: var(--ink);
 }
 
-/* ---------- Stats ---------- */
+
+/* =========================================================
+   STATS PANEL
+   ---------------------------------------------------------
+   The stats are shown as label/value rows using monospace text.
+========================================================= */
 
 .stats-panel {
-  border-top: 1px solid var(--line);
-  border-bottom: 1px solid var(--line);
-  padding: 8px 0;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    padding: 8px 0;
 }
 
 .stat-row {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-  font-family:
-    ui-monospace,
-    SFMono-Regular,
-    Menlo,
-    Consolas,
-    monospace;
-  padding: 4px 0;
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    padding: 4px 0;
 }
 
-.stat-row span:last-child {
-  color: var(--ink);
-}
+    .stat-row span:last-child {
+        color: var(--ink);
+    }
 
-/* ---------- Status ---------- */
+
+/* =========================================================
+   STATUS PANEL
+   ---------------------------------------------------------
+   #status is legacy/hidden.
+   #currentStatus is the visible status readout.
+========================================================= */
 
 #status {
-  display: none;
+    display: none;
 }
 
 #currentStatus {
-  display: block;
-  margin-top: 0;
-  color: var(--muted);
-  font-size: 13px;
-  padding: 6px 8px;
-  border-radius: 8px;
-  background: #0d1318;
-  border: 1px solid var(--line);
-  min-height: 20px;
+    display: block;
+    margin-top: 0;
+    color: var(--muted);
+    font-size: 13px;
+    padding: 6px 8px;
+    border-radius: 8px;
+    background: #0d1318;
+    border: 1px solid var(--line);
+    min-height: 20px;
 }
 
-/* ---------- Preview Overlay ---------- */
+
+/* =========================================================
+   PREVIEW OVERLAY
+   ---------------------------------------------------------
+   Used by the render preview.
+
+   This is an in-page modal overlay rather than a popup window.
+========================================================= */
 
 .preview-overlay[hidden] {
     display: none !important;
@@ -428,42 +884,114 @@ button.primary {
 }
 
 .preview-body {
-    overflow: auto;
-    display: grid;
-    place-items: center;
-    padding: 16px;
-    background: #111;
+    position: relative;
+    overflow: hidden;
+    padding: 0;
+    background: radial-gradient(circle at center, rgba(255,255,255,0.05), transparent 55%), #111;
+    cursor: grab;
 }
 
-    .preview-body img {
-        max-width: 100%;
-        max-height: 100%;
-        image-rendering: pixelated;
-        background: white;
+    .preview-body.dragging {
+        cursor: grabbing;
     }
 
-/* ---------- Responsive ---------- */
+    .preview-body img {
+        position: absolute;
+        left: 0;
+        top: 0;
+        max-width: none;
+        max-height: none;
+        image-rendering: pixelated;
+        background: white;
+        user-select: none;
+        -webkit-user-drag: none;
+        transform-origin: 0 0;
+    }
+
+
+/* =========================================================
+   RESPONSIVE / MOBILE LAYOUT
+   ---------------------------------------------------------
+   On smaller screens, the sidebar becomes a full-width top
+   panel above the map.
+
+   On mobile we allow the document to scroll again because the
+   controls, map, and legend naturally stack vertically.
+========================================================= */
 
 @media (max-width: 900px) {
+    body {
+        display: block;
+        overflow: auto;
+    }
 
-  main {
-    grid-template-columns: 1fr;
-  }
+    main {
+        grid-template-columns: 1fr;
+        height: auto;
+        min-height: auto;
+        overflow: visible;
+    }
 
-  #sidebar {
-    width: 100%;
-    border-right: 0;
-    border-bottom: 1px solid var(--line);
-  }
+        main:has(#sidebar.collapsed) {
+            grid-template-columns: 1fr;
+        }
 
-  #sidebar.collapsed {
-    width: 100%;
-    padding: 12px 14px;
-  }
+    #sidebar {
+        width: 100%;
+        height: auto;
+        min-height: auto;
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+    }
 
-  #sidebar.collapsed #controls,
-  #sidebar.collapsed .generate-btn {
-    display: block;
-  }
+        #sidebar.collapsed {
+            width: 100%;
+            padding: 12px 14px;
+        }
 
+            #sidebar.collapsed #controls,
+            #sidebar.collapsed .generate-btn {
+                display: block;
+            }
+
+            #sidebar.collapsed .sidebar-top {
+                flex-direction: row;
+            }
+
+            #sidebar.collapsed .generate-btn {
+                writing-mode: horizontal-tb;
+                width: auto;
+                height: auto;
+                flex: 1;
+                padding: 9px 12px;
+            }
+
+    #view {
+        grid-template-columns: 1fr;
+        grid-template-rows: minmax(0, 1fr) auto;
+        height: auto;
+        min-height: 60vh;
+        overflow: auto;
+    }
+
+        #view:has(#legendPanel.collapsed) {
+            grid-template-columns: 1fr;
+            grid-template-rows: minmax(0, 1fr) 42px;
+        }
+
+    .legend-panel {
+        height: auto;
+        max-height: 180px;
+    }
+
+        .legend-panel.collapsed .legend-toggle {
+            writing-mode: horizontal-tb;
+            height: auto;
+            text-align: left;
+        }
+
+    .legend-body {
+        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+        overflow: hidden;
+    }
 }

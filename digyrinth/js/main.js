@@ -1,4 +1,4 @@
-(() => {
+﻿(() => {
     // ---------- Utilities ----------
     const clamp = (v, lo = 0, hi = 1) => v < lo ? lo : (v > hi ? hi : v);
 
@@ -100,6 +100,11 @@
         maxBranchTeleports: document.getElementById("maxBranchTeleports"),
         maxShortcutTeleports: document.getElementById("maxShortcutTeleports"),
         showTeleports: document.getElementById("showTeleports"),
+
+        mapViewport: document.getElementById("mapViewport"),
+        legendPanel: document.getElementById("legendPanel"),
+        legendBody: document.getElementById("legendBody"),
+        toggleLegend: document.getElementById("toggleLegend"),
 
     };
 
@@ -2240,14 +2245,45 @@
 
     // ---------- Drawing ----------
     function computeTileAndResizeCanvas() {
-        const vw = document.getElementById("view").clientWidth;
+        const view = els.mapViewport || document.getElementById("mapViewport");
 
-        let tile = Math.floor(vw / (G.Gmapx + 2));
+        if (!view) return;
+
+        /*
+          Fit the map to the currently available map viewport.
+    
+          Important:
+          We measure #mapViewport, not #view.
+    
+          #view includes the legend panel.
+          #mapViewport is only the remaining space reserved for the map.
+        */
+
+        const styles = getComputedStyle(view);
+
+        const padX =
+            parseFloat(styles.paddingLeft || 0) +
+            parseFloat(styles.paddingRight || 0);
+
+        const padY =
+            parseFloat(styles.paddingTop || 0) +
+            parseFloat(styles.paddingBottom || 0);
+
+        const availableWidth = Math.max(1, view.clientWidth - padX);
+        const availableHeight = Math.max(1, view.clientHeight - padY);
+
+        const mapCols = G.Gmapx + 2;
+        const mapRows = G.Gmapy + 2;
+
+        const tileByWidth = Math.floor(availableWidth / mapCols);
+        const tileByHeight = Math.floor(availableHeight / mapRows);
+
+        let tile = Math.min(tileByWidth, tileByHeight);
 
         if (tile < 1) tile = 1;
 
-        els.c.width = tile * (G.Gmapx + 2);
-        els.c.height = tile * (G.Gmapy + 2);
+        els.c.width = tile * mapCols;
+        els.c.height = tile * mapRows;
 
         els.c.style.width = els.c.width + "px";
         els.c.style.height = els.c.height + "px";
@@ -2328,6 +2364,74 @@
         ctx.restore();
     }
 
+    function legendItem(className, label) {
+        return `
+        <div class="legend-item">
+            <span class="legend-swatch ${className}">${className === "legend-arrow" ? "→" : ""}</span>
+            <span class="legend-label">${label}</span>
+        </div>
+    `;
+    }
+
+    function legendGroup(title, items) {
+        if (!items.length) return "";
+
+        return `
+        <div class="legend-group">
+            <div class="legend-group-title">${title}</div>
+            ${items.join("")}
+        </div>
+    `;
+    }
+
+    function updateLegend() {
+        if (!els.legendBody) return;
+
+        const terrain = [];
+
+        terrain.push(legendItem("legend-wall", "Wall"));
+        terrain.push(legendItem("legend-floor", "Floor"));
+
+        if (G.showTint) {
+            terrain.push(legendItem("legend-notouch", "Blocked / No-touch"));
+            terrain.push(legendItem("legend-undiggable", "Temp undiggable"));
+            terrain.push(legendItem("legend-undug", "Filled gap"));
+        }
+
+        if (G.showWater) {
+            terrain.push(legendItem("legend-water", "Flooded"));
+        }
+
+        const features = [];
+
+        features.push(legendItem("legend-start", "Start"));
+
+        if (G.showExit) {
+            features.push(legendItem("legend-exit", "Exit"));
+        }
+
+        if (G.showDoors) {
+            features.push(legendItem("legend-door", "Door"));
+            features.push(legendItem("legend-locked-door", "Locked door"));
+            features.push(legendItem("legend-key", "Key"));
+        }
+
+        if (G.showTeleports) {
+            features.push(legendItem("legend-teleport-source", "Teleport source"));
+            features.push(legendItem("legend-teleport-destination", "Teleport destination"));
+        }
+
+        const debug = [];
+
+        if (G.showArrows) {
+            debug.push(legendItem("legend-arrow", "Route arrow"));
+        }
+
+        els.legendBody.innerHTML =
+            legendGroup("Terrain", terrain) +
+            legendGroup("Features", features) +
+            legendGroup("Debug", debug);
+    }
 
     function draw() {
         computeTileAndResizeCanvas();
@@ -2384,6 +2488,116 @@
             ctx.fill();
             ctx.restore();
         };
+
+        function drawMapCircleMarker(ctx, cx, cy, radius, fillColor, strokeColor, label = "") {
+            ctx.save();
+
+            // Main coloured circle
+            ctx.fillStyle = fillColor;
+            ctx.beginPath();
+            ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Dark outline around the circle
+            ctx.lineWidth = Math.max(1, Math.floor(radius * 0.22));
+            ctx.strokeStyle = strokeColor;
+            ctx.beginPath();
+            ctx.arc(cx, cy, radius + 1, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // Optional label in the centre
+            if (label) {
+                drawOutlinedMarkerLabel(ctx, label, cx, cy, radius);
+            }
+
+            ctx.restore();
+        }
+        function drawMapDiamondMarker(ctx, cx, cy, radius, fillColor, strokeColor, label = "") {
+            ctx.save();
+
+            ctx.fillStyle = fillColor;
+            ctx.strokeStyle = strokeColor;
+            ctx.lineWidth = Math.max(1, Math.floor(radius * 0.22));
+
+            ctx.beginPath();
+            ctx.moveTo(cx, cy - radius);
+            ctx.lineTo(cx + radius, cy);
+            ctx.lineTo(cx, cy + radius);
+            ctx.lineTo(cx - radius, cy);
+            ctx.closePath();
+
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.restore();
+
+            if (label) {
+                drawOutlinedMarkerLabel(ctx, label, cx, cy, radius);
+            }
+        }
+
+        function drawMapDoorMarker(ctx, x, y, ts, fillColor, label = "") {
+            const nx = x * ts;
+            const ny = y * ts;
+            const cx = nx + ts / 2;
+            const cy = ny + ts / 2;
+
+            const vertical = isVerticalDoorTile(x, y);
+
+            // Make locked doors a little thicker if they have a label.
+            const thickness = label
+                ? Math.max(3, Math.ceil(ts * 0.5))
+                : Math.max(2, Math.ceil(ts * 0.3));
+
+            const offset = label
+                ? Math.floor(ts * 0.25)
+                : Math.floor(ts * 0.35);
+
+            ctx.save();
+
+            ctx.fillStyle = fillColor;
+
+            if (vertical) {
+                ctx.fillRect(nx + offset, ny, thickness, ts);
+            } else {
+                ctx.fillRect(nx, ny + offset, ts, thickness);
+            }
+
+            ctx.restore();
+
+            if (label) {
+                drawOutlinedMarkerLabel(ctx, label, cx, cy, Math.max(4, ts * 0.36));
+            }
+        }
+
+        function isVerticalDoorTile(x, y) {
+            return isFloorTile(x - 1, y) && isFloorTile(x + 1, y);
+        }
+
+        function drawOutlinedMarkerLabel(ctx, text, cx, cy, radius) {
+            if (!text) return;
+
+            const fontSize = Math.max(8, Math.floor(radius * 1.15));
+
+            ctx.save();
+
+            ctx.font = `600 ${fontSize}px system-ui`;
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+
+            // Same softer outline style as the improved S/E markers.
+            ctx.lineWidth = Math.max(1.25, radius * 0.14);
+            ctx.strokeStyle = "rgba(0,0,0,0.85)";
+            ctx.fillStyle = "rgba(255,255,255,0.92)";
+
+            const label = String(text);
+            const yOffset = fontSize * 0.03;
+
+            ctx.strokeText(label, cx, cy + yOffset);
+            ctx.fillText(label, cx, cy + yOffset);
+
+            ctx.restore();
+        }
 
         const getTeleportColour = (tile) => {
             const role = String(tile.teleportRole || "").toLowerCase();
@@ -2461,6 +2675,114 @@
             ctx.restore();
         };
 
+        const DEBUG_TILE_STYLES = {
+            // 0 = wall / solid rock / undug space
+            wall: { rgb: [200, 150, 50], bevel: true },
+
+            // 1 = dug floor / walkable empty space
+            floor: { rgb: [0, 0, 0], bevel: true },
+
+            // 2 = no-touch / permanently blocked from generation
+            notouch: { rgb: [150, 50, 0], bevel: true },
+
+            // 3 = flooded room tile
+            water: { rgb: [0, 0, 150], bevel: false },
+
+            // 4 = fully surrounded floor / open interior marker
+            interior: { rgb: [50, 50, 50], bevel: false },
+
+            // 5 = temporary undiggable tile used during room planning
+            undiggable: { rgb: [0, 100, 100], bevel: true },
+
+            // 6 = tile removed by hole-filler / post-process cleanup
+            undug: { rgb: [175, 125, 25], bevel: true }
+        };
+
+        const rgbString = ([r, g, b]) => `rgb(${r},${g},${b})`;
+
+        const adjustRgb = ([r, g, b], amount) => [
+            Math.max(0, Math.min(255, r + amount)),
+            Math.max(0, Math.min(255, g + amount)),
+            Math.max(0, Math.min(255, b + amount))
+        ];
+
+        const drawDebugTile = (nx, ny, ts, style) => {
+            const { rgb, bevel } = style;
+
+            ctx.fillStyle = rgbString(rgb);
+            ctx.fillRect(nx, ny, ts, ts);
+
+            if (!bevel) return;
+
+            ctx.fillStyle = rgbString(adjustRgb(rgb, -50));
+            ctx.fillRect(nx + 1, ny + 1, ts - 1, ts - 1);
+
+            ctx.fillStyle = rgbString(adjustRgb(rgb, 50));
+            ctx.fillRect(nx, ny, ts - 1, ts - 1);
+
+            ctx.fillStyle = rgbString(rgb);
+            ctx.fillRect(nx + 1, ny + 1, ts - 2, ts - 2);
+        };
+
+        const getDebugTileStyle = (x, y, tile) => {
+            const isFlood = tile.flood;
+            const isNotouch = tile.Notouch;
+            const isUndiggable = tile.undiggable;
+            const isUndug = tile.undug;
+
+            /*
+              Simplified display mode:
+              - ignores most debug tint categories
+              - still shows water if Show Water is enabled
+              - otherwise only distinguishes wall vs floor
+            */
+            if (!G.showTint) {
+                if (isFlood && G.showWater) return DEBUG_TILE_STYLES.water;
+                if (tile.flr === 0) return DEBUG_TILE_STYLES.wall;
+                return DEBUG_TILE_STYLES.floor;
+            }
+
+            /*
+              Full tint/debug display mode.
+        
+              Base tile meaning:
+              - flr === 0 means wall
+              - flr === 1 means floor
+        
+              Then special debug states override that base meaning.
+            */
+            let col = tile.flr;
+
+            // Hidden water is treated as normal floor.
+            if (!G.showWater && isFlood) col = 1;
+
+            // Temp undiggable is shown only when the tile is not plain floor.
+            if (col !== 1 && isUndiggable) col = 5;
+
+            // Fully surrounded floor/interior marker.
+            if (col === 1 && wallcount(x, y) === 0) col = 4;
+
+            // No-touch always overrides ordinary wall/floor display.
+            if (isNotouch) col = 2;
+
+            // Flooded overrides most tint states when water display is enabled.
+            if (isFlood && G.showWater) col = 3;
+
+            // Undug/filled gap marker has final priority.
+            if (isUndug) col = 6;
+
+            switch (col) {
+                case 1: return DEBUG_TILE_STYLES.floor;
+                case 0: return DEBUG_TILE_STYLES.wall;
+                case 2: return DEBUG_TILE_STYLES.notouch;
+                case 3: return DEBUG_TILE_STYLES.water;
+                case 4: return DEBUG_TILE_STYLES.interior;
+                case 5: return DEBUG_TILE_STYLES.undiggable;
+                case 6: return DEBUG_TILE_STYLES.undug;
+                default: return DEBUG_TILE_STYLES.wall;
+            }
+        };
+
         for (let y = 0; y <= G.Gmapy + 1; y++) {
             for (let x = 0; x <= G.Gmapx + 1; x++) {
                 const nx = x * ts;
@@ -2477,115 +2799,7 @@
                     col = 1;
                 }
 
-                if (!G.showTint) {
-                    let r = 0;
-                    let g = 0;
-                    let b = 0;
-                    let s = 1;
-
-                    if (isFlood && G.showWater) {
-                        r = 0;
-                        g = 0;
-                        b = 150;
-                        s = 0;
-                    } else if (map[x][y].flr === 0) {
-                        r = 200;
-                        g = 150;
-                        b = 50;
-                        s = 1;
-                    } else {
-                        r = 0;
-                        g = 0;
-                        b = 0;
-                        s = 1;
-                    }
-
-                    ctx.fillStyle = `rgb(${r},${g},${b})`;
-                    ctx.fillRect(nx, ny, ts, ts);
-
-                    if (s > 0) {
-                        ctx.fillStyle = `rgb(${Math.max(r - 50, 0)},${Math.max(g - 50, 0)},${Math.max(b - 50, 0)})`;
-                        ctx.fillRect(nx + 1, ny + 1, ts - 1, ts - 1);
-
-                        ctx.fillStyle = `rgb(${Math.min(r + 50, 255)},${Math.min(g + 50, 255)},${Math.min(b + 50, 255)})`;
-                        ctx.fillRect(nx, ny, ts - 1, ts - 1);
-
-                        ctx.fillStyle = `rgb(${r},${g},${b})`;
-                        ctx.fillRect(nx + 1, ny + 1, ts - 2, ts - 2);
-                    }
-                } else {
-                    if (col !== 1 && isUndiggable) col = 5;
-                    if (col === 1 && wallcount(x, y) === 0) col = 4;
-                    if (isNotouch) col = 2;
-                    if (isFlood && G.showWater) col = 3;
-                    if (isUndug) col = 6;
-
-                    let r = 0;
-                    let g = 0;
-                    let b = 0;
-                    let s = 1;
-
-                    switch (col) {
-                        case 1:
-                            r = 0;
-                            g = 0;
-                            b = 0;
-                            s = 1;
-                            break;
-                        case 0:
-                            r = 200;
-                            g = 150;
-                            b = 50;
-                            s = 1;
-                            break;
-                        case 2:
-                            r = 150;
-                            g = 50;
-                            b = 0;
-                            s = 1;
-                            break;
-                        case 3:
-                            r = 0;
-                            g = 0;
-                            b = 150;
-                            s = 0;
-                            break;
-                        case 4:
-                            r = 50;
-                            g = 50;
-                            b = 50;
-                            s = 0;
-                            break;
-                        case 5:
-                            r = 0;
-                            g = 100;
-                            b = 100;
-                            s = 1;
-                            break;
-                        case 6:
-                            r = 175;
-                            g = 125;
-                            b = 25;
-                            s = 1;
-                            break;
-                    }
-
-                    ctx.fillStyle = `rgb(${r},${g},${b})`;
-                    ctx.fillRect(nx, ny, ts, ts);
-
-                    if (s > 0) {
-                        ctx.fillStyle = `rgb(${Math.max(r - 50, 0)},${Math.max(g - 50, 0)},${Math.max(b - 50, 0)})`;
-                        ctx.fillRect(nx + 1, ny + 1, ts - 1, ts - 1);
-                    }
-
-                    if (s > 0) {
-                        ctx.fillStyle = `rgb(${Math.min(r + 50, 255)},${Math.min(g + 50, 255)},${Math.min(b + 50, 255)})`;
-                        ctx.fillRect(nx, ny, ts - 1, ts - 1);
-                    }
-
-                    ctx.fillStyle = `rgb(${r},${g},${b})`;
-                    ctx.fillRect(nx + 1, ny + 1, ts - 2, ts - 2);
-                }
+                drawDebugTile(nx, ny,ts, getDebugTileStyle(x, y, map[x][y]) );
 
                 if (!G._finished && x === G.Gdx && y === G.Gdy) {
                     ctx.fillStyle = "rgb(255,255,0)";
@@ -2593,61 +2807,31 @@
                 }
 
                 if (x === G.Gstartx && y === G.Gstarty) {
-                    ctx.fillStyle = "rgb(0,240,0)";
-                    ctx.fillRect(nx, ny, ts, ts);
+                    const sx = nx + ts / 2;
+                    const sy = ny + ts / 2;
+                    const rad = Math.max(4, ts * 0.40);
+
+                    drawMapCircleMarker(ctx, sx, sy, rad, "#00F000", "#003300","S");
                 }
 
+                // Show doors as cyan or orange rectangles, with locked doors labelled by their ID number.
                 if (G.showDoors && map[x][y].doorType === 1) {
-                    const verticalDoor = isFloorTile(x - 1, y) && isFloorTile(x + 1, y);
-
-                    ctx.fillStyle = "#00FFFF";
-
-                    if (verticalDoor) {
-                        ctx.fillRect(nx + Math.floor(ts * 0.35), ny, Math.max(2, Math.ceil(ts * 0.3)), ts);
-                    } else {
-                        ctx.fillRect(nx, ny + Math.floor(ts * 0.35), ts, Math.max(2, Math.ceil(ts * 0.3)));
-                    }
+                    drawMapDoorMarker(ctx, x, y, ts, "#00FFFF" );
                 } else if (G.showDoors && map[x][y].doorType === 2) {
-                    const verticalDoor = isFloorTile(x - 1, y) && isFloorTile(x + 1, y);
-
-                    ctx.fillStyle = "#FF8800";
-
-                    if (verticalDoor) {
-                        ctx.fillRect(nx + Math.floor(ts * 0.25), ny, Math.max(3, Math.ceil(ts * 0.5)), ts);
-                    } else {
-                        ctx.fillRect(nx, ny + Math.floor(ts * 0.25), ts, Math.max(3, Math.ceil(ts * 0.5)));
-                    }
-
-                    if (ts >= 10) {
-                        ctx.fillStyle = "rgb(20,20,20)";
-                        ctx.font = `${Math.max(8, Math.floor(ts * 0.42))}px system-ui`;
-                        ctx.textAlign = "center";
-                        ctx.textBaseline = "middle";
-                        ctx.fillText(String(map[x][y].doorId), nx + ts / 2, ny + ts / 2);
-                    }
+                    drawMapDoorMarker(ctx, x, y, ts, "#FF8800", String(map[x][y].doorId) );
                 }
 
+                // Show keys as orange diamonds with their ID number.
                 if (G.showDoors && map[x][y].keyId) {
-                    const cx = nx + ts / 2;
-                    const cy = ny + ts / 2;
-                    const size = Math.max(2, ts * 0.28);
-
-                    ctx.fillStyle = "#FF8800";
-                    ctx.beginPath();
-                    ctx.moveTo(cx, cy - size);
-                    ctx.lineTo(cx + size, cy);
-                    ctx.lineTo(cx, cy + size);
-                    ctx.lineTo(cx - size, cy);
-                    ctx.closePath();
-                    ctx.fill();
-
-                    if (ts >= 10) {
-                        ctx.fillStyle = "rgb(20,20,20)";
-                        ctx.font = `${Math.max(8, Math.floor(ts * 0.42))}px system-ui`;
-                        ctx.textAlign = "center";
-                        ctx.textBaseline = "middle";
-                        ctx.fillText(String(map[x][y].keyId), nx + ts / 2, ny + ts / 2);
-                    }
+                    drawMapDiamondMarker(
+                        ctx,
+                        nx + ts / 2,
+                        ny + ts / 2,
+                        Math.max(4, ts * 0.36),
+                        "#FF8800",
+                        "#552200",
+                        String(map[x][y].keyId)
+                    );
                 }
 
                 if (G.showTeleports && map[x][y].teleportId) {
@@ -2676,21 +2860,13 @@
         if (G.showExit && G._exitX > 0 && G._exitY > 0) {
             const ex = G._exitX * ts + ts / 2;
             const ey = G._exitY * ts + ts / 2;
-            const rad = Math.max(3, ts * 0.28);
+            const rad = Math.max(4, ts * 0.40);
 
-            ctx.fillStyle = "#FF3333";
-            ctx.beginPath();
-            ctx.arc(ex, ey, rad, 0, Math.PI * 2);
-            ctx.fill();
-
-            ctx.lineWidth = Math.max(1, Math.floor(ts * 0.06));
-            ctx.strokeStyle = "#220000";
-            ctx.beginPath();
-            ctx.arc(ex, ey, rad + 1, 0, Math.PI * 2);
-            ctx.stroke();
+            drawMapCircleMarker(ctx, ex, ey, rad, "#FF3333", "#220000", "E");
         }
 
         updateStats();
+        updateLegend();
     }
 
     // ---------- Step-by-step Runner ----------
@@ -2987,7 +3163,44 @@
     // ---------- Events ----------
     els.btnGenerate.addEventListener("click", () => run(els.showProcess.checked));
 
-    window.addEventListener("resize", () => draw());
+    let resizeDrawQueued = false;
+
+    function queueDraw() {
+        if (resizeDrawQueued) return;
+
+        resizeDrawQueued = true;
+
+        requestAnimationFrame(() => {
+            resizeDrawQueued = false;
+
+            if (G && map && map.length) {
+                draw();
+            }
+        });
+    }
+
+    window.addEventListener("resize", queueDraw);
+
+    const sidebarEl = document.getElementById("sidebar");
+    const viewEl = document.getElementById("mapViewport");
+
+    els.toggleSidebar?.addEventListener("click", () => {
+        if (!sidebarEl) return;
+
+        sidebarEl.classList.toggle("collapsed");
+
+        queueDraw();
+        setTimeout(queueDraw, 130);
+        setTimeout(queueDraw, 260);
+    });
+
+    if (viewEl && "ResizeObserver" in window) {
+        const viewResizeObserver = new ResizeObserver(() => {
+            queueDraw();
+        });
+
+        viewResizeObserver.observe(viewEl);
+    }
 
     els.showArrows.addEventListener("change", () => {
         G.showArrows = !!els.showArrows.checked;
@@ -3026,10 +3239,6 @@
         header.addEventListener("click", () => {
             header.parentElement.classList.toggle("open");
         });
-    });
-
-    els.toggleSidebar?.addEventListener("click", () => {
-        document.getElementById("sidebar")?.classList.toggle("collapsed");
     });
 
     els.processSpeed?.addEventListener("input", () => {
@@ -3079,6 +3288,18 @@
             el.addEventListener("input", () => refreshConfigCode());
             el.addEventListener("change", () => refreshConfigCode(true));
         }
+    });
+
+    els.toggleLegend?.addEventListener("click", () => {
+        if (!els.legendPanel) return;
+
+        const collapsed = els.legendPanel.classList.toggle("collapsed");
+
+        els.toggleLegend.setAttribute("aria-expanded", String(!collapsed));
+
+        queueDraw();
+        setTimeout(queueDraw, 130);
+        setTimeout(queueDraw, 260);
     });
 
     // ---------- First paint ----------

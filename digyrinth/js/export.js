@@ -54,8 +54,6 @@
 
             const state = window.Digyrinth.ensureGenerated();
 
-            window.Digyrinth.ensureGenerated();
-
             const style = document.getElementById("exportStyle")?.value || "current";
             const tileSize = Math.max(8, Math.min(256, parseInt(document.getElementById("exportTileSize")?.value, 10) || 72));
             const showDoors = !!document.getElementById("exportShowDoors")?.checked;
@@ -109,6 +107,16 @@
 
             image.src = dataUrl;
             overlay.hidden = false;
+
+            // Reset the preview viewer once the image has loaded.
+            if (typeof window.resetPreviewViewer === "function") {
+                if (image.complete) {
+                    window.resetPreviewViewer();
+                } else {
+                    image.onload = () => window.resetPreviewViewer();
+                }
+            }
+
         } catch (err) {
             console.error(err);
             alert("Preview failed. Check the browser console for details.");
@@ -230,5 +238,123 @@
             previewOverlay.hidden = true;
         }
     });
+
+    /* =========================================================
+   PREVIEW VIEWER ZOOM / PAN
+   ---------------------------------------------------------
+   Adds:
+   - mouse wheel zoom
+   - drag to pan
+   - double-click reset
+========================================================= */
+
+    const previewViewer = document.getElementById("previewViewer");
+    const previewImage = document.getElementById("previewImage");
+
+    let previewScale = 1;
+    let previewX = 0;
+    let previewY = 0;
+    let previewDragging = false;
+    let previewDragStartX = 0;
+    let previewDragStartY = 0;
+    let previewStartX = 0;
+    let previewStartY = 0;
+
+    function updatePreviewTransform() {
+        if (!previewImage) return;
+
+        previewImage.style.transform =
+            `translate(${previewX}px, ${previewY}px) scale(${previewScale})`;
+    }
+
+    function resetPreviewViewer() {
+        if (!previewViewer || !previewImage) return;
+
+        const vw = previewViewer.clientWidth;
+        const vh = previewViewer.clientHeight;
+
+        const iw = previewImage.naturalWidth || previewImage.width;
+        const ih = previewImage.naturalHeight || previewImage.height;
+
+        if (!vw || !vh || !iw || !ih) return;
+
+        const fitScale = Math.min(vw / iw, vh / ih) * 0.95;
+
+        previewScale = Math.max(0.05, fitScale);
+        previewX = (vw - iw * previewScale) / 2;
+        previewY = (vh - ih * previewScale) / 2;
+
+        updatePreviewTransform();
+    }
+
+    function zoomPreviewAt(pointX, pointY, factor) {
+        if (!previewViewer || !previewImage) return;
+
+        const oldScale = previewScale;
+        const newScale = Math.max(0.05, Math.min(16, previewScale * factor));
+
+        const imageX = (pointX - previewX) / oldScale;
+        const imageY = (pointY - previewY) / oldScale;
+
+        previewScale = newScale;
+
+        previewX = pointX - imageX * previewScale;
+        previewY = pointY - imageY * previewScale;
+
+        updatePreviewTransform();
+    }
+
+    // Make this callable from previewRender().
+    window.resetPreviewViewer = resetPreviewViewer;
+
+    if (previewViewer && previewImage) {
+        previewViewer.addEventListener("wheel", (e) => {
+            e.preventDefault();
+
+            const rect = previewViewer.getBoundingClientRect();
+            const pointX = e.clientX - rect.left;
+            const pointY = e.clientY - rect.top;
+
+            const factor = e.deltaY < 0 ? 1.15 : 1 / 1.15;
+
+            zoomPreviewAt(pointX, pointY, factor);
+        }, { passive: false });
+
+        previewViewer.addEventListener("mousedown", (e) => {
+            previewDragging = true;
+            previewViewer.classList.add("dragging");
+
+            previewDragStartX = e.clientX;
+            previewDragStartY = e.clientY;
+            previewStartX = previewX;
+            previewStartY = previewY;
+        });
+
+        window.addEventListener("mousemove", (e) => {
+            if (!previewDragging) return;
+
+            previewX = previewStartX + (e.clientX - previewDragStartX);
+            previewY = previewStartY + (e.clientY - previewDragStartY);
+
+            updatePreviewTransform();
+        });
+
+        window.addEventListener("mouseup", () => {
+            previewDragging = false;
+            previewViewer.classList.remove("dragging");
+        });
+
+        previewViewer.addEventListener("dblclick", () => {
+            resetPreviewViewer();
+        });
+
+        window.addEventListener("resize", () => {
+            const overlay = document.getElementById("previewOverlay");
+
+            if (overlay && !overlay.hidden) {
+                resetPreviewViewer();
+            }
+        });
+    }
 
 })();
