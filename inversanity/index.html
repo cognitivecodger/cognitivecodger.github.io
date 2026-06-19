@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Inversanity 0.2</title>
+    <style>
+        html, body {
+            margin: 0;
+            min-height: 100%;
+            background: #0b0e18;
+            color: #e6e6e6;
+            font-family: system-ui, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+            overscroll-behavior: none;
+        }
+
+        .wrap {
+            display: grid;
+            place-items: center;
+            min-height: 100svh;
+            padding: max(6px, env(safe-area-inset-top)) max(6px, env(safe-area-inset-right)) max(6px, env(safe-area-inset-bottom)) max(6px, env(safe-area-inset-left));
+            box-sizing: border-box;
+        }
+
+        canvas {
+            background: #111;
+            display: block;
+            width: auto;
+            height: auto;
+            max-width: 100%;
+            max-height: calc(100svh - 12px);
+            box-shadow: 0 10px 30px rgba(0,0,0,.6);
+            border-radius: 6px;
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <canvas id="game" width="800" height="600"></canvas>
+    </div>
+    <script>
+        (() => {
+            // ===== Constants (ported from Blitz Basic) =====
+            const max_gridsize = 20;
+            const min_gridsize = 5;
+            const min_scramble = 3;
+            const max_scramble = 30;
+            const min_patterns = 2;
+            const max_patterns = 8;
+
+            // Layout switches between the original desktop arrangement and a portrait UI.
+            let CANVAS_W = 800, CANVAS_H = 600;
+            let BOARD_X = 220, BOARD_Y = 20, BOARD_SIZE = 560;
+            let portraitLayout = false;
+
+            // Offsets (centre + von Neumann + diagonals)
+            const OFFSETS = [
+                [0, 0], // centre
+                [0, -1], // top
+                [0, 1], // bottom
+                [-1, 0], // left
+                [1, 0], // right
+                [-1, -1], // top left
+                [1, -1], // top right
+                [-1, 1], // bottom left
+                [1, 1], // bottom right
+            ];
+
+            // Base colours (RGB 0..255), with names for potential future use
+            const COLS = [
+                { name: 'BLACK ', rgb: [0, 0, 0] },
+                { name: 'RED   ', rgb: [128, 0, 0] },
+                { name: 'GREEN ', rgb: [0, 128, 0] },
+                { name: 'BLUE  ', rgb: [0, 0, 128] },
+                { name: 'YELLOW', rgb: [128, 128, 0] },
+                { name: 'PINK  ', rgb: [128, 0, 128] },
+                { name: 'PURPLE', rgb: [64, 0, 128] },
+                { name: 'ORANGE', rgb: [180, 100, 0] },
+            ];
+
+            // ===== Game state =====
+            let scramblePresses = min_scramble;
+            let gridSize = min_gridsize;
+            let patternCount = min_patterns;
+            let current_moves = 0;
+            let total_moves = 0;
+            let current_time = 0;
+            let total_time = 0;
+            let options = 1; // bit 0: wrap/overlap, bit 1: diagonals
+            let gameStarted = false;
+            let paused = false;
+            let confirmReset = false;
+            let levelTransition = false;
+            let soundEnabled = true;
+            let levelAdvanceTimer = null;
+
+            let xsize = gridSize, ysize = gridSize;
+            let cellW = 560 / xsize, cellH = 560 / ysize;
+            let grid = createGrid(max_gridsize, max_gridsize, 1);
+            let levelStartGrid = null;
+
+            // Randomiser for pre-scramble at level start (mimics Blitz play())
+            let randomizeCount = 0; // how many random hits remain before interactivity
+            let waitCounter = 0;    // frames elapsed toward next random hit
+            const waitTime = 30;    // ~0.5s at 60fps
+            let hoverXY = { x: -1, y: -1 };
+            let colourChoice = null;
+            let gridPress = null;
+            let pressedChoice = null;
+            let longPressTimer = null;
+
+            // ===== Canvas setup =====
+            const cvs = document.getElementById('game');
+            const ctx = cvs.getContext('2d');
+            cvs.oncontextmenu = e => e.preventDefault(); // allow right-click actions
+
+            const SCRAMBLE_MINUS = { x: 24, y: 45, w: 30, h: 28 };
+            const SCRAMBLE_PLUS = { x: 166, y: 45, w: 30, h: 28 };
+            const GRID_MINUS = { x: 24, y: 121, w: 30, h: 28 };
+            const GRID_PLUS = { x: 166, y: 121, w: 30, h: 28 };
+            const PATTERN_MINUS = { x: 24, y: 197, w: 30, h: 28 };
+            const PATTERN_PLUS = { x: 166, y: 197, w: 30, h: 28 };
+            const MAIN_BUTTON = { x: 24, y: 414, w: 172, h: 34 };
+            const RESET_PUZZLE_BUTTON = { x: 24, y: 456, w: 172, h: 34 };
+            const SOUND_BUTTON = { x: 24, y: 498, w: 172, h: 34 };
+            const RESET_GAME_BUTTON = { x: 24, y: 544, w: 172, h: 34 };
+            const CONFIRM_YES_BUTTON = { x: 390, y: 338, w: 92, h: 36 };
+            const CONFIRM_NO_BUTTON = { x: 508, y: 338, w: 92, h: 36 };
+
+            function setRect(rect, x, y, w, h) { Object.assign(rect, { x, y, w, h }); }
+
+            function updateLayout() {
+                const portrait = window.matchMedia('(max-width: 700px), (orientation: portrait)').matches;
+                if (portrait === portraitLayout && cvs.width === CANVAS_W) return;
+                portraitLayout = portrait;
+
+                if (portraitLayout) {
+                    CANVAS_W = 600; CANVAS_H = 1140;
+                    BOARD_X = 20; BOARD_Y = 20; BOARD_SIZE = 560;
+                    setRect(SCRAMBLE_MINUS, 20, 621, 72, 68);
+                    setRect(SCRAMBLE_PLUS, 508, 621, 72, 68);
+                    setRect(GRID_MINUS, 20, 709, 72, 68);
+                    setRect(GRID_PLUS, 508, 709, 72, 68);
+                    setRect(PATTERN_MINUS, 20, 797, 72, 68);
+                    setRect(PATTERN_PLUS, 508, 797, 72, 68);
+                    setRect(MAIN_BUTTON, 20, 966, 270, 70);
+                    setRect(RESET_PUZZLE_BUTTON, 310, 966, 270, 70);
+                    setRect(SOUND_BUTTON, 20, 1044, 270, 70);
+                    setRect(RESET_GAME_BUTTON, 310, 1044, 270, 70);
+                    setRect(CONFIRM_YES_BUTTON, 184, 612, 104, 60);
+                    setRect(CONFIRM_NO_BUTTON, 312, 612, 104, 60);
+                } else {
+                    CANVAS_W = 800; CANVAS_H = 600;
+                    BOARD_X = 220; BOARD_Y = 20; BOARD_SIZE = 560;
+                    setRect(SCRAMBLE_MINUS, 24, 45, 30, 28);
+                    setRect(SCRAMBLE_PLUS, 166, 45, 30, 28);
+                    setRect(GRID_MINUS, 24, 121, 30, 28);
+                    setRect(GRID_PLUS, 166, 121, 30, 28);
+                    setRect(PATTERN_MINUS, 24, 197, 30, 28);
+                    setRect(PATTERN_PLUS, 166, 197, 30, 28);
+                    setRect(MAIN_BUTTON, 24, 414, 172, 34);
+                    setRect(RESET_PUZZLE_BUTTON, 24, 456, 172, 34);
+                    setRect(SOUND_BUTTON, 24, 498, 172, 34);
+                    setRect(RESET_GAME_BUTTON, 24, 544, 172, 34);
+                    setRect(CONFIRM_YES_BUTTON, 390, 338, 92, 36);
+                    setRect(CONFIRM_NO_BUTTON, 508, 338, 92, 36);
+                }
+
+                cvs.width = CANVAS_W;
+                cvs.height = CANVAS_H;
+                cellW = BOARD_SIZE / xsize;
+                cellH = cellW;
+                colourChoice = null;
+            }
+
+            // ===== Sound effects =====
+            // Synthesised with Web Audio so the game remains a single self-contained file.
+            // Browsers only permit audio after the player has interacted with the page.
+            let audioCtx = null;
+            let masterGain = null;
+
+            function ensureAudio() {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (!AudioContext) return false;
+                if (!audioCtx) {
+                    audioCtx = new AudioContext();
+                    masterGain = audioCtx.createGain();
+                    masterGain.gain.value = 0.18;
+                    masterGain.connect(audioCtx.destination);
+                }
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                return true;
+            }
+
+            function playButtonTone(frequency) {
+                if (!soundEnabled) return;
+                if (!ensureAudio()) return;
+                const now = audioCtx.currentTime;
+                const oscillator = audioCtx.createOscillator();
+                const envelope = audioCtx.createGain();
+
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(frequency, now);
+                oscillator.frequency.exponentialRampToValueAtTime(frequency * 0.96, now + 0.09);
+                envelope.gain.setValueAtTime(0.0001, now);
+                envelope.gain.exponentialRampToValueAtTime(0.7, now + 0.008);
+                envelope.gain.exponentialRampToValueAtTime(0.0001, now + 0.11);
+
+                oscillator.connect(envelope);
+                envelope.connect(masterGain);
+                oscillator.start(now);
+                oscillator.stop(now + 0.12);
+            }
+
+            function playPressSound() { playButtonTone(180); }
+            function playReleaseSound() { playButtonTone(390); }
+
+            function playFanfare() {
+                if (!soundEnabled || !ensureAudio()) return;
+                const notes = [523.25, 659.25, 783.99, 1046.50];
+                const starts = [0, 0.13, 0.26, 0.43];
+                const lengths = [0.16, 0.16, 0.20, 0.48];
+                const now = audioCtx.currentTime;
+
+                notes.forEach((frequency, i) => {
+                    const oscillator = audioCtx.createOscillator();
+                    const envelope = audioCtx.createGain();
+                    const start = now + starts[i];
+                    const end = start + lengths[i];
+                    oscillator.type = i === notes.length - 1 ? 'triangle' : 'sine';
+                    oscillator.frequency.setValueAtTime(frequency, start);
+                    envelope.gain.setValueAtTime(0.0001, start);
+                    envelope.gain.exponentialRampToValueAtTime(0.55, start + 0.015);
+                    envelope.gain.exponentialRampToValueAtTime(0.0001, end);
+                    oscillator.connect(envelope);
+                    envelope.connect(masterGain);
+                    oscillator.start(start);
+                    oscillator.stop(end + 0.02);
+                });
+            }
+
+            // A click on any game control unlocks audio for subsequent computer moves.
+            window.addEventListener('pointerdown', ensureAudio, { once: true, capture: true });
+            window.addEventListener('keydown', ensureAudio, { once: true, capture: true });
+
+            // ===== Utility =====
+            function clampWrap(a, b, c, wrap) {
+                if (b > c) [b, c] = [c, b];
+                const diff = (c - b) + 1;
+                if (a < b) return wrap ? b + ((a - b) % diff + diff) % diff : b;
+                if (a > c) return wrap ? b + ((a - b) % diff + diff) % diff : c;
+                return a;
+            }
+            function lerp(a, b, t) { return a + (b - a) * t; }
+            function lighten([r, g, b], amt) { return [clamp255(r + amt), clamp255(g + amt), clamp255(b + amt)]; }
+            function clamp255(v) { return Math.max(0, Math.min(255, v | 0)); }
+            function rgbToStr([r, g, b]) { return `rgb(${r | 0},${g | 0},${b | 0})`; }
+            function createGrid(w, h, fill = 0) { return Array.from({ length: h }, () => Array(w).fill(fill)); }
+
+            // Button-like cell painter to mimic original gradient halves
+            function drawCellButton(x, y, w, h, baseRgb) {
+                // top half lighter, bottom half darker
+                // fill gradient by scanlines (cheap but fine at this scale)
+                const half = h / 2;
+                for (let n = 0; n < half - 1; n++) {
+                    // bottom darker strip
+                    const amt1 = Math.floor(n * (40 / (h / 4)));
+                    const col1 = lighten(baseRgb, amt1);
+                    ctx.fillStyle = rgbToStr(col1);
+                    ctx.fillRect(x + 2, y + half + n, w - 4, 1);
+                    // top lighter strip
+                    const col2 = lighten(baseRgb, amt1 + 50);
+                    ctx.fillStyle = rgbToStr(col2);
+                    ctx.fillRect(x + 2, y + half - n, w - 4, 1);
+                }
+                // borders
+                const light = rgbToStr(lighten(baseRgb, 120));
+                const dark = rgbToStr(lighten(baseRgb, -50));
+                ctx.strokeStyle = dark; ctx.strokeRect(x, y, w, h);
+                ctx.strokeStyle = light; ctx.strokeRect(x + 1, y + 1, w - 2, h - 2);
+                // corner dots (black)
+                ctx.fillStyle = '#000';
+                ctx.fillRect(x, y, 1, 1);
+                ctx.fillRect(x + w - 1, y, 1, 1);
+                ctx.fillRect(x, y + h - 1, 1, 1);
+                ctx.fillRect(x + w - 1, y + h - 1, 1, 1);
+            }
+
+            function getPaletteColour(index) {
+                // Grid values run from 1 to patternCount; palette index 0 is black/off.
+                const idx = clampWrap(index - 1, 0, patternCount - 1, true);
+                return COLS[idx].rgb;
+            }
+
+            // ===== Puzzle setup =====
+            function resetConfiguration() {
+                scramblePresses = min_scramble;
+                gridSize = min_gridsize;
+                patternCount = min_patterns;
+                total_moves = 0;
+                total_time = 0;
+            }
+
+            function startPuzzle(resetmoves = false) {
+                if (resetmoves) { total_moves = 0; total_time = 0; }
+                options = 1; // wrap edges; diagonal effects are not currently enabled
+
+                current_time = 0;
+                current_moves = 0;
+
+                xsize = gridSize; ysize = gridSize;
+                cellW = Math.min(BOARD_SIZE / xsize, BOARD_SIZE / ysize);
+                cellH = cellW;
+
+                // Reset grid to colour 1
+                for (let y = 0; y < max_gridsize; y++) for (let x = 0; x < max_gridsize; x++) grid[y][x] = 1;
+
+                randomizeCount = gameStarted ? scramblePresses : 0;
+                waitCounter = 0;
+                hoverXY = { x: -1, y: -1 };
+                paused = false;
+                levelStartGrid = null;
+                colourChoice = null;
+            }
+
+            function beginGame() {
+                if (gameStarted) return;
+                gameStarted = true;
+                paused = false;
+                confirmReset = false;
+                levelTransition = false;
+                total_moves = 0;
+                total_time = 0;
+                startPuzzle(true);
+            }
+
+            function resetToReady() {
+                if (levelAdvanceTimer !== null) {
+                    clearTimeout(levelAdvanceTimer);
+                    levelAdvanceTimer = null;
+                }
+                gameStarted = false;
+                paused = false;
+                confirmReset = false;
+                levelTransition = false;
+                resetConfiguration();
+                startPuzzle(true);
+            }
+
+            function changeSetting(setting, amount) {
+                if (levelAdvanceTimer !== null) {
+                    clearTimeout(levelAdvanceTimer);
+                    levelAdvanceTimer = null;
+                }
+                levelTransition = false;
+                if (setting === 'scramble') scramblePresses = clampWrap(scramblePresses + amount, min_scramble, max_scramble, false);
+                if (setting === 'grid') gridSize = clampWrap(gridSize + amount, min_gridsize, max_gridsize, false);
+                if (setting === 'patterns') patternCount = clampWrap(patternCount + amount, min_patterns, max_patterns, false);
+                startPuzzle(false);
+            }
+
+            function resetCurrentLevel() {
+                if (!gameStarted || !levelStartGrid) return;
+                grid = levelStartGrid.map(row => row.slice());
+                current_moves = 0;
+                paused = false;
+                hoverXY = { x: -1, y: -1 };
+                colourChoice = null;
+            }
+
+            function applyPlayerHit(x, y, change) {
+                if (!gameStarted || paused || confirmReset || levelTransition || randomizeCount !== 0) return;
+                hit(x, y, patternCount, change, options);
+                playReleaseSound();
+                current_moves++;
+                total_moves++;
+            }
+
+            function completeLevel() {
+                if (levelTransition) return;
+                levelTransition = true;
+                hoverXY = { x: -1, y: -1 };
+                playFanfare();
+                levelAdvanceTimer = setTimeout(() => {
+                    levelAdvanceTimer = null;
+                    levelTransition = false;
+                    startPuzzle(false);
+                }, 950);
+            }
+
+            function hit(x, y, patterns, change, leveltype) {
+                // Decode flags
+                let lt = leveltype;
+                const diagonals = (lt & 2) !== 0; // bit 1
+                const overlaps = (lt & 1) !== 0; // bit 0 (wrap)
+
+                for (let t = 0; t < OFFSETS.length; t++) {
+                    if (t < 5 || diagonals) {
+                        let xx = x + OFFSETS[t][0];
+                        let yy = y + OFFSETS[t][1];
+                        if (overlaps) {
+                            xx = clampWrap(xx, 0, xsize - 1, true);
+                            yy = clampWrap(yy, 0, ysize - 1, true);
+                        }
+                        if (xx >= 0 && xx < xsize && yy >= 0 && yy < ysize) {
+                            const val = grid[yy][xx];
+                            grid[yy][xx] = clampWrap(val + change, 1, patterns, true);
+                        }
+                    }
+                }
+            }
+
+            // ===== Rendering =====
+            function drawFrame() {
+                // Backdrop borders similar to Blitz display_main()
+                ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
+                for (let t = 1; t <= 8; t++) {
+                    ctx.strokeStyle = `rgb(${t * 10},${t * 10},${50 + t * 10})`;
+                    ctx.strokeRect(t, t, CANVAS_W - t * 2, CANVAS_H - t * 2);
+                }
+                for (let t = 1; t <= 8; t++) {
+                    ctx.strokeStyle = `rgb(${t * 10},${t * 10},${50 + t * 10})`;
+                    ctx.strokeRect(BOARD_X - t, BOARD_Y - t, BOARD_SIZE + t * 2, BOARD_SIZE + t * 2);
+                }
+                ctx.fillStyle = '#000';
+                ctx.fillRect(BOARD_X, BOARD_Y, BOARD_SIZE, BOARD_SIZE);
+
+                // Settings and status panel
+                const x = portraitLayout ? 300 : 110;
+                const scrambleLabelY = portraitLayout ? 616 : 28;
+                const scrambleNumberY = portraitLayout ? 664 : 64;
+                const gridLabelY = portraitLayout ? 704 : 104;
+                const gridNumberY = portraitLayout ? 752 : 140;
+                const patternLabelY = portraitLayout ? 792 : 180;
+                const patternNumberY = portraitLayout ? 840 : 216;
+                drawLabel(x, scrambleLabelY, "SCRAMBLE");
+                drawNumber(x, scrambleNumberY, pad(scramblePresses, 2));
+                drawCanvasButton(SCRAMBLE_MINUS, "−", 'scrambleminus', false, levelTransition || scramblePresses <= min_scramble);
+                drawCanvasButton(SCRAMBLE_PLUS, "+", 'scrambleplus', false, levelTransition || scramblePresses >= max_scramble);
+
+                drawLabel(x, gridLabelY, "GRID SIZE");
+                drawNumber(x, gridNumberY, `${gridSize}×${gridSize}`);
+                drawCanvasButton(GRID_MINUS, "−", 'gridminus', false, levelTransition || gridSize <= min_gridsize);
+                drawCanvasButton(GRID_PLUS, "+", 'gridplus', false, levelTransition || gridSize >= max_gridsize);
+
+                drawLabel(x, patternLabelY, "PATTERNS");
+                drawNumber(x, patternNumberY, String(patternCount));
+                drawCanvasButton(PATTERN_MINUS, "−", 'patternminus', false, levelTransition || patternCount <= min_patterns);
+                drawCanvasButton(PATTERN_PLUS, "+", 'patternplus', false, levelTransition || patternCount >= max_patterns);
+                drawPatternBar(portraitLayout ? 130 : 20, portraitLayout ? 878 : 240, portraitLayout ? 340 : 180, portraitLayout ? 18 : 16);
+
+                if (portraitLayout) {
+                    drawLabel(150, 916, "MOVES");
+                    drawNumber(150, 950, pad(current_moves, 4));
+                    drawLabel(450, 916, "TOTAL MOVES");
+                    drawNumber(450, 950, pad(total_moves, 6));
+                } else {
+                    drawLabel(x, 286, "MOVES");
+                    drawNumber(x, 314, pad(current_moves, 4));
+                    drawLabel(x, 354, "TOTAL MOVES");
+                    drawNumber(x, 382, pad(total_moves, 6));
+                }
+
+                const mainLabel = !gameStarted ? "BEGIN" : paused ? "RESUME" : "PAUSE";
+                const mainDisabled = gameStarted && (randomizeCount > 0 || levelTransition);
+                const resetLevelDisabled = !gameStarted || !levelStartGrid || randomizeCount > 0 || levelTransition;
+                drawCanvasButton(MAIN_BUTTON, mainLabel, 'main', paused, mainDisabled);
+                drawCanvasButton(RESET_PUZZLE_BUTTON, "RESET PUZZLE", 'resetlevel', false, resetLevelDisabled);
+                drawCanvasButton(SOUND_BUTTON, soundEnabled ? "SOUND: ON" : "SOUND: OFF", 'sound', !soundEnabled, false);
+                drawCanvasButton(RESET_GAME_BUTTON, "RESET GAME", 'resetgame', false, false);
+
+                // Board & interaction
+                const mx = mouse.x, my = mouse.y;
+                let lightsOn = 0;
+                let hiliteX = -1, hiliteY = -1;
+
+                for (let gy = 0; gy < ysize; gy++) {
+                    for (let gx = 0; gx < xsize; gx++) {
+                        const xx = BOARD_X + (gx * cellW) | 0;
+                        const yy = BOARD_Y + (gy * cellH) | 0;
+                        const val = grid[gy][gx];
+                        if (val !== 1) lightsOn++;
+
+                        // base colour for this cell according to current palette
+                        let rgb = getPaletteColour(val);
+                        // Hover highlight uses a brighter version of the current colour.
+                        let hovered = (gx === hoverXY.x && gy === hoverXY.y);
+                        if (hovered) rgb = lighten(rgb, 100);
+                        drawCellButton(xx, yy, cellW | 0, cellH | 0, rgb);
+
+                        // Interaction
+                        const over = (mx >= xx && mx < xx + cellW && my >= yy && my < yy + cellH);
+                        if (over) {
+                            hiliteX = gx; hiliteY = gy; // used for cursor box
+                        }
+                    }
+                }
+
+                // cursor highlight box (grid snapped)
+                if (hiliteX >= 0) {
+                    ctx.strokeStyle = 'rgb(255,255,25)';
+                    ctx.lineWidth = 1;
+                    ctx.strokeRect(BOARD_X + hiliteX * cellW, BOARD_Y + hiliteY * cellH, cellW, cellH);
+                }
+
+                // Post-scramble logic to mimic Blitz randomizer
+                if (gameStarted && !paused && !confirmReset && randomizeCount > 0) {
+                    // Prevent instant level-skip during scramble (grid starts solved)
+                    if (lightsOn === 0) lightsOn = 1;
+                    // animate ghost highlight
+                    if (waitCounter === (waitTime >> 1)) {
+                        hoverXY.x = (Math.random() * xsize) | 0;
+                        hoverXY.y = (Math.random() * ysize) | 0;
+                        playPressSound();
+                    }
+                    waitCounter++;
+                    if (waitCounter >= waitTime) {
+                        hit(hoverXY.x, hoverXY.y, patternCount, +1, options);
+                        playReleaseSound();
+                        randomizeCount--; waitCounter = 0; hoverXY = { x: -1, y: -1 };
+                        if (randomizeCount === 0) levelStartGrid = grid.map(row => row.slice());
+                        // ensure board not solved during scramble
+                        if (lightsOn === 0) lightsOn = 1;
+                    }
+                } else if (gameStarted && !paused && !confirmReset && !levelTransition && randomizeCount === 0) {
+                    hoverXY = lastPointerType === 'mouse' ? cellFromMouse(mx, my) : { x: -1, y: -1 };
+                } else {
+                    hoverXY = { x: -1, y: -1 };
+                }
+
+                // Win check: if all lights are off, celebrate and generate another puzzle.
+                if (gameStarted && !paused && !confirmReset && !levelTransition && randomizeCount === 0 && lightsOn === 0) {
+                    completeLevel();
+                }
+
+                if (levelTransition) {
+                    ctx.fillStyle = 'rgba(0,0,0,.62)';
+                    ctx.fillRect(BOARD_X, BOARD_Y + BOARD_SIZE / 2 - 36, BOARD_SIZE, 72);
+                    ctx.fillStyle = '#ffffff';
+                    ctx.font = 'bold 26px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
+                    const message = 'PUZZLE COMPLETE';
+                    ctx.fillText(message, BOARD_X + (BOARD_SIZE - ctx.measureText(message).width) / 2, BOARD_Y + BOARD_SIZE / 2 + 9);
+                }
+
+                if (paused && !confirmReset) {
+                    drawBoardMessage('PAUSED');
+                }
+
+                if (colourChoice && !confirmReset) {
+                    drawColourChoice();
+                }
+
+                if (confirmReset) {
+                    drawResetConfirmation();
+                }
+
+                // The crosshair is useful with a mouse but would be distracting on touch.
+                if (lastPointerType === 'mouse') drawCursor();
+            }
+
+            function interactEnabled() {
+                return gameStarted && !paused && !confirmReset && !levelTransition && randomizeCount === 0 && !colourChoice;
+            }
+
+            function pointInRect(px, py, rect) {
+                return px >= rect.x && px < rect.x + rect.w && py >= rect.y && py < rect.y + rect.h;
+            }
+
+            function controlAt(px, py) {
+                if (confirmReset) {
+                    if (pointInRect(px, py, CONFIRM_YES_BUTTON)) return 'confirmyes';
+                    if (pointInRect(px, py, CONFIRM_NO_BUTTON)) return 'confirmno';
+                    return null;
+                }
+                if (!levelTransition && scramblePresses > min_scramble && pointInRect(px, py, SCRAMBLE_MINUS)) return 'scrambleminus';
+                if (!levelTransition && scramblePresses < max_scramble && pointInRect(px, py, SCRAMBLE_PLUS)) return 'scrambleplus';
+                if (!levelTransition && gridSize > min_gridsize && pointInRect(px, py, GRID_MINUS)) return 'gridminus';
+                if (!levelTransition && gridSize < max_gridsize && pointInRect(px, py, GRID_PLUS)) return 'gridplus';
+                if (!levelTransition && patternCount > min_patterns && pointInRect(px, py, PATTERN_MINUS)) return 'patternminus';
+                if (!levelTransition && patternCount < max_patterns && pointInRect(px, py, PATTERN_PLUS)) return 'patternplus';
+                if (pointInRect(px, py, MAIN_BUTTON) && (!gameStarted || (randomizeCount === 0 && !levelTransition))) return 'main';
+                if (pointInRect(px, py, RESET_PUZZLE_BUTTON) && gameStarted && levelStartGrid && randomizeCount === 0 && !levelTransition) return 'resetlevel';
+                if (pointInRect(px, py, SOUND_BUTTON)) return 'sound';
+                if (pointInRect(px, py, RESET_GAME_BUTTON)) return 'resetgame';
+                return null;
+            }
+
+            function drawCanvasButton(rect, label, controlName, selected = false, disabled = false) {
+                const hovered = !disabled && controlAt(mouse.x, mouse.y) === controlName;
+                const pressed = !disabled && pressedControl === controlName && hovered;
+                const top = disabled ? [30, 32, 40] : selected ? [38, 45, 72] : hovered ? [55, 67, 110] : [35, 43, 72];
+                const bottom = disabled ? [17, 18, 23] : selected ? [18, 22, 38] : hovered ? [30, 38, 68] : [20, 25, 44];
+                const gradient = ctx.createLinearGradient(0, rect.y, 0, rect.y + rect.h);
+                gradient.addColorStop(0, rgbToStr(pressed ? bottom : top));
+                gradient.addColorStop(1, rgbToStr(pressed ? top : bottom));
+                ctx.fillStyle = gradient;
+                ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
+                ctx.strokeStyle = disabled ? '#444958' : hovered ? '#dce5ff' : '#7183bd';
+                ctx.strokeRect(rect.x, rect.y, rect.w, rect.h);
+                ctx.fillStyle = disabled ? '#686c78' : selected ? '#9aa6ce' : '#ffffff';
+                const fontSize = Math.min(18, Math.max(15, Math.floor(rect.h * 0.4)));
+                ctx.font = `bold ${fontSize}px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace`;
+                ctx.fillText(label, rect.x + (rect.w - ctx.measureText(label).width) / 2, rect.y + rect.h / 2 + fontSize * 0.34);
+            }
+
+            function drawBoardMessage(message) {
+                ctx.fillStyle = 'rgba(0,0,0,.68)';
+                ctx.fillRect(BOARD_X, BOARD_Y + BOARD_SIZE / 2 - 36, BOARD_SIZE, 72);
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 28px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
+                ctx.fillText(message, BOARD_X + (BOARD_SIZE - ctx.measureText(message).width) / 2, BOARD_Y + BOARD_SIZE / 2 + 10);
+            }
+
+            function drawResetConfirmation() {
+                ctx.fillStyle = 'rgba(0,0,0,.76)';
+                ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 25px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
+                const title = 'RESET THE WHOLE GAME?';
+                const titleY = portraitLayout ? 520 : 270;
+                const noteY = portraitLayout ? 564 : 305;
+                ctx.fillText(title, (CANVAS_W - ctx.measureText(title).width) / 2, titleY);
+                ctx.fillStyle = '#aeb9df';
+                ctx.font = '15px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
+                const note = 'Settings and total moves will return to defaults.';
+                ctx.fillText(note, (CANVAS_W - ctx.measureText(note).width) / 2, noteY);
+                drawCanvasButton(CONFIRM_YES_BUTTON, 'YES', 'confirmyes');
+                drawCanvasButton(CONFIRM_NO_BUTTON, 'NO', 'confirmno');
+            }
+
+            function getChoiceRects() {
+                const size = Math.max(34, Math.min(portraitLayout ? 68 : 60, cellW * 1.3));
+                const gap = Math.max(5, Math.min(10, cellW * 0.18));
+                const cellX = BOARD_X + colourChoice.x * cellW;
+                const cellY = BOARD_Y + colourChoice.y * cellH;
+                let decrementX = cellX - gap - size;
+                let incrementX = cellX + cellW + gap;
+                const y = clampWrap(cellY + (cellH - size) / 2, BOARD_Y, BOARD_Y + BOARD_SIZE - size, false);
+
+                // At an outer edge, keep both choices visible while retaining left-to-right order.
+                if (decrementX < BOARD_X) {
+                    decrementX = cellX + cellW + gap;
+                    incrementX = decrementX + size + gap;
+                } else if (incrementX + size > BOARD_X + BOARD_SIZE) {
+                    incrementX = cellX - gap - size;
+                    decrementX = incrementX - gap - size;
+                }
+                return {
+                    decrement: { x: decrementX, y, w: size, h: size },
+                    increment: { x: incrementX, y, w: size, h: size }
+                };
+            }
+
+            function choiceAt(px, py) {
+                if (!colourChoice) return null;
+                const rects = getChoiceRects();
+                if (pointInRect(px, py, rects.decrement)) return 'decrement';
+                if (pointInRect(px, py, rects.increment)) return 'increment';
+                return null;
+            }
+
+            function drawColourChoice() {
+                const rects = getChoiceRects();
+                const value = grid[colourChoice.y][colourChoice.x];
+                const decrementValue = clampWrap(value - 1, 1, patternCount, true);
+                const incrementValue = clampWrap(value + 1, 1, patternCount, true);
+
+                const selectedX = BOARD_X + colourChoice.x * cellW;
+                const selectedY = BOARD_Y + colourChoice.y * cellH;
+                ctx.strokeStyle = '#ffff66';
+                ctx.lineWidth = 3;
+                ctx.strokeRect(selectedX + 1, selectedY + 1, cellW - 2, cellH - 2);
+                ctx.lineWidth = 1;
+
+                drawColourChoiceButton(rects.decrement, decrementValue, '−', pressedChoice === 'decrement');
+                drawColourChoiceButton(rects.increment, incrementValue, '+', pressedChoice === 'increment');
+            }
+
+            function drawColourChoiceButton(rect, value, symbol, pressed) {
+                const inset = pressed ? 3 : 0;
+                const r = { x: rect.x + inset, y: rect.y + inset, w: rect.w - inset * 2, h: rect.h - inset * 2 };
+                ctx.fillStyle = 'rgba(0,0,0,.75)';
+                ctx.fillRect(r.x - 4, r.y - 4, r.w + 8, r.h + 8);
+                drawCellButton(r.x, r.y, r.w, r.h, getPaletteColour(value));
+                ctx.textAlign = 'center';
+                ctx.lineWidth = 3;
+                ctx.strokeStyle = '#000000';
+                ctx.fillStyle = '#ffffff';
+                const fontSize = Math.max(18, Math.floor(r.h * 0.48));
+                ctx.font = `bold ${fontSize}px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace`;
+                ctx.strokeText(symbol, r.x + r.w / 2, r.y + r.h / 2 + fontSize * 0.34);
+                ctx.fillText(symbol, r.x + r.w / 2, r.y + r.h / 2 + fontSize * 0.34);
+                ctx.textAlign = 'start';
+                ctx.lineWidth = 1;
+            }
+
+            function drawLabel(x, y, text) {
+                ctx.fillStyle = '#9fb3ff';
+                ctx.font = 'bold 16px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
+                ctx.fillText(text, x - (ctx.measureText(text).width >> 1), y);
+            }
+            function drawNumber(x, y, text) {
+                // framed box like original
+                const w = ctx.measureText(text).width + 16, h = 24;
+                drawFrameBox(x - (w >> 1), y - 16, w, h, true);
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 18px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
+                ctx.fillText(text, x - (ctx.measureText(text).width >> 1), y);
+            }
+            function drawPatternBar(x, y, w, h) {
+                ctx.fillStyle = '#000'; ctx.fillRect(x, y, w, h);
+                const segW = w / patternCount;
+                for (let t = 0; t < patternCount; t++) {
+                    const base = COLS[t].rgb;
+                    ctx.fillStyle = rgbToStr(base);
+                    ctx.fillRect(x + t * segW, y, segW, h);
+                    ctx.strokeStyle = rgbToStr(lighten(base, -64));
+                    ctx.strokeRect(x + t * segW, y, segW, h);
+                }
+                // border stack
+                for (let t = 1; t <= 8; t++) {
+                    ctx.strokeStyle = `rgb(${t * 10},${t * 10},${50 + t * 10})`;
+                    ctx.strokeRect(x - t, y - t, w + t * 2, h + t * 2);
+                }
+            }
+            function drawFrameBox(x, y, w, h, inverse) {
+                if (inverse) {
+                    for (let t = 1; t <= 8; t++) {
+                        const s = t * 10; ctx.strokeStyle = `rgb(${s},${s},${50 + s})`;
+                        ctx.strokeRect(x - t, y - t, w + t * 2, h + t * 2);
+                    }
+                    ctx.fillStyle = '#000'; ctx.fillRect(x, y, w, h);
+                } else {
+                    for (let t = 1; t <= 8; t++) {
+                        const s = t * 10; ctx.strokeStyle = `rgb(${s},${s},${50 + s})`;
+                        ctx.strokeRect((x - 8) + t, (y - 8) + t, w + (8 - t) * 2, h + (8 - t) * 2);
+                    }
+                }
+            }
+
+            function pad(n, len) { n = String(n); return n.length >= len ? n : ('0'.repeat(len - n.length) + n); }
+
+            function cellFromMouse(mx, my) {
+                if (mx < BOARD_X || my < BOARD_Y || mx >= BOARD_X + BOARD_SIZE || my >= BOARD_Y + BOARD_SIZE) return { x: -1, y: -1 };
+                const gx = Math.floor((mx - BOARD_X) / cellW);
+                const gy = Math.floor((my - BOARD_Y) / cellH);
+                if (gx < 0 || gy < 0 || gx >= xsize || gy >= ysize) return { x: -1, y: -1 };
+                return { x: gx, y: gy };
+            }
+
+            function drawCursor() {
+                const mx = mouse.x, my = mouse.y;
+                ctx.strokeStyle = '#fff';
+                ctx.beginPath();
+                ctx.moveTo(mx, my - 6); ctx.lineTo(mx, my + 6);
+                ctx.moveTo(mx - 6, my); ctx.lineTo(mx + 6, my);
+                ctx.stroke();
+                ctx.strokeStyle = '#0a0a0a';
+                ctx.strokeRect(mx - 1, my - 7, 3, 15);
+                ctx.strokeRect(mx - 7, my - 1, 15, 3);
+            }
+
+            // ===== Pointer handling (mouse, touch and pen) =====
+            const mouse = { x: 0, y: 0 };
+            let lastPointerType = 'mouse';
+            let pressedControl = null;
+
+            function updatePointer(e) {
+                const rect = cvs.getBoundingClientRect();
+                mouse.x = Math.floor((e.clientX - rect.left) * (cvs.width / rect.width));
+                mouse.y = Math.floor((e.clientY - rect.top) * (cvs.height / rect.height));
+                lastPointerType = e.pointerType || 'mouse';
+            }
+
+            function clearLongPress() {
+                if (longPressTimer !== null) {
+                    clearTimeout(longPressTimer);
+                    longPressTimer = null;
+                }
+            }
+
+            function handleControlAction(action) {
+                if (!action) return;
+                if (action === 'main') {
+                    playReleaseSound();
+                    if (!gameStarted) beginGame();
+                    else { paused = !paused; colourChoice = null; }
+                } else if (action === 'resetlevel') {
+                    playReleaseSound(); resetCurrentLevel();
+                } else if (action === 'resetgame') {
+                    playReleaseSound(); confirmReset = true; colourChoice = null; hoverXY = { x: -1, y: -1 };
+                } else if (action === 'confirmyes') {
+                    playReleaseSound(); resetToReady();
+                } else if (action === 'confirmno') {
+                    playReleaseSound(); confirmReset = false;
+                } else if (action === 'scrambleminus') {
+                    playReleaseSound(); changeSetting('scramble', -1);
+                } else if (action === 'scrambleplus') {
+                    playReleaseSound(); changeSetting('scramble', +1);
+                } else if (action === 'gridminus') {
+                    playReleaseSound(); changeSetting('grid', -1);
+                } else if (action === 'gridplus') {
+                    playReleaseSound(); changeSetting('grid', +1);
+                } else if (action === 'patternminus') {
+                    playReleaseSound(); changeSetting('patterns', -1);
+                } else if (action === 'patternplus') {
+                    playReleaseSound(); changeSetting('patterns', +1);
+                } else if (action === 'sound') {
+                    if (soundEnabled) { playReleaseSound(); soundEnabled = false; }
+                    else { soundEnabled = true; playReleaseSound(); }
+                }
+            }
+
+            cvs.addEventListener('pointermove', e => {
+                updatePointer(e);
+                if (gridPress && Math.hypot(mouse.x - gridPress.startX, mouse.y - gridPress.startY) > 12) {
+                    clearLongPress();
+                    gridPress.moved = true;
+                }
+                e.preventDefault();
+            }, { passive: false });
+
+            cvs.addEventListener('pointerdown', e => {
+                updatePointer(e);
+                e.preventDefault();
+                try { cvs.setPointerCapture(e.pointerId); } catch (_) { }
+
+                if (colourChoice) {
+                    pressedChoice = choiceAt(mouse.x, mouse.y);
+                    if (pressedChoice) playPressSound();
+                    else colourChoice = null;
+                    return;
+                }
+
+                const control = controlAt(mouse.x, mouse.y);
+                if (e.button === 0 && control) {
+                    pressedControl = control;
+                    playPressSound();
+                    return;
+                }
+
+                if (!interactEnabled() || (e.button !== 0 && e.button !== 2)) return;
+                const cell = cellFromMouse(mouse.x, mouse.y);
+                if (cell.x < 0) return;
+                playPressSound();
+                gridPress = { x: cell.x, y: cell.y, startX: mouse.x, startY: mouse.y, change: e.button === 2 ? -1 : 1, moved: false, longOpened: false };
+
+                if (e.button === 0) {
+                    longPressTimer = setTimeout(() => {
+                        if (!gridPress || gridPress.moved) return;
+                        gridPress.longOpened = true;
+                        colourChoice = { x: gridPress.x, y: gridPress.y };
+                        hoverXY = { x: -1, y: -1 };
+                        if (navigator.vibrate) navigator.vibrate(25);
+                    }, 480);
+                }
+            }, { passive: false });
+
+            cvs.addEventListener('pointerup', e => {
+                updatePointer(e);
+                e.preventDefault();
+                clearLongPress();
+
+                if (pressedChoice) {
+                    const action = choiceAt(mouse.x, mouse.y) === pressedChoice ? pressedChoice : null;
+                    const cell = colourChoice;
+                    pressedChoice = null;
+                    colourChoice = null;
+                    if (action && cell) applyPlayerHit(cell.x, cell.y, action === 'decrement' ? -1 : 1);
+                    gridPress = null;
+                    return;
+                }
+
+                if (pressedControl) {
+                    const releasedControl = controlAt(mouse.x, mouse.y);
+                    const action = releasedControl === pressedControl ? pressedControl : null;
+                    pressedControl = null;
+                    handleControlAction(action);
+                    return;
+                }
+
+                if (gridPress) {
+                    const releaseCell = cellFromMouse(mouse.x, mouse.y);
+                    if (!gridPress.longOpened && !gridPress.moved && releaseCell.x === gridPress.x && releaseCell.y === gridPress.y) {
+                        applyPlayerHit(gridPress.x, gridPress.y, gridPress.change);
+                    }
+                    gridPress = null;
+                }
+            }, { passive: false });
+
+            cvs.addEventListener('pointercancel', () => {
+                clearLongPress();
+                gridPress = null;
+                pressedControl = null;
+                pressedChoice = null;
+            });
+
+            // ===== Main loop =====
+            function tick() {
+                drawFrame();
+                requestAnimationFrame(tick);
+            }
+
+            window.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    if (confirmReset) confirmReset = false;
+                    else confirmReset = true;
+                }
+            });
+            window.addEventListener('resize', updateLayout);
+
+            // ===== Boot =====
+            updateLayout();
+            resetToReady();
+            tick();
+        })();
+    </script>
+</body>
+</html>
