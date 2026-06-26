@@ -44,7 +44,7 @@
 
         .app {
             display: grid;
-            grid-template-columns: minmax(660px, 760px) minmax(340px, 1fr);
+            grid-template-columns: minmax(460px, 620px) minmax(420px, 1fr) minmax(320px, 420px);
             min-height: 100vh;
         }
 
@@ -90,6 +90,14 @@
             max-height: 100vh;
             overflow: auto;
             padding: 16px;
+            border-right: 1px solid var(--line);
+        }
+
+        .inspector-pane {
+            max-height: 100vh;
+            overflow-y: auto;
+            padding: 16px;
+            background: linear-gradient(180deg, rgba(18,26,36,0.95), rgba(12,17,23,0.98));
         }
 
         .section {
@@ -509,10 +517,10 @@
             user-select: none;
         }
 
-            .preview-toggle-label input {
-                width: auto;
-                margin: 0;
-            }
+        .preview-toggle-label input {
+            width: auto;
+            margin: 0;
+        }
 
         .preview-side-area {
             display: flex;
@@ -538,26 +546,26 @@
             cursor: pointer;
         }
 
-            .preview-side-title.active {
-                border-color: rgba(101,183,255,0.75);
-                background: rgba(101,183,255,0.16);
-                color: #d7ecff;
-            }
-
-            .preview-side-title.inactive::after {
-                content: " — click to edit";
-                color: var(--muted);
-            }
-
-        .preview-zoom-controls label {
-            margin: 0;
-            white-space: nowrap;
+        .preview-side-title.active {
+            border-color: rgba(101,183,255,0.75);
+            background: rgba(101,183,255,0.16);
+            color: #d7ecff;
         }
 
-        .preview-zoom-controls select {
-            width: auto;
-            min-width: 92px;
+        .preview-side-title.inactive::after {
+            content: " — click to edit";
+            color: var(--muted);
         }
+
+            .preview-zoom-controls label {
+                margin: 0;
+                white-space: nowrap;
+            }
+
+            .preview-zoom-controls select {
+                width: auto;
+                min-width: 92px;
+            }
 
         .preview-shell {
             display: inline-block;
@@ -631,12 +639,12 @@
             height: 100%;
         }
 
-        /* Stat boxes are also preview elements, so they must stay absolute-positioned.
+            /* Stat boxes are also preview elements, so they must stay absolute-positioned.
                The old .stat-preview position: relative rule overrode .preview-element
                and made group children flow horizontally like flex items instead of using X/Y. */
-        .preview-element.stat-preview {
-            position: absolute;
-        }
+            .preview-element.stat-preview {
+                position: absolute;
+            }
 
         .stat-label {
             font-weight: 750;
@@ -840,9 +848,9 @@
             padding: 12px;
         }
 
-            .style-inspector-card h3 {
-                margin-top: 0;
-            }
+        .style-inspector-card h3 {
+            margin-top: 0;
+        }
 
         .style-inspector-head {
             display: flex;
@@ -878,14 +886,19 @@
             font-size: 12px;
         }
 
-            .used-by-list li {
-                margin: 2px 0;
-            }
+        .used-by-list li {
+            margin: 2px 0;
+        }
 
         .inspector-empty {
             color: var(--muted);
             font-size: 13px;
             padding: 8px 0;
+        }
+
+        #styleInspectorSection {
+            position: sticky;
+            top: 16px;
         }
 
         @media (max-width: 1180px) {
@@ -933,7 +946,7 @@
             <div class="topbar">
                 <div class="brand">
                     <h1>TCG Generator v28.1 style inspector refresh</h1>
-                    <div>Element-based card editor · style inspector · themed fonts · layer controls</div>
+                    <div>Element-based card editor · three-column layout · style inspector · layer controls</div>
                 </div>
             </div>
 
@@ -1335,7 +1348,9 @@
                 </div>
                 <div class="hint" style="margin-top:10px;">Project JSON preview is manual-only for better performance. Use <strong>Open Project Data</strong> in the Project section when you need to inspect it.</div>
             </div>
+        </main>
 
+        <aside class="inspector-pane">
             <div class="section" id="styleInspectorSection">
                 <div class="section-header">
                     <div class="section-title-row">
@@ -1359,7 +1374,7 @@
                     </div>
                 </div>
             </div>
-        </main>
+        </aside>
     </div>
 
     <div id="addModal" class="modal-backdrop" role="dialog" aria-modal="true">
@@ -1542,14 +1557,14 @@
         }
 
         const defaultCard = {
-            version: 28,
+            version: 28.2,
             app: "TCG Generator",
             project: {
                 type: "TCG Generator Project",
-                fileVersion: 28,
+                fileVersion: 28.2,
                 name: "Iron Longsword",
                 savedAt: null,
-                generatorVersion: 28
+                generatorVersion: 28.2
             },
             activeSide: "front",
             card: {
@@ -2203,8 +2218,8 @@
                 ...deepClone(defaultCard.project),
                 ...(merged.project || {}),
                 type: "TCG Generator Project",
-                fileVersion: 28,
-                generatorVersion: 28,
+                fileVersion: 28.2,
+                generatorVersion: 28.2,
                 name: merged.project?.name || merged.card?.name || "Untitled Project"
             };
             merged.card.borderEnabled = merged.card.borderEnabled !== false;
@@ -4745,19 +4760,19 @@
 <meta charset="UTF-8">
 <title>${escapeHtml(title)}</title>
 <style>
-        body { margin: 0; font-family: Arial, Helvetica, sans-serif; background: #101510; color: #e8eee8; }
-        .toolbar { position: sticky; top: 0; display: flex; justify-content: space-between; gap: 12px; align-items: center; padding: 10px 14px; background: #182018; border-bottom: 1px solid #304230; }
-        .toolbar button { padding: 8px 12px; cursor: pointer; }
-        pre { margin: 0; padding: 16px; white-space: pre-wrap; word-break: break-word; font-family: Consolas, "Courier New", monospace; font-size: 12px; line-height: 1.45; }
-        .muted { color: #aeb8ae; font-size: 12px; }
+    body { margin: 0; font-family: Arial, Helvetica, sans-serif; background: #101510; color: #e8eee8; }
+    .toolbar { position: sticky; top: 0; display: flex; justify-content: space-between; gap: 12px; align-items: center; padding: 10px 14px; background: #182018; border-bottom: 1px solid #304230; }
+    .toolbar button { padding: 8px 12px; cursor: pointer; }
+    pre { margin: 0; padding: 16px; white-space: pre-wrap; word-break: break-word; font-family: Consolas, "Courier New", monospace; font-size: 12px; line-height: 1.45; }
+    .muted { color: #aeb8ae; font-size: 12px; }
 </style>
 </head>
 <body>
-        <div class="toolbar">
-            <div><strong>${escapeHtml(title)}</strong><div class="muted">Generated on demand by TCG Generator v28.</div></div>
-            <button onclick="navigator.clipboard.writeText(document.querySelector('pre').textContent).then(()=>alert('Project data copied.')).catch(()=>alert('Could not copy project data.'))">Copy</button>
-        </div>
-        <pre>${escapeHtml(json)}</pre>
+    <div class="toolbar">
+        <div><strong>${escapeHtml(title)}</strong><div class="muted">Generated on demand by TCG Generator v28.2.</div></div>
+        <button onclick="navigator.clipboard.writeText(document.querySelector('pre').textContent).then(()=>alert('Project data copied.')).catch(()=>alert('Could not copy project data.'))">Copy</button>
+    </div>
+    <pre>${escapeHtml(json)}</pre>
 </body>
 </html>`);
             popup.document.close();
@@ -4822,8 +4837,8 @@
             payload.project = {
                 ...(payload.project || {}),
                 type: "TCG Generator Project",
-                fileVersion: 28,
-                generatorVersion: 28,
+                fileVersion: 28.2,
+                generatorVersion: 28.2,
                 name: payload.card?.name || payload.project?.name || "Untitled Project",
                 savedAt: now
             };
@@ -4854,7 +4869,7 @@
         function describeLoadedProject(originalData, normalised) {
             const originalVersion = parseInt(originalData?.version || originalData?.project?.fileVersion || 0, 10);
             const name = normalised.project?.name || normalised.card?.name || "Untitled Project";
-            if (originalVersion && originalVersion < 25) return `Loaded project "${name}" from v${originalVersion} and upgraded it to v28.`;
+            if (originalVersion && originalVersion < 25) return `Loaded project "${name}" from v${originalVersion} and upgraded it to v28.2.`;
             return `Loaded project "${name}".`;
         }
 
@@ -4865,7 +4880,7 @@
                     const raw = JSON.parse(reader.result);
                     const originalVersion = parseInt(raw?.version || raw?.project?.fileVersion || 0, 10);
                     if (!originalVersion || originalVersion < 23) {
-                        throw new Error("This file is older than v23 and is no longer supported by v28.");
+                        throw new Error("This file is older than v23 and is no longer supported by v28.2.");
                     }
                     state = normalizeState(raw);
                     selectedId = state.elements[0]?.id || null;
@@ -4948,12 +4963,12 @@
                 };
                 const callbacks = imageMetaCache.get(src)?.callbacks || [];
                 imageMetaCache.set(src, meta);
-                callbacks.forEach(cb => { try { cb(meta); } catch (e) { } });
+                callbacks.forEach(cb => { try { cb(meta); } catch (e) {} });
             }).catch(() => {
                 const meta = { status: "error" };
                 const callbacks = imageMetaCache.get(src)?.callbacks || [];
                 imageMetaCache.set(src, meta);
-                callbacks.forEach(cb => { try { cb(meta); } catch (e) { } });
+                callbacks.forEach(cb => { try { cb(meta); } catch (e) {} });
             });
             return null;
         }
@@ -5351,38 +5366,38 @@
 <meta charset="UTF-8">
 <title>${title}</title>
 <style>
-        @page { size: ${settings.pageSize === "Letter" ? "letter" : "A4"}; margin: 0; }
-        * { box-sizing: border-box; }
-        body { margin: 0; font-family: Arial, Helvetica, sans-serif; background: #777; color: #111; }
-        .toolbar { position: sticky; top: 0; z-index: 10; display: flex; gap: 10px; align-items: center; justify-content: space-between; padding: 10px 14px; background: #f5f5f5; border-bottom: 1px solid #ccc; }
-        .toolbar-left { display: flex; flex-direction: column; gap: 3px; }
-        .toolbar button { padding: 8px 12px; font-size: 14px; cursor: pointer; }
-        .pages { padding: 12px 0 24px; }
-        .page-wrap { margin: 0 auto 12px; width: ${layout.page.widthMm}mm; }
-        .page { width: ${layout.page.widthMm}mm; height: ${layout.page.heightMm}mm; background: white; box-shadow: 0 4px 18px rgba(0,0,0,0.35); page-break-after: always; }
-        .page img { display: block; width: 100%; height: 100%; }
-        @media print {
-            body { background: white; }
-            .toolbar { display: none !important; }
-            .pages { padding: 0; }
-            .page-wrap { margin: 0; width: auto; }
-            .page { margin: 0; box-shadow: none; }
-        }
+    @page { size: ${settings.pageSize === "Letter" ? "letter" : "A4"}; margin: 0; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: Arial, Helvetica, sans-serif; background: #777; color: #111; }
+    .toolbar { position: sticky; top: 0; z-index: 10; display: flex; gap: 10px; align-items: center; justify-content: space-between; padding: 10px 14px; background: #f5f5f5; border-bottom: 1px solid #ccc; }
+    .toolbar-left { display: flex; flex-direction: column; gap: 3px; }
+    .toolbar button { padding: 8px 12px; font-size: 14px; cursor: pointer; }
+    .pages { padding: 12px 0 24px; }
+    .page-wrap { margin: 0 auto 12px; width: ${layout.page.widthMm}mm; }
+    .page { width: ${layout.page.widthMm}mm; height: ${layout.page.heightMm}mm; background: white; box-shadow: 0 4px 18px rgba(0,0,0,0.35); page-break-after: always; }
+    .page img { display: block; width: 100%; height: 100%; }
+    @media print {
+        body { background: white; }
+        .toolbar { display: none !important; }
+        .pages { padding: 0; }
+        .page-wrap { margin: 0; width: auto; }
+        .page { margin: 0; box-shadow: none; }
+    }
 </style>
 </head>
 <body>
-        <div class="toolbar">
-            <div class="toolbar-left">
-                <strong>${title}</strong>
-                <span>${summary}</span>
-            </div>
-            <div>
-                <button onclick="window.print()">Print</button>
-            </div>
+    <div class="toolbar">
+        <div class="toolbar-left">
+            <strong>${title}</strong>
+            <span>${summary}</span>
         </div>
-        <div class="pages">
-            ${pageDataUrls.map((page, i) => `<div class="page-wrap"><div class="page"><img alt="Printable sheet ${i + 1}: ${page.label}" src="${page.src}"></div></div>`).join("")}
+        <div>
+            <button onclick="window.print()">Print</button>
         </div>
+    </div>
+    <div class="pages">
+        ${pageDataUrls.map((page, i) => `<div class="page-wrap"><div class="page"><img alt="Printable sheet ${i + 1}: ${page.label}" src="${page.src}"></div></div>`).join("")}
+    </div>
 </body>
 </html>`;
         }
@@ -5638,7 +5653,7 @@
 
                 const manifest = {
                     app: "TCG Generator",
-                    generatorVersion: 28,
+                    generatorVersion: 28.2,
                     exportedAt: new Date().toISOString(),
                     projectName: state.project?.name || state.card?.name || "Untitled Project",
                     cardName: state.card?.name || "Card",
