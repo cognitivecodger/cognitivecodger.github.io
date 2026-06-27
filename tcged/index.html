@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>TCG Generator v28.3</title>
+    <title>TCG Generator v28.4</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Audiowide&family=Bangers&family=Cinzel:wght@400;700;900&family=Creepster&family=Exo+2:wght@400;600;700;800&family=IM+Fell+English+SC&family=Luckiest+Guy&family=Montserrat:wght@400;600;700;800&family=Orbitron:wght@400;600;700;800&family=Oxanium:wght@400;600;700;800&family=Rajdhani:wght@400;600;700&family=Rye&family=Share+Tech+Mono&family=Special+Elite&family=UnifrakturCook:wght@700&display=swap" rel="stylesheet">
@@ -945,8 +945,8 @@
         <section class="editor">
             <div class="topbar">
                 <div class="brand">
-                    <h1>TCG Generator v28.3</h1>
-                    <div>Element-based card editor · load-stable three-column layout · style inspector</div>
+                    <h1>TCG Generator v28.4</h1>
+                    <div>Element-based card editor · stable number inputs · style inspector</div>
                 </div>
             </div>
 
@@ -1567,14 +1567,14 @@
         }
 
         const defaultCard = {
-            version: 28.3,
+            version: 28.4,
             app: "TCG Generator",
             project: {
                 type: "TCG Generator Project",
-                fileVersion: 28.3,
+                fileVersion: 28.4,
                 name: "Iron Longsword",
                 savedAt: null,
-                generatorVersion: 28.3
+                generatorVersion: 28.4
             },
             activeSide: "front",
             card: {
@@ -2228,8 +2228,8 @@
                 ...deepClone(defaultCard.project),
                 ...(merged.project || {}),
                 type: "TCG Generator Project",
-                fileVersion: 28.3,
-                generatorVersion: 28.3,
+                fileVersion: 28.4,
+                generatorVersion: 28.4,
                 name: merged.project?.name || merged.card?.name || "Untitled Project"
             };
             merged.card.borderEnabled = merged.card.borderEnabled !== false;
@@ -2495,6 +2495,19 @@
                 input.insertAdjacentElement("afterend", hint);
             }
             hint.textContent = text || "";
+        }
+
+        function numberInputHasUsableValue(input) {
+            if (!input) return false;
+            const raw = String(input.value ?? "").trim();
+            if (raw === "") return false;
+            if (input.validity && input.validity.badInput) return false;
+            return Number.isFinite(parseFloat(raw));
+        }
+
+        function restoreNumberInput(input, fallbackValue) {
+            if (!input) return;
+            input.value = fallbackValue ?? "";
         }
 
         function updateGlobalPercentHints() {
@@ -3159,6 +3172,8 @@
             if (type !== "textarea") inp.type = type;
             inp.value = value ?? "";
             Object.entries(attrs).forEach(([k, v]) => inp.setAttribute(k, v));
+            const isNumberField = type === "number";
+            let lastGoodValue = inp.value;
             const genericHint = document.createElement("div");
             const hasGenericPercentHint = type === "number" && String(label || "").includes("%");
             if (hasGenericPercentHint) {
@@ -3166,13 +3181,27 @@
                 genericHint.style.marginTop = "4px";
                 genericHint.textContent = genericPercentFieldHint(label, inp.value);
             }
-            inp.addEventListener("input", () => {
+            const commitNumberInput = (restoreIfInvalid = false) => {
+                if (!isNumberField) { onInput(inp.value); return true; }
+                if (!numberInputHasUsableValue(inp)) {
+                    if (restoreIfInvalid) restoreNumberInput(inp, lastGoodValue);
+                    if (hasGenericPercentHint) genericHint.textContent = genericPercentFieldHint(label, inp.value);
+                    return false;
+                }
+                lastGoodValue = inp.value;
                 onInput(inp.value);
+                return true;
+            };
+            inp.addEventListener("input", () => {
+                if (!commitNumberInput(false)) return;
                 if (hasGenericPercentHint) genericHint.textContent = genericPercentFieldHint(label, inp.value);
                 renderPreview();
                 updateJsonPreview();
             });
-            inp.addEventListener("change", () => { onInput(inp.value); renderAll(false); });
+            inp.addEventListener("change", () => {
+                if (!commitNumberInput(true)) return;
+                renderAll(false);
+            });
             wrap.append(lab, inp);
             if (hasGenericPercentHint) wrap.appendChild(genericHint);
             return wrap;
@@ -3185,14 +3214,33 @@
             const inp = document.createElement("input");
             inp.type = "number";
             inp.value = value ?? "";
+            let lastGoodValue = inp.value;
             Object.entries({ step: "0.1", ...attrs }).forEach(([k, v]) => inp.setAttribute(k, v));
             const hint = document.createElement("div");
             hint.className = "hint";
             hint.style.marginTop = "4px";
             const updateHint = () => { hint.textContent = pctHintText(label, inp.value, el, isChild); };
+            const commitPercentInput = (restoreIfInvalid = false) => {
+                if (!numberInputHasUsableValue(inp)) {
+                    if (restoreIfInvalid) restoreNumberInput(inp, lastGoodValue);
+                    updateHint();
+                    return false;
+                }
+                lastGoodValue = inp.value;
+                onInput(inp.value);
+                updateHint();
+                return true;
+            };
             updateHint();
-            inp.addEventListener("input", () => { onInput(inp.value); updateHint(); renderPreview(); updateJsonPreview(); });
-            inp.addEventListener("change", () => { onInput(inp.value); renderAll(false); });
+            inp.addEventListener("input", () => {
+                if (!commitPercentInput(false)) return;
+                renderPreview();
+                updateJsonPreview();
+            });
+            inp.addEventListener("change", () => {
+                if (!commitPercentInput(true)) return;
+                renderAll(false);
+            });
             wrap.append(lab, inp, hint);
             return wrap;
         }
@@ -4784,7 +4832,7 @@
 </head>
 <body>
         <div class="toolbar">
-            <div><strong>${escapeHtml(title)}</strong><div class="muted">Generated on demand by TCG Generator v28.3.</div></div>
+            <div><strong>${escapeHtml(title)}</strong><div class="muted">Generated on demand by TCG Generator v28.4.</div></div>
             <button onclick="navigator.clipboard.writeText(document.querySelector('pre').textContent).then(()=>alert('Project data copied.')).catch(()=>alert('Could not copy project data.'))">Copy</button>
         </div>
         <pre>${escapeHtml(json)}</pre>
@@ -4852,8 +4900,8 @@
             payload.project = {
                 ...(payload.project || {}),
                 type: "TCG Generator Project",
-                fileVersion: 28.3,
-                generatorVersion: 28.3,
+                fileVersion: 28.4,
+                generatorVersion: 28.4,
                 name: payload.card?.name || payload.project?.name || "Untitled Project",
                 savedAt: now
             };
@@ -4884,7 +4932,7 @@
         function describeLoadedProject(originalData, normalised) {
             const originalVersion = parseInt(originalData?.version || originalData?.project?.fileVersion || 0, 10);
             const name = normalised.project?.name || normalised.card?.name || "Untitled Project";
-            if (originalVersion && originalVersion < 25) return `Loaded project "${name}" from v${originalVersion} and upgraded it to v28.3.`;
+            if (originalVersion && originalVersion < 25) return `Loaded project "${name}" from v${originalVersion} and upgraded it to v28.4.`;
             return `Loaded project "${name}".`;
         }
 
@@ -4895,7 +4943,7 @@
                     const raw = JSON.parse(reader.result);
                     const originalVersion = parseInt(raw?.version || raw?.project?.fileVersion || 0, 10);
                     if (!originalVersion || originalVersion < 23) {
-                        throw new Error("This file is older than v23 and is no longer supported by v28.3.");
+                        throw new Error("This file is older than v23 and is no longer supported by v28.4.");
                     }
                     isLoadingProject = true;
                     state = normalizeState(raw);
@@ -5672,7 +5720,7 @@
 
                 const manifest = {
                     app: "TCG Generator",
-                    generatorVersion: 28.3,
+                    generatorVersion: 28.4,
                     exportedAt: new Date().toISOString(),
                     projectName: state.project?.name || state.card?.name || "Untitled Project",
                     cardName: state.card?.name || "Card",
@@ -5708,7 +5756,10 @@
         }
 
         Object.values(inputs).forEach(inp => {
-            inp.addEventListener("input", () => renderAll(false));
+            inp.addEventListener("input", () => {
+                if (inp?.type === "number" && !numberInputHasUsableValue(inp)) return;
+                renderAll(false);
+            });
             inp.addEventListener("change", () => renderAll(false));
         });
 
