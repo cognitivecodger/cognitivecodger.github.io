@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>TCG Generator v28.4</title>
+    <title>TCG Generator v28.5</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Audiowide&family=Bangers&family=Cinzel:wght@400;700;900&family=Creepster&family=Exo+2:wght@400;600;700;800&family=IM+Fell+English+SC&family=Luckiest+Guy&family=Montserrat:wght@400;600;700;800&family=Orbitron:wght@400;600;700;800&family=Oxanium:wght@400;600;700;800&family=Rajdhani:wght@400;600;700&family=Rye&family=Share+Tech+Mono&family=Special+Elite&family=UnifrakturCook:wght@700&display=swap" rel="stylesheet">
@@ -945,7 +945,7 @@
         <section class="editor">
             <div class="topbar">
                 <div class="brand">
-                    <h1>TCG Generator v28.4</h1>
+                    <h1>TCG Generator v28.5</h1>
                     <div>Element-based card editor · stable number inputs · style inspector</div>
                 </div>
             </div>
@@ -1567,14 +1567,14 @@
         }
 
         const defaultCard = {
-            version: 28.4,
+            version: 28.5,
             app: "TCG Generator",
             project: {
                 type: "TCG Generator Project",
-                fileVersion: 28.4,
+                fileVersion: 28.5,
                 name: "Iron Longsword",
                 savedAt: null,
-                generatorVersion: 28.4
+                generatorVersion: 28.5
             },
             activeSide: "front",
             card: {
@@ -2228,8 +2228,8 @@
                 ...deepClone(defaultCard.project),
                 ...(merged.project || {}),
                 type: "TCG Generator Project",
-                fileVersion: 28.4,
-                generatorVersion: 28.4,
+                fileVersion: 28.5,
+                generatorVersion: 28.5,
                 name: merged.project?.name || merged.card?.name || "Untitled Project"
             };
             merged.card.borderEnabled = merged.card.borderEnabled !== false;
@@ -2984,8 +2984,24 @@
             if (!previewEl || !stageEl) return;
             const originalSide = state.activeSide === "back" ? "back" : "front";
             const targetSide = side === "back" ? "back" : "front";
-            saveWorkingDesignToSide(state, originalSide);
-            loadWorkingDesignFromSide(targetSide, state);
+            const originalView = {
+                activeSide: originalSide,
+                background: state.card.background,
+                backgroundImageData: state.card.backgroundImageData,
+                backgroundFit: state.card.backgroundFit,
+                backgroundTileScale: state.card.backgroundTileScale,
+                elements: state.elements
+            };
+            const viewingOtherSide = targetSide !== originalSide;
+
+            if (viewingOtherSide) {
+                // Save the current working side, then temporarily load the other side for drawing.
+                // Important: restore the original element array by reference afterwards. Replacing
+                // state.elements during ordinary preview refreshes breaks active number-input closures,
+                // which made typed values appear to require entering twice.
+                saveWorkingDesignToSide(state, originalSide);
+                loadWorkingDesignFromSide(targetSide, state);
+            }
 
             const cardH = state.card.previewHeight;
             const cardW = cardH * state.card.widthMm / state.card.heightMm;
@@ -3023,7 +3039,14 @@
                 }
             };
 
-            loadWorkingDesignFromSide(originalSide, state);
+            if (viewingOtherSide) {
+                state.activeSide = originalView.activeSide;
+                state.card.background = originalView.background;
+                state.card.backgroundImageData = originalView.backgroundImageData;
+                state.card.backgroundFit = originalView.backgroundFit;
+                state.card.backgroundTileScale = originalView.backgroundTileScale;
+                state.elements = originalView.elements;
+            }
         }
 
         function renderPreview() {
@@ -4832,7 +4855,7 @@
 </head>
 <body>
         <div class="toolbar">
-            <div><strong>${escapeHtml(title)}</strong><div class="muted">Generated on demand by TCG Generator v28.4.</div></div>
+            <div><strong>${escapeHtml(title)}</strong><div class="muted">Generated on demand by TCG Generator v28.5.</div></div>
             <button onclick="navigator.clipboard.writeText(document.querySelector('pre').textContent).then(()=>alert('Project data copied.')).catch(()=>alert('Could not copy project data.'))">Copy</button>
         </div>
         <pre>${escapeHtml(json)}</pre>
@@ -4900,8 +4923,8 @@
             payload.project = {
                 ...(payload.project || {}),
                 type: "TCG Generator Project",
-                fileVersion: 28.4,
-                generatorVersion: 28.4,
+                fileVersion: 28.5,
+                generatorVersion: 28.5,
                 name: payload.card?.name || payload.project?.name || "Untitled Project",
                 savedAt: now
             };
@@ -4932,7 +4955,7 @@
         function describeLoadedProject(originalData, normalised) {
             const originalVersion = parseInt(originalData?.version || originalData?.project?.fileVersion || 0, 10);
             const name = normalised.project?.name || normalised.card?.name || "Untitled Project";
-            if (originalVersion && originalVersion < 25) return `Loaded project "${name}" from v${originalVersion} and upgraded it to v28.4.`;
+            if (originalVersion && originalVersion < 25) return `Loaded project "${name}" from v${originalVersion} and upgraded it to v28.5.`;
             return `Loaded project "${name}".`;
         }
 
@@ -4943,7 +4966,7 @@
                     const raw = JSON.parse(reader.result);
                     const originalVersion = parseInt(raw?.version || raw?.project?.fileVersion || 0, 10);
                     if (!originalVersion || originalVersion < 23) {
-                        throw new Error("This file is older than v23 and is no longer supported by v28.4.");
+                        throw new Error("This file is older than v23 and is no longer supported by v28.5.");
                     }
                     isLoadingProject = true;
                     state = normalizeState(raw);
@@ -5720,7 +5743,7 @@
 
                 const manifest = {
                     app: "TCG Generator",
-                    generatorVersion: 28.4,
+                    generatorVersion: 28.5,
                     exportedAt: new Date().toISOString(),
                     projectName: state.project?.name || state.card?.name || "Untitled Project",
                     cardName: state.card?.name || "Card",
