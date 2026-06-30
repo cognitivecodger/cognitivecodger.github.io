@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashpad Sketch Editor v6</title>
+    <style>
+        :root {
+            --panel: #f4f4f4;
+            --border: #cfcfcf;
+            --text: #222;
+            --menu: #fff;
+            --menu-hover: #eee;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            color: var(--text);
+            background: #e9e9e9;
+        }
+
+        header {
+            padding: 10px 14px;
+            background: #222;
+            color: white;
+        }
+
+            header h1 {
+                margin: 0;
+                font-size: 18px;
+            }
+
+        .menubar {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            padding: 6px 10px;
+            background: #dedede;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 20;
+        }
+
+        .menu {
+            position: relative;
+        }
+
+            .menu > summary {
+                list-style: none;
+                cursor: pointer;
+                user-select: none;
+                padding: 7px 10px;
+                border: 1px solid var(--border);
+                background: var(--menu);
+                border-radius: 4px;
+                min-width: 110px;
+            }
+
+                .menu > summary::-webkit-details-marker {
+                    display: none;
+                }
+
+                .menu > summary::after {
+                    content: " ▾";
+                    font-size: 11px;
+                }
+
+            .menu[open] > summary {
+                background: var(--menu-hover);
+            }
+
+        .menu-content {
+            position: absolute;
+            top: calc(100% + 3px);
+            left: 0;
+            min-width: 190px;
+            padding: 5px;
+            background: var(--menu);
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 12px rgba(0,0,0,.18);
+            border-radius: 4px;
+            z-index: 30;
+        }
+
+            .menu-content button {
+                display: block;
+                width: 100%;
+                text-align: left;
+                border: 0;
+                background: transparent;
+                padding: 7px 9px;
+                cursor: pointer;
+            }
+
+                .menu-content button:hover {
+                    background: var(--menu-hover);
+                }
+
+            .menu-content hr {
+                border: 0;
+                border-top: 1px solid var(--border);
+                margin: 5px 0;
+            }
+
+        .canvas-size-readout {
+            margin-left: auto;
+            padding: 4px 8px;
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding: 10px;
+            background: var(--panel);
+            border-bottom: 1px solid var(--border);
+            align-items: end;
+        }
+
+        .group {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            font-size: 12px;
+        }
+
+        .inline {
+            flex-direction: row;
+            align-items: center;
+            gap: 6px;
+            padding-bottom: 3px;
+        }
+
+        label {
+            white-space: nowrap;
+        }
+
+        select, input, button {
+            font-size: 14px;
+            padding: 5px;
+        }
+
+            input[type="number"] {
+                width: 86px;
+            }
+
+        button {
+            cursor: pointer;
+        }
+
+        .canvas-wrap {
+            padding: 12px;
+            overflow: auto;
+        }
+
+        canvas {
+            display: block;
+            background: white;
+            border: 1px solid #777;
+            touch-action: none;
+        }
+
+        .help {
+            padding: 8px 12px 14px;
+            font-size: 13px;
+            line-height: 1.35;
+            background: #fafafa;
+            border-top: 1px solid var(--border);
+        }
+
+        .status {
+            padding: 6px 12px;
+            font-size: 13px;
+            background: #fffbe6;
+            border-top: 1px solid #e3d77a;
+        }
+
+        dialog {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0;
+            min-width: 320px;
+            box-shadow: 0 8px 30px rgba(0,0,0,.25);
+        }
+
+            dialog::backdrop {
+                background: rgba(0,0,0,.35);
+            }
+
+        .dialog-head {
+            padding: 10px 12px;
+            background: #222;
+            color: white;
+            font-weight: bold;
+        }
+
+        .dialog-body {
+            padding: 12px;
+            display: grid;
+            gap: 10px;
+        }
+
+        .dialog-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .dialog-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            padding: 10px 12px;
+            border-top: 1px solid var(--border);
+            background: #f7f7f7;
+        }
+
+        .note {
+            font-size: 12px;
+            color: #555;
+            line-height: 1.35;
+        }
+    </style>
+</head>
+<body>
+    <header><h1>Dashpad Sketch Editor</h1></header>
+
+    <div class="menubar">
+        <details class="menu">
+            <summary>Canvas</summary><div class="menu-content">
+                <button id="openCanvasSize">Canvas size...</button>
+                <hr>
+                <button id="openDashpadSketch">Open Dashpad Sketch file...</button>
+                <button id="saveDashpadSketch">Save Dashpad Sketch file</button>
+                <hr>
+                <button id="savePng">Save PNG</button>
+                <button id="copyCanvasClipboard">Copy canvas to clipboard</button>
+                <hr><button id="clearAll">Clear all</button>
+            </div>
+        </details>
+        <details class="menu">
+            <summary>Selected Object</summary><div class="menu-content">
+                <button id="bringFront">Bring to front</button>
+                <button id="bringForward">Move forward</button>
+                <button id="moveBack">Move back</button>
+                <button id="sendBack">Send to back</button>
+                <hr><button id="deleteObject">Delete selected object</button>
+            </div>
+        </details>
+        <span id="canvasSizeReadout" class="canvas-size-readout">Image: 1100 × 700 px</span>
+    </div>
+    <input id="DashpadSketchInput" type="file" accept=".json,.dashpadsketch,.dashpadsketch.json,application/json" hidden />
+
+    <div class="toolbar">
+        <div class="group">
+            <label for="tool">Tool</label><select id="tool">
+                <option value="select">Select / move points</option>
+                <option value="pen">Freehand pen</option>
+                <option value="polyline">Click-point line</option>
+                <option value="rect">Rectangle</option>
+                <option value="square">Square</option>
+                <option value="circle">Circle</option>
+                <option value="bezier">Bézier curve</option>
+                <option value="deleteSegment">Delete line segment</option>
+            </select>
+        </div>
+        <div class="group"><label for="penColor">Pen colour</label><input id="penColor" type="color" value="#111111" /></div>
+        <div class="group"><label for="penSize">Pen size</label><input id="penSize" type="number" min="1" max="100" value="5" /></div>
+        <div class="group"><label for="brushShape">Pen shape</label><select id="brushShape"><option value="circle">Circle</option><option value="square">Square</option></select></div>
+        <div class="group"><label for="lineStyle">Line style</label><select id="lineStyle"><option value="solid">Solid</option><option value="dashed">Dashed / striped</option><option value="dotted">Dotted</option></select></div>
+        <div class="group inline"><input id="showGrid" type="checkbox" checked /><label for="showGrid">Show grid</label></div>
+        <div class="group inline"><input id="snapGrid" type="checkbox" /><label for="snapGrid">Snap to grid</label></div>
+        <div class="group"><label for="gridSize">Grid size</label><input id="gridSize" type="number" min="5" max="200" value="25" /></div>
+        <div class="group inline"><input id="exportGrid" type="checkbox" /><label for="exportGrid">Include grid in PNG</label></div>
+    </div>
+
+    <div class="canvas-wrap"><canvas id="canvas" width="1100" height="700"></canvas></div>
+    <div class="status" id="status">Ready.</div>
+    <div class="help"><strong>How to use:</strong> Use the <strong>Canvas</strong> menu to set the actual image size, save/load editable DashpadSketch files, and export a PNG, or copy/open the canvas image from the clipboard command. Use <strong>Selected Object</strong> to change Z layering or delete the current object. Freehand pen: drag to draw. Click-point line: left-click points, right-click to finish. Bézier curve: click a start point, then click an end point; drag the two control handles afterwards. Select/move: click an object, then drag its points or drag the line/body to move the whole object. Delete line segment: click a segment between two points. Press <strong>Delete</strong> to remove the selected object, or <strong>Escape</strong> to cancel the current drawing action.</div>
+
+    <dialog id="canvasDialog">
+        <div class="dialog-head">Canvas size</div>
+        <div class="dialog-body">
+            <div class="dialog-row"><label for="canvasWidth">Width, pixels</label><input id="canvasWidth" type="number" min="50" max="5000" step="1" value="1100" /></div>
+            <div class="dialog-row"><label for="canvasHeight">Height, pixels</label><input id="canvasHeight" type="number" min="50" max="5000" step="1" value="700" /></div>
+            <div class="dialog-row"><label for="scaleDrawing">Scale existing drawing</label><input id="scaleDrawing" type="checkbox" /></div>
+            <div class="note">The PNG export uses this exact canvas size. If “Scale existing drawing” is off, existing objects keep their current coordinates and may be clipped if the canvas becomes smaller.</div>
+        </div>
+        <div class="dialog-actions"><button id="cancelCanvasSize" type="button">Cancel</button><button id="applyCanvasSize" type="button">Apply</button></div>
+    </dialog>
+
+    <script>
+        (() => {
+            const canvas = document.getElementById("canvas");
+            const ctx = canvas.getContext("2d");
+            const toolEl = document.getElementById("tool");
+            const colourEl = document.getElementById("penColor");
+            const sizeEl = document.getElementById("penSize");
+            const brushEl = document.getElementById("brushShape");
+            const lineStyleEl = document.getElementById("lineStyle");
+            const showGridEl = document.getElementById("showGrid");
+            const snapGridEl = document.getElementById("snapGrid");
+            const gridSizeEl = document.getElementById("gridSize");
+            const exportGridEl = document.getElementById("exportGrid");
+            const statusEl = document.getElementById("status");
+            const canvasDialog = document.getElementById("canvasDialog");
+            const canvasWidthEl = document.getElementById("canvasWidth");
+            const canvasHeightEl = document.getElementById("canvasHeight");
+            const scaleDrawingEl = document.getElementById("scaleDrawing");
+            const canvasSizeReadoutEl = document.getElementById("canvasSizeReadout");
+            const dashpadSketchInput = document.getElementById("DashpadSketchInput");
+
+            const objects = [];
+            let selectedIndex = -1, dragMode = null, lastPointer = null;
+            let currentStroke = null, polyDraft = null, shapeDraft = null, bezierDraft = null, hoverPoint = null;
+
+            function closeMenus() { document.querySelectorAll(".menu[open]").forEach(m => m.removeAttribute("open")); }
+            function updateCanvasSizeReadout() { canvasSizeReadoutEl.textContent = `Image: ${canvas.width} × ${canvas.height} px`; }
+            function setStatus(text) { const layer = selectedIndex >= 0 && objects[selectedIndex] ? ` Layer ${selectedIndex + 1} of ${objects.length}.` : ""; statusEl.textContent = text + layer; }
+            function currentStyle() { return { color: colourEl.value, width: Math.max(1, Number(sizeEl.value) || 1), brush: brushEl.value, lineStyle: lineStyleEl.value }; }
+            function getGridSize() { return Math.max(5, Number(gridSizeEl.value) || 25); }
+            function snapPoint(p) { if (!snapGridEl.checked) return { x: p.x, y: p.y }; const g = getGridSize(); return { x: Math.round(p.x / g) * g, y: Math.round(p.y / g) * g }; }
+            function canvasPoint(evt) { const r = canvas.getBoundingClientRect(); return { x: (evt.clientX - r.left) * (canvas.width / r.width), y: (evt.clientY - r.top) * (canvas.height / r.height) }; }
+
+            function applyStrokeStyle(obj) {
+                const width = Math.max(1, obj.width || 1);
+                ctx.strokeStyle = obj.color || "#111111";
+                ctx.lineWidth = width;
+                ctx.lineCap = obj.brush === "square" ? "square" : "round";
+                ctx.lineJoin = obj.brush === "square" ? "miter" : "round";
+                if (obj.lineStyle === "dashed") ctx.setLineDash([width * 4, width * 2.4]);
+                else if (obj.lineStyle === "dotted") ctx.setLineDash([0.01, width * 2.3]);
+                else ctx.setLineDash([]);
+            }
+
+            function drawGrid() {
+                const g = getGridSize(); ctx.save(); ctx.setLineDash([]); ctx.strokeStyle = "#ddd"; ctx.lineWidth = 1; ctx.beginPath();
+                for (let x = 0; x <= canvas.width; x += g) { ctx.moveTo(x + .5, 0); ctx.lineTo(x + .5, canvas.height); }
+                for (let y = 0; y <= canvas.height; y += g) { ctx.moveTo(0, y + .5); ctx.lineTo(canvas.width, y + .5); }
+                ctx.stroke(); ctx.restore();
+            }
+            function drawLine(a, b, obj) { ctx.save(); applyStrokeStyle(obj); ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke(); ctx.restore(); }
+            function drawPolyline(obj) {
+                if (!obj.points || obj.points.length < 2) return;
+                ctx.save(); applyStrokeStyle(obj); ctx.beginPath(); let drawing = false;
+                for (let i = 0; i < obj.points.length - 1; i++) {
+                    const on = obj.segments ? obj.segments[i] !== false : true;
+                    if (!on) { drawing = false; continue; }
+                    if (!drawing) { ctx.moveTo(obj.points[i].x, obj.points[i].y); drawing = true; }
+                    ctx.lineTo(obj.points[i + 1].x, obj.points[i + 1].y);
+                }
+                ctx.stroke(); ctx.restore();
+            }
+            function drawRectObject(obj) {
+                const p = obj.points; if (!p || p.length < 4) return;
+                ctx.save(); applyStrokeStyle(obj); ctx.beginPath(); const pairs = [[0, 1], [1, 2], [2, 3], [3, 0]];
+                for (let i = 0; i < pairs.length; i++) { if (obj.segments && obj.segments[i] === false) continue; const [a, b] = pairs[i]; ctx.moveTo(p[a].x, p[a].y); ctx.lineTo(p[b].x, p[b].y); }
+                ctx.stroke(); ctx.restore();
+            }
+            function drawCircle(obj) { ctx.save(); applyStrokeStyle(obj); ctx.beginPath(); ctx.arc(obj.cx, obj.cy, obj.r, 0, Math.PI * 2); ctx.stroke(); ctx.restore(); }
+            function drawBezier(obj) { if (obj.segments && obj.segments[0] === false) return; ctx.save(); applyStrokeStyle(obj); ctx.beginPath(); ctx.moveTo(obj.p0.x, obj.p0.y); ctx.bezierCurveTo(obj.c1.x, obj.c1.y, obj.c2.x, obj.c2.y, obj.p1.x, obj.p1.y); ctx.stroke(); ctx.restore(); }
+            function drawObject(obj) { if (obj.type === "stroke" || obj.type === "polyline") drawPolyline(obj); if (obj.type === "rect" || obj.type === "square") drawRectObject(obj); if (obj.type === "circle") drawCircle(obj); if (obj.type === "bezier") drawBezier(obj); }
+
+            function drawHandle(p, kind = "normal") {
+                ctx.save(); ctx.setLineDash([]); ctx.lineWidth = 1; ctx.strokeStyle = "#000";
+                if (kind === "control") { ctx.fillStyle = "#ffcc00"; ctx.beginPath(); ctx.arc(p.x, p.y, 6, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); }
+                else if (kind === "radius") { ctx.fillStyle = "#99ddff"; ctx.beginPath(); ctx.rect(p.x - 6, p.y - 6, 12, 12); ctx.fill(); ctx.stroke(); }
+                else { ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.rect(p.x - 5, p.y - 5, 10, 10); ctx.fill(); ctx.stroke(); }
+                ctx.restore();
+            }
+            function objectBounds(obj) {
+                let pts = [];
+                if (["stroke", "polyline", "rect", "square"].includes(obj.type)) pts = obj.points || [];
+                else if (obj.type === "circle") return { x: obj.cx - obj.r, y: obj.cy - obj.r, w: obj.r * 2, h: obj.r * 2 };
+                else if (obj.type === "bezier") pts = [obj.p0, obj.p1, obj.c1, obj.c2];
+                if (!pts.length) return null; const xs = pts.map(p => p.x), ys = pts.map(p => p.y); return { x: Math.min(...xs), y: Math.min(...ys), w: Math.max(...xs) - Math.min(...xs), h: Math.max(...ys) - Math.min(...ys) };
+            }
+            function drawSelection(obj) {
+                ctx.save(); ctx.setLineDash([5, 5]); ctx.strokeStyle = "#06c"; ctx.lineWidth = 1;
+                if (obj.type === "stroke") { const b = objectBounds(obj); if (b) ctx.strokeRect(b.x - 6, b.y - 6, b.w + 12, b.h + 12); ctx.restore(); return; }
+                if (obj.type === "circle") { ctx.beginPath(); ctx.arc(obj.cx, obj.cy, obj.r + 6, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]); drawHandle({ x: obj.cx, y: obj.cy }); drawHandle({ x: obj.cx + obj.r, y: obj.cy }, "radius"); ctx.restore(); return; }
+                if (obj.type === "bezier") { ctx.beginPath(); ctx.moveTo(obj.p0.x, obj.p0.y); ctx.lineTo(obj.c1.x, obj.c1.y); ctx.moveTo(obj.p1.x, obj.p1.y); ctx.lineTo(obj.c2.x, obj.c2.y); ctx.stroke(); ctx.setLineDash([]); drawHandle(obj.p0); drawHandle(obj.p1); drawHandle(obj.c1, "control"); drawHandle(obj.c2, "control"); ctx.restore(); return; }
+                ctx.setLineDash([]); for (const p of obj.points || []) drawHandle(p); ctx.restore();
+            }
+            function drawDrafts() {
+                if (currentStroke) drawObject(currentStroke);
+                if (polyDraft && polyDraft.points.length) { const obj = { type: "polyline", points: polyDraft.points.slice(), segments: polyDraft.points.slice(1).map(() => true), color: polyDraft.color, width: polyDraft.width, brush: polyDraft.brush, lineStyle: polyDraft.lineStyle }; drawPolyline(obj); if (hoverPoint) drawLine(polyDraft.points[polyDraft.points.length - 1], hoverPoint, polyDraft); for (const p of polyDraft.points) drawHandle(p); }
+                if (shapeDraft) { const obj = makeShapeFromDraft(shapeDraft.start, shapeDraft.current, shapeDraft.type, shapeDraft); if (obj) drawObject(obj); }
+                if (bezierDraft && bezierDraft.p0) { drawHandle(bezierDraft.p0); if (hoverPoint) drawLine(bezierDraft.p0, hoverPoint, bezierDraft); }
+            }
+            function render(options = {}) { const forExport = !!options.forExport; ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, canvas.width, canvas.height); if (forExport ? exportGridEl.checked : showGridEl.checked) drawGrid(); for (const obj of objects) drawObject(obj); if (!forExport) { drawDrafts(); if (selectedIndex >= 0 && objects[selectedIndex]) drawSelection(objects[selectedIndex]); } updateCanvasSizeReadout(); }
+
+            function makeShapeFromDraft(start, current, type, style) {
+                const a = start; let b = current;
+                if (type === "rect") { if (Math.abs(b.x - a.x) < 2 || Math.abs(b.y - a.y) < 2) return null; return { type: "rect", points: [{ x: a.x, y: a.y }, { x: b.x, y: a.y }, { x: b.x, y: b.y }, { x: a.x, y: b.y }], segments: [true, true, true, true], color: style.color, width: style.width, brush: style.brush, lineStyle: style.lineStyle }; }
+                if (type === "square") { const dx = b.x - a.x, dy = b.y - a.y, side = Math.max(Math.abs(dx), Math.abs(dy)); if (side < 2) return null; const sx = dx < 0 ? -1 : 1, sy = dy < 0 ? -1 : 1; b = { x: a.x + sx * side, y: a.y + sy * side }; return { type: "square", points: [{ x: a.x, y: a.y }, { x: b.x, y: a.y }, { x: b.x, y: b.y }, { x: a.x, y: b.y }], segments: [true, true, true, true], color: style.color, width: style.width, brush: style.brush, lineStyle: style.lineStyle }; }
+                if (type === "circle") { const dx = b.x - a.x, dy = b.y - a.y, side = Math.max(Math.abs(dx), Math.abs(dy)); if (side < 2) return null; const sx = dx < 0 ? -1 : 1, sy = dy < 0 ? -1 : 1, end = { x: a.x + sx * side, y: a.y + sy * side }; return { type: "circle", cx: (a.x + end.x) / 2, cy: (a.y + end.y) / 2, r: side / 2, color: style.color, width: style.width, brush: style.brush, lineStyle: style.lineStyle }; }
+                return null;
+            }
+            function distance(a, b) { return Math.hypot(a.x - b.x, a.y - b.y); }
+            function distanceToSegment(p, a, b) { const dx = b.x - a.x, dy = b.y - a.y, len2 = dx * dx + dy * dy; if (len2 === 0) return distance(p, a); let t = ((p.x - a.x) * dx + (p.y - a.y) * dy) / len2; t = Math.max(0, Math.min(1, t)); return distance(p, { x: a.x + t * dx, y: a.y + t * dy }); }
+            function bezierPoint(obj, t) { const mt = 1 - t; return { x: mt * mt * mt * obj.p0.x + 3 * mt * mt * t * obj.c1.x + 3 * mt * t * t * obj.c2.x + t * t * t * obj.p1.x, y: mt * mt * mt * obj.p0.y + 3 * mt * mt * t * obj.c1.y + 3 * mt * t * t * obj.c2.y + t * t * t * obj.p1.y }; }
+            function distanceToBezier(p, obj) { let best = Infinity, prev = bezierPoint(obj, 0); for (let i = 1; i <= 40; i++) { const next = bezierPoint(obj, i / 40); best = Math.min(best, distanceToSegment(p, prev, next)); prev = next; } return best; }
+            function hitHandle(p) {
+                if (selectedIndex < 0 || !objects[selectedIndex]) return null; const obj = objects[selectedIndex], tol = 10;
+                if (["polyline", "rect", "square"].includes(obj.type)) for (let i = 0; i < obj.points.length; i++) if (distance(p, obj.points[i]) <= tol) return { objIndex: selectedIndex, kind: "point", pointIndex: i };
+                if (obj.type === "circle") { if (distance(p, { x: obj.cx, y: obj.cy }) <= tol) return { objIndex: selectedIndex, kind: "circleCentre" }; if (distance(p, { x: obj.cx + obj.r, y: obj.cy }) <= tol) return { objIndex: selectedIndex, kind: "circleRadius" }; }
+                if (obj.type === "bezier") for (const [name, pt] of [["p0", obj.p0], ["p1", obj.p1], ["c1", obj.c1], ["c2", obj.c2]]) if (distance(p, pt) <= tol) return { objIndex: selectedIndex, kind: "bezierPoint", name };
+                return null;
+            }
+            function rectPairs() { return [[0, 1], [1, 2], [2, 3], [3, 0]]; }
+            function hitSegment(p) {
+                let best = null, bestDist = Infinity;
+                for (let i = objects.length - 1; i >= 0; i--) {
+                    const obj = objects[i], tol = Math.max(8, (obj.width || 1) / 2 + 6);
+                    if (obj.type === "polyline" || obj.type === "stroke") for (let s = 0; s < obj.points.length - 1; s++) { if (obj.segments && obj.segments[s] === false) continue; const d = distanceToSegment(p, obj.points[s], obj.points[s + 1]); if (d < tol && d < bestDist) { best = { objIndex: i, segmentIndex: s, distance: d }; bestDist = d; } }
+                    if (obj.type === "rect" || obj.type === "square") { const pairs = rectPairs(); for (let s = 0; s < pairs.length; s++) { if (obj.segments && obj.segments[s] === false) continue; const [a, b] = pairs[s]; const d = distanceToSegment(p, obj.points[a], obj.points[b]); if (d < tol && d < bestDist) { best = { objIndex: i, segmentIndex: s, distance: d }; bestDist = d; } } }
+                    if (obj.type === "bezier" && (!obj.segments || obj.segments[0] !== false)) { const d = distanceToBezier(p, obj); if (d < tol && d < bestDist) { best = { objIndex: i, segmentIndex: 0, distance: d }; bestDist = d; } }
+                    if (obj.type === "circle") { const d = Math.abs(distance(p, { x: obj.cx, y: obj.cy }) - obj.r); if (d < tol && d < bestDist) { best = { objIndex: i, segmentIndex: null, distance: d }; bestDist = d; } }
+                }
+                return best;
+            }
+            function selectAt(p) { const hit = hitSegment(p); if (!hit) { selectedIndex = -1; return false; } selectedIndex = hit.objIndex; return true; }
+            function moveObject(obj, dx, dy) { if (["polyline", "stroke", "rect", "square"].includes(obj.type)) { for (const p of obj.points) { p.x += dx; p.y += dy; } return; } if (obj.type === "circle") { obj.cx += dx; obj.cy += dy; return; } if (obj.type === "bezier") for (const n of ["p0", "p1", "c1", "c2"]) { obj[n].x += dx; obj[n].y += dy; } }
+            function scalePoint(p, sx, sy) { p.x *= sx; p.y *= sy; }
+            function scaleObject(obj, sx, sy) { const ss = (Math.abs(sx) + Math.abs(sy)) / 2; if (["polyline", "stroke", "rect", "square"].includes(obj.type)) { for (const p of obj.points) scalePoint(p, sx, sy); obj.width = Math.max(1, obj.width * ss); return; } if (obj.type === "circle") { obj.cx *= sx; obj.cy *= sy; obj.r *= ss; obj.width = Math.max(1, obj.width * ss); return; } if (obj.type === "bezier") { for (const n of ["p0", "p1", "c1", "c2"]) scalePoint(obj[n], sx, sy); obj.width = Math.max(1, obj.width * ss); } }
+            function setHandlePosition(handle, p) { const obj = objects[handle.objIndex], q = snapPoint(p); if (handle.kind === "point") { obj.points[handle.pointIndex] = q; return; } if (handle.kind === "circleCentre") { obj.cx = q.x; obj.cy = q.y; return; } if (handle.kind === "circleRadius") { obj.r = Math.max(1, distance(q, { x: obj.cx, y: obj.cy })); return; } if (handle.kind === "bezierPoint") obj[handle.name] = q; }
+            function removeSelectedObject() { closeMenus(); if (selectedIndex < 0) { setStatus("No object selected."); return; } objects.splice(selectedIndex, 1); selectedIndex = -1; render(); setStatus("Selected object deleted."); }
+            function moveSelectedLayer(direction) { closeMenus(); if (selectedIndex < 0 || !objects[selectedIndex]) { setStatus("No object selected."); return; } const oldIndex = selectedIndex; let newIndex = oldIndex; if (direction === "front") newIndex = objects.length - 1; if (direction === "back") newIndex = 0; if (direction === "forward") newIndex = Math.min(objects.length - 1, oldIndex + 1); if (direction === "backward") newIndex = Math.max(0, oldIndex - 1); if (newIndex === oldIndex) { setStatus("Selected object is already at that layer."); return; } const [obj] = objects.splice(oldIndex, 1); objects.splice(newIndex, 0, obj); selectedIndex = newIndex; const label = { front: "brought to front", back: "sent to back", forward: "moved forward", backward: "moved back" }[direction]; render(); setStatus(`Selected object ${label}.`); }
+            function cancelCurrentAction() { currentStroke = null; polyDraft = null; shapeDraft = null; bezierDraft = null; dragMode = null; hoverPoint = null; setStatus("Cancelled."); render(); }
+            function openCanvasSizeDialog() { closeMenus(); canvasWidthEl.value = canvas.width; canvasHeightEl.value = canvas.height; scaleDrawingEl.checked = false; if (canvasDialog.showModal) canvasDialog.showModal(); else { const w = Number(prompt("Canvas width in pixels:", canvas.width)); const h = Number(prompt("Canvas height in pixels:", canvas.height)); applyCanvasSize(w, h, false); } }
+
+            function canvasToPngBlob() {
+                return new Promise((resolve, reject) => {
+                    try {
+                        canvas.toBlob((blob) => {
+                            if (blob) resolve(blob);
+                            else reject(new Error("Canvas could not be converted to PNG."));
+                        }, "image/png");
+                    } catch (err) {
+                        reject(err);
+                    }
+                });
+            }
+
+            function openPngPreview(blob) {
+                const url = URL.createObjectURL(blob);
+                const win = window.open(url, "_blank");
+                setTimeout(() => URL.revokeObjectURL(url), 60000);
+
+                if (!win) {
+                    setStatus("Browser blocked the image preview popup. Try Save PNG instead.");
+                }
+            }
+
+            async function savePngFile() {
+                closeMenus();
+
+                const oldSelected = selectedIndex;
+                render({ forExport: true });
+
+                try {
+                    const blob = await canvasToPngBlob();
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement("a");
+
+                    link.download = `sketch_${canvas.width}x${canvas.height}.png`;
+                    link.href = url;
+                    link.style.display = "none";
+
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+
+                    setTimeout(() => URL.revokeObjectURL(url), 60000);
+                    setStatus("PNG download started.");
+                } catch (err) {
+                    console.error(err);
+
+                    try {
+                        const dataUrl = canvas.toDataURL("image/png");
+                        const win = window.open(dataUrl, "_blank");
+                        if (win) {
+                            setStatus("PNG opened in a new tab. Save it from there.");
+                        } else {
+                            setStatus("Could not save PNG. Browser blocked download and preview.");
+                        }
+                    } catch (fallbackErr) {
+                        console.error(fallbackErr);
+                        setStatus("Could not save PNG in this browser.");
+                    }
+                } finally {
+                    selectedIndex = oldSelected;
+                    render();
+                }
+            }
+
+            async function copyCanvasToClipboard() {
+                closeMenus();
+
+                const oldSelected = selectedIndex;
+                render({ forExport: true });
+
+                try {
+                    const blob = await canvasToPngBlob();
+
+                    if (navigator.clipboard && window.ClipboardItem && window.isSecureContext) {
+                        await navigator.clipboard.write([
+                            new ClipboardItem({ "image/png": blob })
+                        ]);
+                        setStatus("Canvas copied to clipboard.");
+                    } else {
+                        openPngPreview(blob);
+                        setStatus("Image clipboard is not available from this page, so the PNG was opened in a new tab instead.");
+                    }
+                } catch (err) {
+                    console.error(err);
+
+                    try {
+                        const blob = await canvasToPngBlob();
+                        openPngPreview(blob);
+                        setStatus("Clipboard copy failed, so the PNG was opened in a new tab instead.");
+                    } catch (fallbackErr) {
+                        console.error(fallbackErr);
+                        setStatus("Could not copy or preview the canvas in this browser.");
+                    }
+                } finally {
+                    selectedIndex = oldSelected;
+                    render();
+                }
+            }
+
+            function applyCanvasSize(width, height, scaleExisting) { const nw = Math.max(50, Math.min(5000, Math.round(Number(width) || canvas.width))); const nh = Math.max(50, Math.min(5000, Math.round(Number(height) || canvas.height))); const ow = canvas.width, oh = canvas.height; if (scaleExisting && ow > 0 && oh > 0) { const sx = nw / ow, sy = nh / oh; for (const obj of objects) scaleObject(obj, sx, sy); } canvas.width = nw; canvas.height = nh; updateCanvasSizeReadout(); render(); setStatus(`Canvas size set to ${nw} × ${nh} px.`); }
+
+
+            function safeNumber(value, fallback = 0) {
+                const n = Number(value);
+                return Number.isFinite(n) ? n : fallback;
+            }
+
+            function cleanPoint(p) {
+                return { x: safeNumber(p && p.x, 0), y: safeNumber(p && p.y, 0) };
+            }
+
+            function cleanStyle(obj) {
+                const allowedBrushes = new Set(["circle", "square"]);
+                const allowedLineStyles = new Set(["solid", "dashed", "dotted"]);
+                return {
+                    color: typeof obj.color === "string" ? obj.color : "#111111",
+                    width: Math.max(1, safeNumber(obj.width, 5)),
+                    brush: allowedBrushes.has(obj.brush) ? obj.brush : "circle",
+                    lineStyle: allowedLineStyles.has(obj.lineStyle) ? obj.lineStyle : "solid"
+                };
+            }
+
+            function cleanSegments(segments, count) {
+                const result = [];
+                for (let i = 0; i < count; i++) {
+                    result.push(Array.isArray(segments) ? segments[i] !== false : true);
+                }
+                return result;
+            }
+
+            function cleanObject(obj) {
+                if (!obj || typeof obj !== "object") return null;
+                const style = cleanStyle(obj);
+
+                if (obj.type === "stroke" || obj.type === "polyline") {
+                    const points = Array.isArray(obj.points) ? obj.points.map(cleanPoint) : [];
+                    if (points.length < 2) return null;
+                    return {
+                        type: obj.type,
+                        points,
+                        segments: cleanSegments(obj.segments, points.length - 1),
+                        ...style
+                    };
+                }
+
+                if (obj.type === "rect" || obj.type === "square") {
+                    const points = Array.isArray(obj.points) ? obj.points.map(cleanPoint).slice(0, 4) : [];
+                    if (points.length < 4) return null;
+                    return {
+                        type: obj.type,
+                        points,
+                        segments: cleanSegments(obj.segments, 4),
+                        ...style
+                    };
+                }
+
+                if (obj.type === "circle") {
+                    return {
+                        type: "circle",
+                        cx: safeNumber(obj.cx, 0),
+                        cy: safeNumber(obj.cy, 0),
+                        r: Math.max(1, safeNumber(obj.r, 10)),
+                        ...style
+                    };
+                }
+
+                if (obj.type === "bezier") {
+                    return {
+                        type: "bezier",
+                        p0: cleanPoint(obj.p0),
+                        p1: cleanPoint(obj.p1),
+                        c1: cleanPoint(obj.c1),
+                        c2: cleanPoint(obj.c2),
+                        segments: cleanSegments(obj.segments, 1),
+                        ...style
+                    };
+                }
+
+                return null;
+            }
+
+            function projectData() {
+                return {
+                    format: "DashpadSketch",
+                    version: 1,
+                    canvas: {
+                        width: canvas.width,
+                        height: canvas.height
+                    },
+                    settings: {
+                        showGrid: showGridEl.checked,
+                        snapGrid: snapGridEl.checked,
+                        gridSize: getGridSize(),
+                        exportGrid: exportGridEl.checked
+                    },
+                    objects: JSON.parse(JSON.stringify(objects))
+                };
+            }
+
+            function saveDashpadSketchFile() {
+                closeMenus();
+                const data = projectData();
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+                const link = document.createElement("a");
+                link.download = `dashpadsketch_${canvas.width}x${canvas.height}.dashpadsketch.json`;
+                link.href = URL.createObjectURL(blob);
+                link.click();
+                setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+                setStatus("dashpadSketch file saved.");
+            }
+
+            function opendashpadSketchFilePicker() {
+                closeMenus();
+                dashpadSketchInput.value = "";
+                dashpadSketchInput.click();
+            }
+
+            function loadProjectData(data) {
+                if (!data || typeof data !== "object") throw new Error("The file does not contain valid JSON data.");
+                if (data.format !== "DashpadSketch" || !Array.isArray(data.objects)) {
+                    throw new Error("This does not look like a dashpad Sketch file.");
+                }
+
+                const newWidth = Math.max(50, Math.min(5000, Math.round(safeNumber(data.canvas && data.canvas.width, canvas.width))));
+                const newHeight = Math.max(50, Math.min(5000, Math.round(safeNumber(data.canvas && data.canvas.height, canvas.height))));
+                const loadedObjects = data.objects.map(cleanObject).filter(Boolean);
+
+                currentStroke = null;
+                polyDraft = null;
+                shapeDraft = null;
+                bezierDraft = null;
+                dragMode = null;
+                hoverPoint = null;
+                selectedIndex = -1;
+
+                canvas.width = newWidth;
+                canvas.height = newHeight;
+
+                if (data.settings && typeof data.settings === "object") {
+                    showGridEl.checked = data.settings.showGrid !== false;
+                    snapGridEl.checked = data.settings.snapGrid === true;
+                    exportGridEl.checked = data.settings.exportGrid === true;
+                    gridSizeEl.value = Math.max(5, Math.min(200, Math.round(safeNumber(data.settings.gridSize, getGridSize()))));
+                }
+
+                objects.length = 0;
+                objects.push(...loadedObjects);
+
+                updateCanvasSizeReadout();
+                render();
+                setStatus(`Dashpad Sketch file loaded. ${objects.length} object${objects.length === 1 ? "" : "s"}.`);
+            }
+
+            function readDashpadSketchFile(file) {
+                const reader = new FileReader();
+
+                reader.onload = () => {
+                    try {
+                        const data = JSON.parse(String(reader.result || ""));
+                        loadProjectData(data);
+                    } catch (error) {
+                        alert(`Could not open Dashpad Sketch file: ${error.message}`);
+                        setStatus("Dashpad Sketch file could not be loaded.");
+                    }
+                };
+
+                reader.onerror = () => {
+                    alert("Could not read that file.");
+                    setStatus("Dashpad Sketch file could not be read.");
+                };
+
+                reader.readAsText(file);
+            }
+
+            canvas.addEventListener("pointerdown", evt => {
+                const raw = canvasPoint(evt), p = snapPoint(raw), tool = toolEl.value; if (evt.button === 2) return;
+                if (tool === "pen") { selectedIndex = -1; currentStroke = { type: "stroke", points: [p], segments: [], ...currentStyle() }; setStatus("Drawing freehand stroke."); canvas.setPointerCapture(evt.pointerId); render(); return; }
+                if (tool === "polyline") { selectedIndex = -1; if (!polyDraft) { polyDraft = { points: [p], ...currentStyle() }; setStatus("Click more points. Right-click to finish the line."); } else { polyDraft.points.push(p); setStatus(`${polyDraft.points.length} points. Right-click to finish the line.`); } render(); return; }
+                if (["rect", "square", "circle"].includes(tool)) { selectedIndex = -1; shapeDraft = { type: tool, start: p, current: p, ...currentStyle() }; setStatus(`Drawing ${tool}. Drag and release to place it.`); canvas.setPointerCapture(evt.pointerId); render(); return; }
+                if (tool === "bezier") { selectedIndex = -1; if (!bezierDraft) { bezierDraft = { p0: p, ...currentStyle() }; setStatus("Bézier start point placed. Click the end point."); } else { const p0 = bezierDraft.p0, p1 = p, dx = p1.x - p0.x, dy = p1.y - p0.y; objects.push({ type: "bezier", p0, p1, c1: { x: p0.x + dx / 3, y: p0.y + dy / 3 }, c2: { x: p0.x + dx * 2 / 3, y: p0.y + dy * 2 / 3 }, segments: [true], color: bezierDraft.color, width: bezierDraft.width, brush: bezierDraft.brush, lineStyle: bezierDraft.lineStyle }); selectedIndex = objects.length - 1; bezierDraft = null; setStatus("Bézier curve created. Use Select / move points to alter the handles."); } render(); return; }
+                if (tool === "deleteSegment") { const hit = hitSegment(raw); if (!hit) { setStatus("No line segment found there."); return; } const obj = objects[hit.objIndex]; if (obj.type === "circle") { setStatus("Circles do not have separate line segments to delete."); return; } if (obj.segments && hit.segmentIndex !== null) { obj.segments[hit.segmentIndex] = false; selectedIndex = hit.objIndex; setStatus("Line segment deleted."); render(); } return; }
+                if (tool === "select") { const handle = hitHandle(raw); if (handle) { dragMode = { type: "handle", handle }; lastPointer = raw; setStatus("Dragging point/handle."); canvas.setPointerCapture(evt.pointerId); return; } if (selectAt(raw)) { dragMode = { type: "object" }; lastPointer = raw; setStatus("Object selected. Drag to move it, or drag its points."); canvas.setPointerCapture(evt.pointerId); } else { dragMode = null; lastPointer = null; setStatus("Nothing selected."); } render(); }
+            });
+            canvas.addEventListener("pointermove", evt => {
+                const raw = canvasPoint(evt), p = snapPoint(raw); hoverPoint = p;
+                if (currentStroke) { const last = currentStroke.points[currentStroke.points.length - 1]; if (!last || distance(last, p) > .5) { currentStroke.points.push(p); currentStroke.segments.push(true); } render(); return; }
+                if (shapeDraft) { shapeDraft.current = p; render(); return; }
+                if (bezierDraft || polyDraft) render();
+                if (dragMode && lastPointer) { const obj = objects[selectedIndex]; if (!obj) return; if (dragMode.type === "handle") setHandlePosition(dragMode.handle, raw); if (dragMode.type === "object") { let dx = raw.x - lastPointer.x, dy = raw.y - lastPointer.y; if (snapGridEl.checked) { const sl = snapPoint(lastPointer), sn = snapPoint(raw); dx = sn.x - sl.x; dy = sn.y - sl.y; } moveObject(obj, dx, dy); } lastPointer = raw; render(); }
+            });
+            canvas.addEventListener("pointerup", evt => {
+                const raw = canvasPoint(evt), p = snapPoint(raw);
+                if (currentStroke) { if (currentStroke.points.length > 1) { objects.push(currentStroke); selectedIndex = objects.length - 1; setStatus("Freehand stroke added."); } currentStroke = null; render(); return; }
+                if (shapeDraft) { shapeDraft.current = p; const obj = makeShapeFromDraft(shapeDraft.start, shapeDraft.current, shapeDraft.type, shapeDraft); if (obj) { objects.push(obj); selectedIndex = objects.length - 1; setStatus(`${shapeDraft.type[0].toUpperCase() + shapeDraft.type.slice(1)} added.`); } else setStatus("Shape was too small to add."); shapeDraft = null; render(); return; }
+                if (dragMode) { dragMode = null; lastPointer = null; render(); }
+            });
+            canvas.addEventListener("contextmenu", evt => { evt.preventDefault(); if (toolEl.value === "polyline" && polyDraft) { if (polyDraft.points.length >= 2) { objects.push({ type: "polyline", points: polyDraft.points.slice(), segments: polyDraft.points.slice(1).map(() => true), color: polyDraft.color, width: polyDraft.width, brush: polyDraft.brush, lineStyle: polyDraft.lineStyle }); selectedIndex = objects.length - 1; setStatus("Click-point line finished."); } else setStatus("Line cancelled because it had fewer than two points."); polyDraft = null; render(); } });
+
+            document.getElementById("openCanvasSize").addEventListener("click", openCanvasSizeDialog);
+            document.getElementById("saveDashpadSketch").addEventListener("click", saveDashpadSketchFile);
+            document.getElementById("openDashpadSketch").addEventListener("click", opendashpadSketchFilePicker);
+            dashpadSketchInput.addEventListener("change", () => { if (dashpadSketchInput.files && dashpadSketchInput.files[0]) readDashpadSketchFile(dashpadSketchInput.files[0]); });
+            document.getElementById("sendBack").addEventListener("click", () => moveSelectedLayer("back"));
+            document.getElementById("moveBack").addEventListener("click", () => moveSelectedLayer("backward"));
+            document.getElementById("bringForward").addEventListener("click", () => moveSelectedLayer("forward"));
+            document.getElementById("bringFront").addEventListener("click", () => moveSelectedLayer("front"));
+            document.getElementById("deleteObject").addEventListener("click", removeSelectedObject);
+            document.getElementById("cancelCanvasSize").addEventListener("click", () => canvasDialog.close());
+            document.getElementById("applyCanvasSize").addEventListener("click", () => { applyCanvasSize(Number(canvasWidthEl.value), Number(canvasHeightEl.value), scaleDrawingEl.checked); canvasDialog.close(); });
+            document.getElementById("clearAll").addEventListener("click", () => { closeMenus(); if (!confirm("Clear the whole drawing?")) return; objects.length = 0; selectedIndex = -1; cancelCurrentAction(); setStatus("Drawing cleared."); });
+            document.getElementById("copyCanvasClipboard").addEventListener("click", copyCanvasToClipboard);
+
+            document.getElementById("savePng").addEventListener("click", savePngFile);
+            for (const el of [showGridEl, snapGridEl, gridSizeEl, exportGridEl]) { el.addEventListener("input", render); el.addEventListener("change", render); }
+            toolEl.addEventListener("change", () => { cancelCurrentAction(); const tool = toolEl.value; if (tool === "polyline") setStatus("Click points to draw connected lines. Right-click to finish."); else if (tool === "bezier") setStatus("Click a start point, then click an end point."); else if (tool === "deleteSegment") setStatus("Click a line segment between two points to delete it."); else setStatus("Ready."); });
+            document.addEventListener("click", evt => { if (!evt.target.closest(".menu")) closeMenus(); });
+            window.addEventListener("keydown", evt => { if (evt.key === "Escape") { cancelCurrentAction(); closeMenus(); } if (evt.key === "Delete" || evt.key === "Backspace") { if (document.activeElement && ["INPUT", "SELECT"].includes(document.activeElement.tagName)) return; evt.preventDefault(); removeSelectedObject(); } if (evt.ctrlKey && evt.key === "]") { evt.preventDefault(); moveSelectedLayer("forward"); } if (evt.ctrlKey && evt.key === "[") { evt.preventDefault(); moveSelectedLayer("backward"); } });
+            function initialRender() {
+                updateCanvasSizeReadout();
+                render();
+                setStatus("Ready.");
+            }
+
+            if (document.readyState === "loading") {
+                document.addEventListener("DOMContentLoaded", initialRender, { once: true });
+            } else {
+                initialRender();
+            }
+
+            requestAnimationFrame(initialRender);
+            window.addEventListener("load", initialRender, { once: true });
+            setTimeout(initialRender, 100);
+        })();
+    </script>
+</body>
+</html>
