@@ -104,7 +104,6 @@
             display: block;
         }
 
-        /* Keep display text centered over canvas */
         #display-text {
             position: absolute;
             top: 50%;
@@ -150,6 +149,7 @@
         <div id="title">Zone Perfection</div>
         <div class="controls">
             <label><input type="checkbox" id="use-countdown" checked> Use Countdown</label>
+            <label><input type="checkbox" id="pause-on-success"> Pause on Success</label>
             <button id="start-btn">Trigger Skill Check</button>
             <button id="reset-stats-btn">Reset Stats</button>
         </div>
@@ -172,7 +172,6 @@
     </div>
 
     <div id="game-container">
-        <!-- canvas size attributes control internal resolution; CSS makes it responsive -->
         <canvas id="canvas" width="500" height="500"></canvas>
         <div id="display-text"></div>
     </div>
@@ -182,13 +181,12 @@
     <script>
         const canvas = document.getElementById('canvas');
         const playArea = document.getElementById('game-container');
-        const ctx = canvas.getContext('2d');
         const displayText = document.getElementById('display-text');
         const startBtn = document.getElementById('start-btn');
         const resetStatsBtn = document.getElementById('reset-stats-btn');
         const useCountdownCheckbox = document.getElementById('use-countdown');
+        const pauseOnSuccessCheckbox = document.getElementById('pause-on-success');
 
-        // Stat DOM nodes
         const statAttempts = document.getElementById('stat-attempts');
         const statSuccesses = document.getElementById('stat-successes');
         const statGreats = document.getElementById('stat-greats');
@@ -197,7 +195,6 @@
         const statStreak = document.getElementById('stat-streak');
         const statBest = document.getElementById('stat-best');
 
-        // Canvas internal size
         const CANVAS_SIZE = 500;
         const centerX = CANVAS_SIZE / 2;
         const centerY = CANVAS_SIZE / 2;
@@ -205,7 +202,6 @@
         const pointerLineInset = 12;
         const pointerLineOutset = 12;
 
-        // Game State
         let isActive = false;
         let isCountingDown = false;
         let isWaitingForRestart = false;
@@ -216,13 +212,10 @@
         let pointerFrozen = false;
         let animationStarted = false;
 
-        // Zone variables
         let successStart = 0, successEnd = 0, greatStart = 0, greatEnd = 0;
 
-        // Stats
         const stats = { attempts: 0, successes: 0, greats: 0, fails: 0, currentStreak: 0, bestStreak: 0 };
 
-        // Audio
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         function playSound(freq, type, duration) {
             const osc = audioCtx.createOscillator();
@@ -237,11 +230,9 @@
         function playSuccessSound(isGreat) { if (isGreat) { playSound(880, 'triangle', 0.15); setTimeout(() => playSound(1200, 'triangle', 0.2), 80); } else playSound(660, 'sine', 0.2); }
         function playFailSound() { playSound(150, 'sawtooth', 0.4); }
 
-        // Helpers
         function normalizeAngle(angle) { const twoPI = Math.PI * 2; let a = angle % twoPI; if (a < 0) a += twoPI; return a; }
         function isAngleInRange(angle, start, end) { if (start <= end) return angle >= start && angle <= end; return angle >= start || angle <= end; }
 
-        // Zones
         function generateZones() {
             const randomOffset = Math.random() * (Math.PI * 1.2) + 0.3;
             successStart = pointerAngle + randomOffset;
@@ -250,7 +241,6 @@
             greatEnd = greatStart + 0.12;
         }
 
-        // Stats
         function updateStatsDisplay() {
             statAttempts.textContent = stats.attempts;
             statSuccesses.textContent = stats.successes;
@@ -263,7 +253,6 @@
         }
         function resetStats() { stats.attempts = 0; stats.successes = 0; stats.greats = 0; stats.fails = 0; stats.currentStreak = 0; stats.bestStreak = 0; updateStatsDisplay(); }
 
-        // Start/Countdown/Trigger
         function startSkillCheck(resetPointer = true) {
             if (isActive || isCountingDown || isDisplayingResult) return;
             if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -280,7 +269,7 @@
         }
         function triggerActiveCheck() { isActive = true; isWaitingForRestart = false; activeRunStartAngle = pointerAngle; playWarningBeep(); }
 
-        // Drawing (canvas internal coords)
+        const ctx = canvas.getContext('2d');
         function drawWheel() {
             ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
             ctx.beginPath(); ctx.arc(centerX, centerY, radius, 0, Math.PI * 2); ctx.strokeStyle = '#333'; ctx.lineWidth = 18; ctx.stroke();
@@ -292,7 +281,6 @@
             ctx.restore();
         }
 
-        // Animation loop
         function ensureAnimation() {
             if (animationStarted) return;
             animationStarted = true;
@@ -311,11 +299,12 @@
             requestAnimationFrame(loop);
         }
 
-        // Resolve
         function resolveSkillCheck(forcedResult = null, auto = false) {
             if (!isActive) return;
             isActive = false;
+            // Freeze pointer while we evaluate
             pointerFrozen = true;
+
             let result = forcedResult;
             if (!result) {
                 const currentNorm = normalizeAngle(pointerAngle + Math.PI / 2);
@@ -328,7 +317,7 @@
                 else result = 'fail';
             }
 
-            // update stats
+            // Update stats
             stats.attempts++;
             if (result === 'great') { stats.greats++; stats.successes++; stats.currentStreak++; }
             else if (result === 'success') { stats.successes++; stats.currentStreak++; }
@@ -341,44 +330,51 @@
                 displayText.innerHTML = 'Explosion!';
                 playFailSound();
                 isWaitingForRestart = true;
+                // pointerFrozen remains true until player starts next run
             } else {
-                isDisplayingResult = true;
+                // success / great
                 displayText.className = (result === 'great') ? 'great' : 'success';
                 displayText.innerHTML = (result === 'great') ? 'Great Skill Check!' : 'Success!';
                 playSuccessSound(result === 'great');
-                setTimeout(() => {
-                    displayText.className = ''; displayText.innerHTML = ''; isDisplayingResult = false;
-                    generateZones(); pointerFrozen = false; triggerActiveCheck();
-                }, 1000);
+
+                if (pauseOnSuccessCheckbox.checked) {
+                    // Pause FOR 1 second, then automatically continue (pointer frozen during the 1s)
+                    isDisplayingResult = true;
+                    setTimeout(() => {
+                        displayText.className = ''; displayText.innerHTML = ''; isDisplayingResult = false;
+                        generateZones();
+                        pointerFrozen = false;
+                        triggerActiveCheck();
+                    }, 1000);
+                } else {
+                    // No pause: immediately start next round (pointer resumes); show message visually for 1s while pointer moves
+                    generateZones();
+                    pointerFrozen = false;
+                    triggerActiveCheck();
+                    isDisplayingResult = true;
+                    setTimeout(() => {
+                        displayText.className = ''; displayText.innerHTML = ''; isDisplayingResult = false;
+                    }, 1);
+                }
             }
         }
 
-        // Input handling: keyboard (space) and play-area pointer/touch support.
         function handlePlayAreaTap() {
-            // Mirror spacebar behaviour:
             if (isActive) { resolveSkillCheck(); return; }
             if (isWaitingForRestart) { isWaitingForRestart = false; startSkillCheck(false); return; }
             if (!isCountingDown && !isDisplayingResult) { startSkillCheck(true); }
         }
 
-        // Use pointerdown on the entire play area (below stats panel)
         playArea.addEventListener('pointerdown', (e) => {
-            // ignore non-primary buttons
             if (e.button && e.button !== 0) return;
-            // prevent default to avoid accidental gestures
             e.preventDefault();
             handlePlayAreaTap();
         }, { passive: false });
 
-        // touchstart fallback
         playArea.addEventListener('touchstart', (e) => {
-            if (e.touches && e.touches[0]) {
-                e.preventDefault();
-                handlePlayAreaTap();
-            }
+            if (e.touches && e.touches[0]) { e.preventDefault(); handlePlayAreaTap(); }
         }, { passive: false });
 
-        // Keyboard handling
         window.addEventListener('keydown', (e) => {
             if (e.code === 'Space') {
                 e.preventDefault();
@@ -388,14 +384,11 @@
             }
         });
 
-        // Buttons
         startBtn.addEventListener('click', () => startSkillCheck(true));
         resetStatsBtn.addEventListener('click', resetStats);
 
-        // Initial draw & stats
         updateStatsDisplay();
         drawWheel();
-        // keep pointer frozen until user starts first run
         pointerFrozen = true;
     </script>
 </body>
