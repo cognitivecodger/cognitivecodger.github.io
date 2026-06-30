@@ -216,6 +216,37 @@
 
         const stats = { attempts: 0, successes: 0, greats: 0, fails: 0, currentStreak: 0, bestStreak: 0 };
 
+        // Input lock/debounce + lock-until-release
+        let inputLocked = false;
+        let inputLockTimeoutId = null;
+        const inputLockMs = 300; // general debounce for taps/keys
+        let waitForRelease = false; // when true, keep input locked until pointerup/touchend
+        let lastInputWasPointer = false; // set by pointerdown handler so resolve can know source
+        let resultMessageTimeoutId = null; // clears non-blocking success/great messages without freezing the next round
+
+        function lockInputForMs(ms) {
+            inputLocked = true;
+            if (inputLockTimeoutId) clearTimeout(inputLockTimeoutId);
+            inputLockTimeoutId = setTimeout(() => {
+                inputLockTimeoutId = null;
+                if (!waitForRelease) inputLocked = false;
+            }, ms);
+        }
+
+        function consumeInput() {
+            if (inputLocked) return false;
+            lockInputForMs(inputLockMs);
+            return true;
+        }
+
+        function lockUntilRelease() {
+            // Cancel any timeout and hold lock until pointerup/touchend clears it
+            if (inputLockTimeoutId) { clearTimeout(inputLockTimeoutId); inputLockTimeoutId = null; }
+            inputLocked = true;
+            waitForRelease = true;
+        }
+
+        // Audio
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         function playSound(freq, type, duration) {
             const osc = audioCtx.createOscillator();
@@ -256,6 +287,7 @@
         function startSkillCheck(resetPointer = true) {
             if (isActive || isCountingDown || isDisplayingResult) return;
             if (audioCtx.state === 'suspended') audioCtx.resume();
+            if (resultMessageTimeoutId) { clearTimeout(resultMessageTimeoutId); resultMessageTimeoutId = null; }
             displayText.className = ''; displayText.innerHTML = ''; isWaitingForRestart = false;
             if (resetPointer) pointerAngle = -Math.PI / 2;
             generateZones(); ensureAnimation();
@@ -333,6 +365,7 @@
                 // pointerFrozen remains true until player starts next run
             } else {
                 // success / great
+                if (resultMessageTimeoutId) { clearTimeout(resultMessageTimeoutId); resultMessageTimeoutId = null; }
                 displayText.className = (result === 'great') ? 'great' : 'success';
                 displayText.innerHTML = (result === 'great') ? 'Great Skill Check!' : 'Success!';
                 playSuccessSound(result === 'great');
@@ -351,42 +384,88 @@
                     generateZones();
                     pointerFrozen = false;
                     triggerActiveCheck();
-                    isDisplayingResult = true;
-                    setTimeout(() => {
-                        displayText.className = ''; displayText.innerHTML = ''; isDisplayingResult = false;
-                    }, 1);
+
+                    // If the resolving input was a pointer press, hold input locked until release so a held finger doesn't re-fire
+                    if (lastInputWasPointer) {
+                        lockUntilRelease();
+                    } else {
+                        // For keyboard or other inputs, keep a short debounce
+                        lockInputForMs(inputLockMs);
+                    }
+
+                    // Do NOT set isDisplayingResult here.
+                    // The next round is active immediately; this timeout only clears the text overlay.
+                    resultMessageTimeoutId = setTimeout(() => {
+                        resultMessageTimeoutId = null;
+                        if (!isCountingDown && !isDisplayingResult) {
+                            displayText.className = '';
+                            displayText.innerHTML = '';
+                        }
+                    }, 1000);
                 }
             }
         }
 
+        // Input handling: keyboard (space) and play-area pointer/touch support.
         function handlePlayAreaTap() {
+            // prevent double-registration: consumeInput returns false if recent input already consumed or locked
+            if (!consumeInput()) return;
+
             if (isActive) { resolveSkillCheck(); return; }
             if (isWaitingForRestart) { isWaitingForRestart = false; startSkillCheck(false); return; }
             if (!isCountingDown && !isDisplayingResult) { startSkillCheck(true); }
         }
 
+        // pointerdown: mark source, then attempt to handle input
         playArea.addEventListener('pointerdown', (e) => {
             if (e.button && e.button !== 0) return;
+            lastInputWasPointer = true;
+            // prevent default to avoid accidental gestures
             e.preventDefault();
             handlePlayAreaTap();
         }, { passive: false });
 
-        playArea.addEventListener('touchstart', (e) => {
-            if (e.touches && e.touches[0]) { e.preventDefault(); handlePlayAreaTap(); }
-        }, { passive: false });
+        // pointerup / pointercancel: clear lastInputWasPointer and handle "release unlock"
+        function handlePointerRelease() {
+            lastInputWasPointer = false;
+            if (waitForRelease) {
+                waitForRelease = false;
+                inputLocked = false;
+            }
+        }
+        playArea.addEventListener('pointerup', (e) => {
+            handlePointerRelease();
+        });
+        playArea.addEventListener('pointercancel', (e) => {
+            handlePointerRelease();
+        });
 
+        // touchend fallback
+        playArea.addEventListener('touchstart', (e) => {
+            if (e.touches && e.touches[0]) { lastInputWasPointer = true; e.preventDefault(); handlePlayAreaTap(); }
+        }, { passive: false });
+        playArea.addEventListener('touchend', (e) => {
+            handlePointerRelease();
+        });
+
+        // Keyboard handling
         window.addEventListener('keydown', (e) => {
             if (e.code === 'Space') {
+                // prevent double-registration via keyboard as well
+                if (!consumeInput()) { e.preventDefault(); return; }
                 e.preventDefault();
+                lastInputWasPointer = false;
                 if (isActive) { resolveSkillCheck(); return; }
                 if (isWaitingForRestart) { isWaitingForRestart = false; startSkillCheck(false); return; }
                 if (!isCountingDown && !isDisplayingResult) { startSkillCheck(true); }
             }
         });
 
+        // Buttons
         startBtn.addEventListener('click', () => startSkillCheck(true));
         resetStatsBtn.addEventListener('click', resetStats);
 
+        // Initial draw & stats
         updateStatsDisplay();
         drawWheel();
         pointerFrozen = true;
