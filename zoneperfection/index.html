@@ -63,7 +63,9 @@
             transition: 0.2s;
         }
 
-        button:hover { background: #ff1e27; }
+            button:hover {
+                background: #ff1e27;
+            }
 
         #stats {
             display: flex;
@@ -74,11 +76,33 @@
             font-size: 14px;
         }
 
-        .stat-column { flex: 1; text-align: left; min-width: 110px; }
-        .stat-row { display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px dashed rgba(255,255,255,0.03); }
+        .stat-column {
+            flex: 1;
+            text-align: left;
+            min-width: 110px;
+        }
 
-        #game-container { position: relative; width: 100%; max-width: 500px; height: auto; }
-        #canvas { background: transparent; width: 100%; height: auto; touch-action: none; display: block; }
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            border-bottom: 1px dashed rgba(255,255,255,0.03);
+        }
+
+        #game-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            height: auto;
+        }
+
+        #canvas {
+            background: transparent;
+            width: 100%;
+            height: auto;
+            touch-action: none;
+            display: block;
+        }
 
         /* Keep display text centered over canvas */
         #display-text {
@@ -94,12 +118,30 @@
             text-shadow: 0 0 8px rgba(0,0,0,0.8);
         }
 
-        .success { color: #2ecc71; }
-        .great { color: #f1c40f; text-shadow: 0 0 12px #f1c40f; }
-        .fail { color: #e74c3c; }
-        .countdown { color: #e67e22; font-size: 40px; }
+        .success {
+            color: #2ecc71;
+        }
 
-        #instructions { margin-top: 12px; color: #888; font-size: 14px; text-align:center; }
+        .great {
+            color: #f1c40f;
+            text-shadow: 0 0 12px #f1c40f;
+        }
+
+        .fail {
+            color: #e74c3c;
+        }
+
+        .countdown {
+            color: #e67e22;
+            font-size: 40px;
+        }
+
+        #instructions {
+            margin-top: 12px;
+            color: #888;
+            font-size: 14px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -135,11 +177,11 @@
         <div id="display-text"></div>
     </div>
 
-    <div id="instructions">Press <strong>SPACEBAR</strong> or tap near the circle to hit the skill check!</div>
+    <div id="instructions">Press <strong>SPACEBAR</strong> or tap the play area (below the stats) to hit the skill check!</div>
 
     <script>
         const canvas = document.getElementById('canvas');
-        // to keep crisp drawing while responsive, we use the canvas internal size (500x500) and scale with CSS
+        const playArea = document.getElementById('game-container');
         const ctx = canvas.getContext('2d');
         const displayText = document.getElementById('display-text');
         const startBtn = document.getElementById('start-btn');
@@ -155,7 +197,7 @@
         const statStreak = document.getElementById('stat-streak');
         const statBest = document.getElementById('stat-best');
 
-        // Circle Layout configurations (use canvas internal coordinates)
+        // Canvas internal size
         const CANVAS_SIZE = 500;
         const centerX = CANVAS_SIZE / 2;
         const centerY = CANVAS_SIZE / 2;
@@ -178,7 +220,7 @@
         let successStart = 0, successEnd = 0, greatStart = 0, greatEnd = 0;
 
         // Stats
-        const stats = { attempts:0, successes:0, greats:0, fails:0, currentStreak:0, bestStreak:0 };
+        const stats = { attempts: 0, successes: 0, greats: 0, fails: 0, currentStreak: 0, bestStreak: 0 };
 
         // Audio
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -191,16 +233,16 @@
             osc.connect(gain); gain.connect(audioCtx.destination);
             osc.start(); osc.stop(audioCtx.currentTime + duration);
         }
-        function playWarningBeep(){ playSound(550,'sine',0.3); }
-        function playSuccessSound(isGreat){ if(isGreat){ playSound(880,'triangle',0.15); setTimeout(()=>playSound(1200,'triangle',0.2),80);} else playSound(660,'sine',0.2); }
-        function playFailSound(){ playSound(150,'sawtooth',0.4); }
+        function playWarningBeep() { playSound(550, 'sine', 0.3); }
+        function playSuccessSound(isGreat) { if (isGreat) { playSound(880, 'triangle', 0.15); setTimeout(() => playSound(1200, 'triangle', 0.2), 80); } else playSound(660, 'sine', 0.2); }
+        function playFailSound() { playSound(150, 'sawtooth', 0.4); }
 
         // Helpers
-        function normalizeAngle(angle){ const twoPI = Math.PI*2; let a = angle % twoPI; if(a<0) a+=twoPI; return a; }
-        function isAngleInRange(angle, start, end){ if(start<=end) return angle>=start && angle<=end; return angle>=start || angle<=end; }
+        function normalizeAngle(angle) { const twoPI = Math.PI * 2; let a = angle % twoPI; if (a < 0) a += twoPI; return a; }
+        function isAngleInRange(angle, start, end) { if (start <= end) return angle >= start && angle <= end; return angle >= start || angle <= end; }
 
         // Zones
-        function generateZones(){
+        function generateZones() {
             const randomOffset = Math.random() * (Math.PI * 1.2) + 0.3;
             successStart = pointerAngle + randomOffset;
             successEnd = successStart + 0.5;
@@ -209,7 +251,7 @@
         }
 
         // Stats
-        function updateStatsDisplay(){
+        function updateStatsDisplay() {
             statAttempts.textContent = stats.attempts;
             statSuccesses.textContent = stats.successes;
             statGreats.textContent = stats.greats;
@@ -219,57 +261,48 @@
             const acc = stats.attempts ? ((stats.successes / stats.attempts) * 100) : 0;
             statAccuracy.textContent = acc.toFixed(1) + '%';
         }
-        function resetStats(){ stats.attempts=0; stats.successes=0; stats.greats=0; stats.fails=0; stats.currentStreak=0; stats.bestStreak=0; updateStatsDisplay(); }
+        function resetStats() { stats.attempts = 0; stats.successes = 0; stats.greats = 0; stats.fails = 0; stats.currentStreak = 0; stats.bestStreak = 0; updateStatsDisplay(); }
 
         // Start/Countdown/Trigger
-        function startSkillCheck(resetPointer = true){
-            if(isActive || isCountingDown || isDisplayingResult) return;
-            if(audioCtx.state === 'suspended') audioCtx.resume();
-            displayText.className=''; displayText.innerHTML=''; isWaitingForRestart=false;
-            if(resetPointer) pointerAngle = -Math.PI/2;
+        function startSkillCheck(resetPointer = true) {
+            if (isActive || isCountingDown || isDisplayingResult) return;
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            displayText.className = ''; displayText.innerHTML = ''; isWaitingForRestart = false;
+            if (resetPointer) pointerAngle = -Math.PI / 2;
             generateZones(); ensureAnimation();
-            if(useCountdownCheckbox.checked){ pointerFrozen = true; runCountdown(3); } else { pointerFrozen = false; triggerActiveCheck(); }
+            if (useCountdownCheckbox.checked) { pointerFrozen = true; runCountdown(3); } else { pointerFrozen = false; triggerActiveCheck(); }
         }
-        function runCountdown(seconds){
+        function runCountdown(seconds) {
             isCountingDown = true; isActive = false;
             displayText.className = 'countdown';
-            if(seconds > 0){ displayText.innerHTML = seconds; playSound(400,'sine',0.1); setTimeout(()=>runCountdown(seconds-1),1000); }
-            else { isCountingDown = false; displayText.className=''; displayText.innerHTML=''; pointerFrozen=false; triggerActiveCheck(); }
+            if (seconds > 0) { displayText.innerHTML = seconds; playSound(400, 'sine', 0.1); setTimeout(() => runCountdown(seconds - 1), 1000); }
+            else { isCountingDown = false; displayText.className = ''; displayText.innerHTML = ''; pointerFrozen = false; triggerActiveCheck(); }
         }
-        function triggerActiveCheck(){ isActive = true; isWaitingForRestart = false; activeRunStartAngle = pointerAngle; playWarningBeep(); }
+        function triggerActiveCheck() { isActive = true; isWaitingForRestart = false; activeRunStartAngle = pointerAngle; playWarningBeep(); }
 
         // Drawing (canvas internal coords)
-        function drawWheel(){
-            // use internal canvas resolution
-            ctx.clearRect(0,0,CANVAS_SIZE,CANVAS_SIZE);
-            // background ring
-            ctx.beginPath(); ctx.arc(centerX, centerY, radius, 0, Math.PI*2); ctx.strokeStyle='#333'; ctx.lineWidth=18; ctx.stroke();
-            // success zone
-            ctx.beginPath(); ctx.arc(centerX, centerY, radius, successStart, successEnd); ctx.strokeStyle='#b3b3b3'; ctx.lineWidth=20; ctx.stroke();
-            // great zone
-            ctx.beginPath(); ctx.arc(centerX, centerY, radius, greatStart, greatEnd); ctx.strokeStyle='#ffffff'; ctx.lineWidth=20; ctx.stroke();
-            // pointer radial line
+        function drawWheel() {
+            ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+            ctx.beginPath(); ctx.arc(centerX, centerY, radius, 0, Math.PI * 2); ctx.strokeStyle = '#333'; ctx.lineWidth = 18; ctx.stroke();
+            ctx.beginPath(); ctx.arc(centerX, centerY, radius, successStart, successEnd); ctx.strokeStyle = '#b3b3b3'; ctx.lineWidth = 20; ctx.stroke();
+            ctx.beginPath(); ctx.arc(centerX, centerY, radius, greatStart, greatEnd); ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 20; ctx.stroke();
             ctx.save(); ctx.translate(centerX, centerY); ctx.rotate(pointerAngle);
-            ctx.beginPath();
-            const inner = radius - pointerLineInset;
-            const outer = radius + pointerLineOutset;
-            ctx.moveTo(inner, 0); ctx.lineTo(outer, 0);
-            ctx.lineWidth = 6; ctx.strokeStyle = '#ff3333'; ctx.shadowBlur = 12; ctx.shadowColor = '#ff3333'; ctx.stroke();
+            ctx.beginPath(); const inner = radius - pointerLineInset; const outer = radius + pointerLineOutset;
+            ctx.moveTo(inner, 0); ctx.lineTo(outer, 0); ctx.lineWidth = 6; ctx.strokeStyle = '#ff3333'; ctx.shadowBlur = 12; ctx.shadowColor = '#ff3333'; ctx.stroke();
             ctx.restore();
         }
 
         // Animation loop
-        function ensureAnimation(){
-            if(animationStarted) return;
+        function ensureAnimation() {
+            if (animationStarted) return;
             animationStarted = true;
-            function loop(){
-                // advance pointer only when not counting down and not frozen and not showing/waiting
-                if(!isCountingDown && !pointerFrozen && !isDisplayingResult && !isWaitingForRestart){
+            function loop() {
+                if (!isCountingDown && !pointerFrozen && !isDisplayingResult && !isWaitingForRestart) {
                     pointerAngle += speed;
                 }
                 drawWheel();
-                if(isActive){
-                    if(pointerAngle > activeRunStartAngle + Math.PI*2){
+                if (isActive) {
+                    if (pointerAngle > activeRunStartAngle + Math.PI * 2) {
                         resolveSkillCheck('fail', true);
                     }
                 }
@@ -279,94 +312,79 @@
         }
 
         // Resolve
-        function resolveSkillCheck(forcedResult = null, auto = false){
-            if(!isActive) return;
+        function resolveSkillCheck(forcedResult = null, auto = false) {
+            if (!isActive) return;
             isActive = false;
-            pointerFrozen = true; // freeze immediately
+            pointerFrozen = true;
             let result = forcedResult;
-            if(!result){
-                const currentNorm = normalizeAngle(pointerAngle + Math.PI/2);
-                const sStart = normalizeAngle(successStart + Math.PI/2);
-                const sEnd = normalizeAngle(successEnd + Math.PI/2);
-                const gStart = normalizeAngle(greatStart + Math.PI/2);
-                const gEnd = normalizeAngle(greatEnd + Math.PI/2);
-                if(isAngleInRange(currentNorm, gStart, gEnd)) result = 'great';
-                else if(isAngleInRange(currentNorm, sStart, sEnd)) result = 'success';
+            if (!result) {
+                const currentNorm = normalizeAngle(pointerAngle + Math.PI / 2);
+                const sStart = normalizeAngle(successStart + Math.PI / 2);
+                const sEnd = normalizeAngle(successEnd + Math.PI / 2);
+                const gStart = normalizeAngle(greatStart + Math.PI / 2);
+                const gEnd = normalizeAngle(greatEnd + Math.PI / 2);
+                if (isAngleInRange(currentNorm, gStart, gEnd)) result = 'great';
+                else if (isAngleInRange(currentNorm, sStart, sEnd)) result = 'success';
                 else result = 'fail';
             }
 
             // update stats
             stats.attempts++;
-            if(result === 'great'){ stats.greats++; stats.successes++; stats.currentStreak++; }
-            else if(result === 'success'){ stats.successes++; stats.currentStreak++; }
+            if (result === 'great') { stats.greats++; stats.successes++; stats.currentStreak++; }
+            else if (result === 'success') { stats.successes++; stats.currentStreak++; }
             else { stats.fails++; stats.currentStreak = 0; }
-            if(stats.currentStreak > stats.bestStreak) stats.bestStreak = stats.currentStreak;
+            if (stats.currentStreak > stats.bestStreak) stats.bestStreak = stats.currentStreak;
             updateStatsDisplay();
 
-            if(result === 'fail'){
+            if (result === 'fail') {
                 displayText.className = 'fail';
                 displayText.innerHTML = 'Explosion!';
                 playFailSound();
                 isWaitingForRestart = true;
-                // pointerFrozen remains true until next run started
             } else {
                 isDisplayingResult = true;
                 displayText.className = (result === 'great') ? 'great' : 'success';
                 displayText.innerHTML = (result === 'great') ? 'Great Skill Check!' : 'Success!';
                 playSuccessSound(result === 'great');
-                setTimeout(()=> {
-                    displayText.className=''; displayText.innerHTML=''; isDisplayingResult = false;
-                    generateZones();
-                    pointerFrozen = false;
-                    triggerActiveCheck();
+                setTimeout(() => {
+                    displayText.className = ''; displayText.innerHTML = ''; isDisplayingResult = false;
+                    generateZones(); pointerFrozen = false; triggerActiveCheck();
                 }, 1000);
             }
         }
 
-        // Input handling: keyboard (space) already supported. Add pointer (touch/click) support.
-        function handleCanvasPointer(clientX, clientY){
-            // convert client coords to canvas internal coords
-            const rect = canvas.getBoundingClientRect();
-            // account for CSS scaling
-            const scaleX = canvas.width / rect.width;
-            const scaleY = canvas.height / rect.height;
-            const x = (clientX - rect.left) * scaleX;
-            const y = (clientY - rect.top) * scaleY;
-            const dx = x - centerX;
-            const dy = y - centerY;
-            const dist = Math.hypot(dx, dy);
-            const TOLERANCE_PX = 40; // how "near" the circle counts
-            if(Math.abs(dist - radius) > TOLERANCE_PX) return; // tap not near the ring
-
+        // Input handling: keyboard (space) and play-area pointer/touch support.
+        function handlePlayAreaTap() {
             // Mirror spacebar behaviour:
-            if(isActive){ resolveSkillCheck(); return; }
-            if(isWaitingForRestart){ isWaitingForRestart = false; startSkillCheck(false); return; }
-            if(!isCountingDown && !isDisplayingResult){ startSkillCheck(true); }
+            if (isActive) { resolveSkillCheck(); return; }
+            if (isWaitingForRestart) { isWaitingForRestart = false; startSkillCheck(false); return; }
+            if (!isCountingDown && !isDisplayingResult) { startSkillCheck(true); }
         }
 
-        // Use pointerdown for unified mouse/touch/stylus input and prevent default gestures
-        canvas.addEventListener('pointerdown', (e) => {
-            // ignore right-clicks, etc.
-            if(e.button && e.button !== 0) return;
+        // Use pointerdown on the entire play area (below stats panel)
+        playArea.addEventListener('pointerdown', (e) => {
+            // ignore non-primary buttons
+            if (e.button && e.button !== 0) return;
+            // prevent default to avoid accidental gestures
             e.preventDefault();
-            handleCanvasPointer(e.clientX, e.clientY);
+            handlePlayAreaTap();
         }, { passive: false });
 
-        // Also add touchstart fallback (some older browsers)
-        canvas.addEventListener('touchstart', (e) => {
-            if(e.touches && e.touches[0]) {
+        // touchstart fallback
+        playArea.addEventListener('touchstart', (e) => {
+            if (e.touches && e.touches[0]) {
                 e.preventDefault();
-                handleCanvasPointer(e.touches[0].clientX, e.touches[0].clientY);
+                handlePlayAreaTap();
             }
         }, { passive: false });
 
-        // Keyboard handling (space)
+        // Keyboard handling
         window.addEventListener('keydown', (e) => {
-            if(e.code === 'Space'){
+            if (e.code === 'Space') {
                 e.preventDefault();
-                if(isActive){ resolveSkillCheck(); return; }
-                if(isWaitingForRestart){ isWaitingForRestart = false; startSkillCheck(false); return; }
-                if(!isCountingDown && !isDisplayingResult){ startSkillCheck(true); }
+                if (isActive) { resolveSkillCheck(); return; }
+                if (isWaitingForRestart) { isWaitingForRestart = false; startSkillCheck(false); return; }
+                if (!isCountingDown && !isDisplayingResult) { startSkillCheck(true); }
             }
         });
 
@@ -377,7 +395,7 @@
         // Initial draw & stats
         updateStatsDisplay();
         drawWheel();
-        // ensure animation won't start moving pointer until user starts a run (pointerFrozen defaults true)
+        // keep pointer frozen until user starts first run
         pointerFrozen = true;
     </script>
 </body>
