@@ -1,0 +1,652 @@
+{
+  "format": "star-drifter-planet-repository",
+  "formatVersion": 2,
+  "starMap": {
+    "camera": {
+      "fieldOfView": 42,
+      "minimumDepth": 500,
+      "maximumDepth": 1150
+    },
+    "systems": [
+      {
+        "id": "eos-reach",
+        "displayName": "Eos Reach",
+        "unlockedByDefault": true,
+        "description": "A stable yellow star anchoring the settled Helios proving territories.",
+        "mapPosition": [
+          -0.72,
+          0.52
+        ],
+        "depth": 560,
+        "distanceLightYears": 8.4,
+        "spectralClass": "G2 V",
+        "star": {
+          "color": "#ffd7a0",
+          "size": 18
+        }
+      },
+      {
+        "id": "vesper-rift",
+        "displayName": "Vesper Rift",
+        "unlockedByDefault": false,
+        "unlockRequirements": {
+          "completedContractCount": {
+            "planetId": "helios-desert",
+            "progressionTag": "helios-charter",
+            "count": 3,
+            "label": "Helios charter contracts"
+          }
+        },
+        "description": "A cool white primary surrounded by sparse, difficult survey lanes.",
+        "mapPosition": [
+          -0.24,
+          0.7
+        ],
+        "depth": 890,
+        "distanceLightYears": 13.7,
+        "spectralClass": "A8 V",
+        "star": {
+          "color": "#c9dcff",
+          "size": 15
+        }
+      },
+      {
+        "id": "caelum-verge",
+        "displayName": "Caelum Verge",
+        "unlockedByDefault": true,
+        "description": "An orange frontier star with two charted terrestrial worlds and an active contract lane to the frozen planet Niveus.",
+        "mapPosition": [
+          0.31,
+          0.58
+        ],
+        "depth": 680,
+        "distanceLightYears": 11.2,
+        "spectralClass": "K3 V",
+        "star": {
+          "color": "#ffb36b",
+          "size": 14
+        }
+      },
+      {
+        "id": "nadir-veil",
+        "displayName": "Nadir Veil",
+        "description": "A dim red system at the edge of reliable local navigation data.",
+        "mapPosition": [
+          0.74,
+          0.34
+        ],
+        "depth": 1080,
+        "distanceLightYears": 19.6,
+        "spectralClass": "M1 V",
+        "star": {
+          "color": "#ff7464",
+          "size": 13
+        }
+      },
+      {
+        "id": "tau-cinder",
+        "displayName": "Tau Cinder",
+        "description": "A dusty binary candidate with no confirmed planetary bodies.",
+        "mapPosition": [
+          -0.54,
+          0.08
+        ],
+        "depth": 640,
+        "distanceLightYears": 10.1,
+        "spectralClass": "K7 V",
+        "star": {
+          "color": "#ff9b67",
+          "size": 12
+        }
+      },
+      {
+        "id": "pale-meridian",
+        "displayName": "Pale Meridian",
+        "description": "A bright navigation reference with no charted planets.",
+        "mapPosition": [
+          0.02,
+          0.18
+        ],
+        "depth": 950,
+        "distanceLightYears": 16.8,
+        "spectralClass": "F2 V",
+        "star": {
+          "color": "#f1f5ff",
+          "size": 16
+        }
+      },
+      {
+        "id": "orison",
+        "displayName": "Orison",
+        "description": "A quiet main-sequence star awaiting detailed orbital surveys.",
+        "mapPosition": [
+          0.5,
+          -0.04
+        ],
+        "depth": 760,
+        "distanceLightYears": 12.5,
+        "spectralClass": "G8 V",
+        "star": {
+          "color": "#ffe0a8",
+          "size": 13
+        }
+      },
+      {
+        "id": "kharon-span",
+        "displayName": "Kharon Span",
+        "description": "A distant red point beyond the established contract lanes.",
+        "mapPosition": [
+          -0.78,
+          -0.48
+        ],
+        "depth": 1130,
+        "distanceLightYears": 21.3,
+        "spectralClass": "M4 V",
+        "star": {
+          "color": "#ff6256",
+          "size": 11
+        }
+      },
+      {
+        "id": "lumen-drift",
+        "displayName": "Lumen Drift",
+        "description": "A nearby white dwarf candidate with no stable worlds detected.",
+        "mapPosition": [
+          -0.18,
+          -0.58
+        ],
+        "depth": 590,
+        "distanceLightYears": 9.2,
+        "spectralClass": "DA",
+        "star": {
+          "color": "#d9efff",
+          "size": 9
+        }
+      },
+      {
+        "id": "sable-crown",
+        "displayName": "Sable Crown",
+        "description": "A faint orange system obscured by a broad interstellar dust band.",
+        "mapPosition": [
+          0.59,
+          -0.52
+        ],
+        "depth": 1010,
+        "distanceLightYears": 18.1,
+        "spectralClass": "K5 V",
+        "star": {
+          "color": "#ff9a5c",
+          "size": 12
+        }
+      }
+    ]
+  },
+  "planets": [
+    {
+      "id": "helios-desert",
+      "systemId": "eos-reach",
+      "displayName": "Helios",
+      "unlockedByDefault": true,
+      "description": "A bright arid proving ground of broad dunes, warm stone and a clear blue atmosphere.",
+      "systemMap": {
+        "orbit": 2,
+        "angle": 32,
+        "color": "#d8a969",
+        "size": 13
+      },
+      "hub": {
+        "id": "helios-bunker-hub",
+        "entityId": "helios-bunker",
+        "position": [
+          0,
+          0,
+          650
+        ],
+        "rotation": [
+          0,
+          180,
+          0
+        ],
+        "surface": "land",
+        "flattenRadius": 190
+      },
+      "terrain": {
+        "seed": 7319,
+        "chunkSize": 200,
+        "cellSize": 30,
+        "streamRadius": 4,
+        "baseHeight": 0,
+        "heightAmplitude": 300,
+        "largeFeatureScale": 430,
+        "mediumFeatureScale": 540,
+        "smallFeatureScale": 210,
+        "roughness": 0.5,
+        "ridgeStrength": 0.1,
+        "flatness": 0.2
+      },
+      "surface": {
+        "lowColor": "#7b5a3e",
+        "midColor": "#a98055",
+        "highColor": "#d1b27d",
+        "slopeColor": "#654733",
+        "colorVariation": 0.08,
+        "slopeBlendStart": 0.2,
+        "roughness": 0.96,
+        "metalness": 0
+      },
+      "atmosphere": {
+        "skyTopColor": "#4f83bd",
+        "skyHorizonColor": "#bfd7e9",
+        "fogColor": "#c4b28f",
+        "fogNear": 3000,
+        "fogFar": 4000
+      },
+      "lighting": {
+        "skyLightColor": "#d7efff",
+        "groundLightColor": "#55442e",
+        "ambientIntensity": 1.35,
+        "sunColor": "#fff1cf",
+        "sunIntensity": 2.4,
+        "sunDirection": [
+          -0.55,
+          0.82,
+          0.38
+        ]
+      },
+      "shadows": {
+        "enabled": true,
+        "distance": 900,
+        "mapSize": 2048,
+        "bias": -0.0005,
+        "normalBias": 0.04
+      },
+      "water": {
+        "enabled": false,
+        "level": -20,
+        "color": "#315f78",
+        "opacity": 0.82,
+        "roughness": 0.25,
+        "metalness": 0.15
+      },
+      "maxAltitude": 2000
+    },
+    {
+      "id": "obsidian-night",
+      "systemId": "vesper-rift",
+      "displayName": "Obsidian Night",
+      "unlockedByDefault": false,
+      "unlockRequirements": {
+        "completedContractCount": {
+          "planetId": "helios-desert",
+          "progressionTag": "helios-charter",
+          "count": 3,
+          "label": "Helios charter contracts"
+        }
+      },
+      "description": "A dark airless-looking world of charcoal ridges, deep valleys and cold directional light.",
+      "systemMap": {
+        "orbit": 3,
+        "angle": 214,
+        "color": "#4c535d",
+        "size": 11
+      },
+      "hub": {
+        "id": "obsidian-night-bunker-hub",
+        "entityId": "obsidian-bunker",
+        "position": [
+          0,
+          0,
+          650
+        ],
+        "rotation": [
+          0,
+          180,
+          0
+        ],
+        "surface": "land",
+        "flattenRadius": 190
+      },
+      "terrain": {
+        "seed": 1824,
+        "chunkSize": 800,
+        "cellSize": 70,
+        "streamRadius": 4,
+        "baseHeight": 0,
+        "heightAmplitude": 170,
+        "largeFeatureScale": 1200,
+        "mediumFeatureScale": 520,
+        "smallFeatureScale": 240,
+        "roughness": 0.28,
+        "ridgeStrength": 0.15,
+        "flatness": 0.12
+      },
+      "surface": {
+        "lowColor": "#0b1622",
+        "midColor": "#172739",
+        "highColor": "#3a5269",
+        "slopeColor": "#080f18",
+        "colorVariation": 0.05,
+        "slopeBlendStart": 0.16,
+        "roughness": 0.94,
+        "metalness": 0.06
+      },
+      "atmosphere": {
+        "skyTopColor": "#06101d",
+        "skyHorizonColor": "#0a192a",
+        "fogColor": "#0a192a",
+        "fogNear": 520,
+        "fogFar": 2450
+      },
+      "lighting": {
+        "skyLightColor": "#79a8c8",
+        "groundLightColor": "#1a2230",
+        "ambientIntensity": 0.42,
+        "fillLightColor": "#3a5068",
+        "fillIntensity": 0.14,
+        "sunColor": "#ffddb0",
+        "sunIntensity": 4.85,
+        "sunDirection": [
+          -1320,
+          720,
+          -2280
+        ],
+        "sunVisual": {
+          "enabled": true,
+          "color": "#ffd889",
+          "radius": 85,
+          "distance": 2700
+        }
+      },
+      "shadows": {
+        "enabled": true,
+        "distance": 900,
+        "mapSize": 2048,
+        "bias": -0.00045,
+        "normalBias": 0.055
+      },
+      "water": {
+        "enabled": false,
+        "level": -35,
+        "color": "#182b3b",
+        "opacity": 0.78,
+        "roughness": 0.18,
+        "metalness": 0.22
+      },
+      "maxAltitude": 1500
+    },
+    {
+      "id": "niveus",
+      "systemId": "caelum-verge",
+      "displayName": "Niveus",
+      "unlockedByDefault": true,
+      "description": "A brilliant frozen world of blue skies, wind-polished ice plains and broad glacial highlands.",
+      "systemMap": {
+        "orbit": 4,
+        "angle": 248,
+        "color": "#b9eaff",
+        "size": 11
+      },
+      "hub": {
+        "id": "niveus-bunker-hub",
+        "entityId": "niveus-bunker",
+        "position": [
+          0,
+          0,
+          650
+        ],
+        "rotation": [
+          0,
+          180,
+          0
+        ],
+        "surface": "land",
+        "flattenRadius": 210
+      },
+      "terrain": {
+        "seed": 9067,
+        "chunkSize": 800,
+        "cellSize": 75,
+        "streamRadius": 4,
+        "baseHeight": 8,
+        "heightAmplitude": 138,
+        "largeFeatureScale": 1220,
+        "mediumFeatureScale": 520,
+        "smallFeatureScale": 220,
+        "roughness": 0.21,
+        "ridgeStrength": 0.08,
+        "flatness": 0.2
+      },
+      "surface": {
+        "lowColor": "#6f96ad",
+        "midColor": "#b7d8e8",
+        "highColor": "#eefbff",
+        "slopeColor": "#55778c",
+        "colorVariation": 0.035,
+        "slopeBlendStart": 0.19,
+        "roughness": 0.42,
+        "metalness": 0.12
+      },
+      "atmosphere": {
+        "skyTopColor": "#286aa8",
+        "skyHorizonColor": "#79acd0",
+        "fogColor": "#9fc3d8",
+        "fogNear": 2500,
+        "fogFar": 4300
+      },
+      "lighting": {
+        "skyLightColor": "#d9f3ff",
+        "groundLightColor": "#7695a8",
+        "ambientIntensity": 1.22,
+        "fillLightColor": "#a7d8ef",
+        "fillIntensity": 0.2,
+        "sunColor": "#fff7e6",
+        "sunIntensity": 3.2,
+        "sunDirection": [
+          -0.58,
+          0.76,
+          0.3
+        ],
+        "sunVisual": {
+          "enabled": true,
+          "color": "#fff4cf",
+          "radius": 72,
+          "distance": 2900
+        }
+      },
+      "shadows": {
+        "enabled": true,
+        "distance": 1050,
+        "mapSize": 2048,
+        "bias": -0.00045,
+        "normalBias": 0.045
+      },
+      "water": {
+        "enabled": false,
+        "level": -38,
+        "color": "#6fb9d5",
+        "opacity": 0.72,
+        "roughness": 0.08,
+        "metalness": 0.28
+      },
+      "maxAltitude": 1800
+    },
+    {
+      "id": "kestrel",
+      "systemId": "caelum-verge",
+      "displayName": "Kestrel",
+      "description": "A temperate world of rolling grasslands broken by weathered grey highlands and rocky summit outcrops.",
+      "playable": false,
+      "systemMap": {
+        "orbit": 2,
+        "angle": 118,
+        "color": "#6f944c",
+        "size": 10
+      },
+      "hub": {
+        "id": "planet-bunker-hub",
+        "entityId": "helios-bunker",
+        "position": [
+          0,
+          0,
+          650
+        ],
+        "rotation": [
+          0,
+          180,
+          0
+        ],
+        "surface": "land",
+        "flattenRadius": 190
+      },
+      "terrain": {
+        "seed": 4387,
+        "chunkSize": 800,
+        "cellSize": 70,
+        "streamRadius": 4,
+        "baseHeight": -135,
+        "heightAmplitude": 361,
+        "largeFeatureScale": 1000,
+        "mediumFeatureScale": 600,
+        "smallFeatureScale": 400,
+        "roughness": 0.19,
+        "ridgeStrength": 0.48,
+        "flatness": 0.75
+      },
+      "surface": {
+        "lowColor": "#35562d",
+        "midColor": "#719448",
+        "highColor": "#ffffff",
+        "slopeColor": "#404040",
+        "colorVariation": 0.1,
+        "slopeBlendStart": 0,
+        "roughness": 1,
+        "metalness": 0
+      },
+      "atmosphere": {
+        "skyTopColor": "#477eff",
+        "skyHorizonColor": "#8accff",
+        "fogColor": "#90c1c8",
+        "fogNear": 2800,
+        "fogFar": 4700
+      },
+      "lighting": {
+        "skyLightColor": "#c8c8ff",
+        "groundLightColor": "#ffffff",
+        "ambientIntensity": 1.3,
+        "fillLightColor": "#b8d6c2",
+        "fillIntensity": 0.18,
+        "sunColor": "#fff694",
+        "sunIntensity": 2.6,
+        "sunDirection": [
+          -0.52,
+          0.8,
+          0.3
+        ],
+        "sunVisual": {
+          "enabled": true,
+          "color": "#fff0c2",
+          "radius": 70,
+          "distance": 2900
+        }
+      },
+      "shadows": {
+        "enabled": true,
+        "distance": 1050,
+        "mapSize": 2048,
+        "bias": -0.00045,
+        "normalBias": 0.045
+      },
+      "water": {
+        "enabled": false,
+        "level": -55,
+        "color": "#3e7890",
+        "opacity": 0.78,
+        "roughness": 0.22,
+        "metalness": 0.08
+      },
+      "maxAltitude": 1800
+    },
+    {
+      "id": "morrow",
+      "systemId": "nadir-veil",
+      "displayName": "Morrow",
+      "description": "A hot volcanic planet with a toxic atmosphere.",
+      "playable": true,
+      "systemMap": {
+        "orbit": 1.5,
+        "angle": 81,
+        "color": "#7f6465",
+        "size": 9
+      },
+      "atmosphere": {
+        "skyTopColor": "#b8ffbc",
+        "fogColor": "#578230",
+        "skyHorizonColor": "#71c639",
+        "fogNear": 3000,
+        "fogFar": 9000
+      },
+      "surface": {
+        "lowColor": "#ff0000",
+        "midColor": "#250e0e",
+        "highColor": "#595959",
+        "slopeColor": "#551b1b",
+        "colorVariation": 0.04,
+        "slopeBlendStart": 1,
+        "roughness": 0.85,
+        "metalness": 0
+      },
+      "terrain": {
+        "seed": 17600,
+        "baseHeight": -100,
+        "heightAmplitude": 400,
+        "roughness": 0.5,
+        "ridgeStrength": 0.5,
+        "flatness": 1,
+        "largeFeatureScale": 1000,
+        "mediumFeatureScale": 900,
+        "smallFeatureScale": 200,
+        "chunkSize": 800
+      },
+      "water": {
+        "enabled": true,
+        "level": -110,
+        "color": "#d92b08",
+        "opacity": 1,
+        "roughness": 0.48,
+        "metalness": 0.04,
+        "shoreColor": "#35100b",
+        "shoreWidth": 7,
+        "lakebedColor": "#120504",
+        "surfaceVariation": 0.16,
+        "emissiveColor": "#571e14",
+        "emissiveIntensity": 2.4,
+        "lightColor": "#ad2301",
+        "lightIntensity": 3.2,
+        "lightDistance": 1500,
+        "lightHeight": 90
+      },
+      "hub": {
+        "id": "planet-bunker-hub",
+        "entityId": "obsidian-bunker",
+        "position": [
+          0,
+          515,
+          0
+        ],
+        "rotation": [
+          0,
+          180,
+          0
+        ],
+        "surface": "land",
+        "flattenRadius": 160
+      },
+      "lighting": {
+        "fillIntensity": 0,
+        "sunVisual": {
+          "enabled": false
+        }
+      }
+    }
+  ]
+}

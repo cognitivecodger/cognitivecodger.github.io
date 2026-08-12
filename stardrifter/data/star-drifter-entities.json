@@ -1,0 +1,1012 @@
+{
+  "format": "star-drifter-entity-repository",
+  "formatVersion": 1,
+  "entities": [
+    {
+      "id": "warp-skimmer-player",
+      "displayName": "Warp Skimmer",
+      "modelId": "warp-skimmer",
+      "behaviorId": "player-flight",
+      "faction": "friendly",
+      "targetable": true,
+      "health": 100,
+      "power": {
+        "chassisRequirement": 15
+      },
+      "shields": {
+        "front": 100,
+        "rear": 100
+      },
+      "movement": {
+        "minimumForwardSpeed": 20,
+        "maximumForwardSpeed": 220,
+        "startingSpeed": 55,
+        "acceleration": 78,
+        "deceleration": 66,
+        "sidestepSpeed": 34,
+        "yawRateDegrees": 42,
+        "pitchRateDegrees": 31,
+        "maximumBankDegrees": 48,
+        "groundClearance": 10
+      },
+      "audio": {
+        "engine": {
+          "mode": "cockpit",
+          "primaryWaveform": "sine",
+          "secondaryWaveform": "triangle",
+          "tertiaryWaveform": "sine",
+          "baseFrequency": 155,
+          "maximumFrequency": 313,
+          "harmonicRatio": 1.52,
+          "tertiaryHarmonicRatio": 2.28,
+          "volume": 0.112,
+          "secondaryVolume": 0.403,
+          "tertiaryVolume": 0.161,
+          "noiseVolume": 0,
+          "idleLevel": 0.15,
+          "speedInfluence": 0.126,
+          "thrustInfluence": 0.055,
+          "thrustPitchInfluence": 0.05,
+          "lowpassBaseFrequency": 1050,
+          "lowpassMaximumFrequency": 1952,
+          "lowpassQ": 0.35,
+          "filterSpeedInfluence": 1,
+          "filterThrustInfluence": 0,
+          "response": 2.2
+        }
+      },
+      "countermeasures": {
+        "type": "flare-decoy",
+        "capacity": 6,
+        "cooldownSeconds": 1.4,
+        "effectiveRadius": 650,
+        "effectiveness": 0.82,
+        "lockDisruptionSeconds": 1.8,
+        "decoyDistance": 70,
+        "flareCount": 14,
+        "flareLifetimeSeconds": 1.8,
+        "color": "#ffd46a"
+      },
+      "weapons": [
+        "warp-skimmer-laser",
+        "warp-skimmer-missile"
+      ],
+      "equipment": [
+        "helios-deflector-mk1",
+        "reinforced-hull-plating",
+        "extended-laser-capacitor",
+        "helios-vector-drive-mk1",
+        "helios-flight-control-mk1"
+      ],
+      "loadoutSlots": {
+        "weapons": {
+          "primary": {
+            "available": true,
+            "aimModes": [
+              "fixed",
+              "gimballed"
+            ],
+            "defaultAimMode": "gimballed",
+            "gimbalDegrees": 50,
+            "sockets": [
+              "left-laser",
+              "right-laser"
+            ]
+          },
+          "secondary": {
+            "available": false,
+            "sockets": []
+          },
+          "ordnance": {
+            "available": true,
+            "sockets": [
+              "guided-missile"
+            ]
+          }
+        },
+        "utility": 1
+      },
+      "radar": {
+        "classification": "friendly-craft",
+        "signature": 1
+      },
+      "missionTags": [
+        "player"
+      ]
+    },
+    {
+      "id": "mantis-medium-gunship-player",
+      "displayName": "MG-12 Mantis Gunship",
+      "modelId": "mantis-medium-gunship",
+      "behaviorId": "player-flight",
+      "faction": "friendly",
+      "targetable": true,
+      "health": 180,
+      "power": {
+        "chassisRequirement": 22
+      },
+      "shields": {
+        "front": 100,
+        "rear": 100
+      },
+      "movement": {
+        "minimumForwardSpeed": 20,
+        "maximumForwardSpeed": 190,
+        "startingSpeed": 50,
+        "acceleration": 58,
+        "deceleration": 54,
+        "sidestepSpeed": 25,
+        "yawRateDegrees": 30,
+        "pitchRateDegrees": 23,
+        "maximumBankDegrees": 38,
+        "groundClearance": 12
+      },
+      "audio": {
+        "engine": {
+          "mode": "cockpit",
+          "primaryWaveform": "sine",
+          "secondaryWaveform": "triangle",
+          "tertiaryWaveform": "sine",
+          "baseFrequency": 112,
+          "maximumFrequency": 248,
+          "harmonicRatio": 1.48,
+          "tertiaryHarmonicRatio": 2.18,
+          "volume": 0.12,
+          "secondaryVolume": 0.43,
+          "tertiaryVolume": 0.17,
+          "noiseVolume": 0,
+          "idleLevel": 0.18,
+          "speedInfluence": 0.12,
+          "thrustInfluence": 0.065,
+          "thrustPitchInfluence": 0.045,
+          "lowpassBaseFrequency": 880,
+          "lowpassMaximumFrequency": 1760,
+          "lowpassQ": 0.4,
+          "filterSpeedInfluence": 1,
+          "filterThrustInfluence": 0,
+          "response": 1.75
+        }
+      },
+      "countermeasures": {
+        "type": "flare-decoy",
+        "capacity": 8,
+        "cooldownSeconds": 1.4,
+        "effectiveRadius": 650,
+        "effectiveness": 0.82,
+        "lockDisruptionSeconds": 1.8,
+        "decoyDistance": 78,
+        "flareCount": 16,
+        "flareLifetimeSeconds": 1.9,
+        "color": "#7beeff"
+      },
+      "weapons": [],
+      "equipment": [],
+      "loadoutSlots": {
+        "weapons": {
+          "primary": {
+            "available": true,
+            "aimModes": [
+              "fixed",
+              "gimballed"
+            ],
+            "defaultAimMode": "gimballed",
+            "gimbalDegrees": 50,
+            "sockets": [
+              "mantis-primary-port-socket",
+              "mantis-primary-starboard-socket"
+            ]
+          },
+          "secondary": {
+            "available": true,
+            "control": "automatic-turret",
+            "aimMode": "turret",
+            "trackingRange": 1900,
+            "yawRateDegrees": 72,
+            "pitchRateDegrees": 68,
+            "solutionTime": 1.15,
+            "solutionDecayTime": 0.65,
+            "minimumAimErrorDegrees": 0.3,
+            "maximumAimErrorDegrees": 4,
+            "sockets": [
+              "mantis-secondary-turret-socket"
+            ]
+          },
+          "ordnance": {
+            "available": true,
+            "sockets": [
+              "mantis-missile-port-forward",
+              "mantis-missile-starboard-forward",
+              "mantis-missile-port-aft",
+              "mantis-missile-starboard-aft"
+            ]
+          }
+        },
+        "utility": 2
+      },
+      "radar": {
+        "classification": "friendly-gunship",
+        "signature": 1.35
+      },
+      "missionTags": [
+        "player",
+        "medium-gunship"
+      ]
+    },
+    {
+      "id": "player-laser-bolt",
+      "displayName": "Player Laser Bolt",
+      "modelId": "player-laser-bolt",
+      "behaviorId": "straight-projectile",
+      "faction": "friendly",
+      "targetable": false,
+      "health": 1,
+      "weapons": [],
+      "collision": {
+        "radius": 0.5
+      },
+      "projectile": {
+        "damage": 8,
+        "speed": 520,
+        "lifetime": 3.5,
+        "maximumRange": 1600
+      },
+      "missionTags": [
+        "projectile",
+        "player-projectile"
+      ]
+    },
+    {
+      "id": "helios-bunker",
+      "displayName": "Helios Bunker",
+      "modelId": "helios-bunker",
+      "behaviorId": "static-structure",
+      "faction": "friendly",
+      "targetable": true,
+      "navigationTarget": "always",
+      "bunker": {
+        "dockingMeshTier": "standard",
+        "captureRadius": 85,
+        "maximumCaptureHeight": 100,
+        "maximumCaptureSpeed": 180,
+        "dockingMeshArmSeconds": 0.75,
+        "dockingMeshBrakingSeconds": 0.85,
+        "dockingMeshMaximumTiltDegrees": 20,
+        "dockingMeshCaptureSeconds": 2.8,
+        "dockingMeshReleaseSeconds": 2,
+        "deployHoldSeconds": 0.5,
+        "launchSpeed": 55,
+        "launchAccelerationSeconds": 1.6,
+        "launchAccelerationStartFraction": 0.15,
+        "launchPitchDegrees": 6,
+        "services": [
+          "mission",
+          "automatic-service",
+          "hangar",
+          "supplies",
+          "planet-data",
+          "deploy"
+        ]
+      },
+      "health": 1000,
+      "weapons": [],
+      "radar": {
+        "classification": "friendly-base",
+        "signature": 3
+      },
+      "missionTags": [
+        "base",
+        "navigation"
+      ]
+    },
+    {
+      "id": "mining-beacon",
+      "displayName": "Navigation Beacon",
+      "modelId": "mining-beacon",
+      "behaviorId": "navigation-beacon",
+      "faction": "navigation",
+      "targetable": false,
+      "health": 25,
+      "weapons": [],
+      "radar": {
+        "classification": "navigation",
+        "signature": 0.6
+      },
+      "missionTags": [
+        "navigation"
+      ]
+    },
+    {
+      "id": "prism-tank-target",
+      "displayName": "Prism Tank",
+      "modelId": "prism-tank",
+      "behaviorId": "ground-vehicle-pursuit",
+      "faction": "hostile",
+      "targetable": true,
+      "health": 120,
+      "weapons": [
+        "prism-tank-cannon"
+      ],
+      "equipment": [
+        "prism-deflector-mk1",
+        "prism-reactive-armour"
+      ],
+      "collision": {
+        "radius": 23
+      },
+      "damageComponents": [
+        {
+          "id": "rear-reactor",
+          "displayName": "Rear Reactor",
+          "nodeId": "rear-reactor",
+          "radius": 5.4,
+          "hullDamageMultiplier": 2.75,
+          "hitColor": "#ff4fd8",
+          "destructionColor": "#ff75e6"
+        }
+      ],
+      "movement": {
+        "maximumForwardSpeed": 12,
+        "acceleration": 3.5,
+        "deceleration": 5,
+        "turnRateDegrees": 30,
+        "pursuitRange": 2400,
+        "preferredRange": 280
+      },
+      "audio": {
+        "engine": {
+          "mode": "external",
+          "primaryWaveform": "triangle",
+          "secondaryWaveform": "square",
+          "baseFrequency": 28,
+          "maximumFrequency": 52,
+          "harmonicRatio": 1.5,
+          "volume": 0.11,
+          "secondaryVolume": 0.12,
+          "noiseVolume": 0.012,
+          "idleLevel": 0.28,
+          "speedInfluence": 0.55,
+          "thrustInfluence": 0.22,
+          "lowpassBaseFrequency": 240,
+          "lowpassMaximumFrequency": 620,
+          "nearDistance": 45,
+          "audibleRange": 1800,
+          "rolloff": 1.7,
+          "panStrength": 0.55,
+          "dopplerStrength": 0.08,
+          "response": 1.8
+        }
+      },
+      "turret": {
+        "muzzleSocket": "primaryMuzzle",
+        "yawRateDegrees": 200,
+        "pitchRateDegrees": 45,
+        "trackingRange": 2600,
+        "targetHeightOffset": 0
+      },
+      "combat": {
+        "detectionRange": 2200,
+        "firingRange": 1200,
+        "aimToleranceDegrees": 1,
+        "minimumFireAltitude": 0,
+        "requiresLineOfSight": true,
+        "aimPrediction": 1,
+        "aimErrorDegrees": 1,
+        "aimErrorRefreshSeconds": 1.1,
+        "maximumPredictionSeconds": 5
+      },
+      "effects": {
+        "shieldHitColor": "#66ddff",
+        "shieldBreakColor": "#d8ffff",
+        "hullHitColor": "#ffb35c",
+        "shieldRadiusMultiplier": 1.18
+      },
+      "radar": {
+        "classification": "hostile-armoured-vehicle",
+        "signature": 2.4
+      },
+      "missionTags": [
+        "enemy",
+        "ground-vehicle",
+        "combat-target"
+      ]
+    },
+    {
+      "id": "prism-tank-target2",
+      "displayName": "Prism Tank",
+      "modelId": "prism-tank",
+      "behaviorId": "ground-vehicle-pursuit",
+      "faction": "hostile",
+      "targetable": true,
+      "health": 120,
+      "weapons": [],
+      "equipment": [
+        "prism-deflector-mk1",
+        "prism-reactive-armour"
+      ],
+      "collision": {
+        "radius": 23
+      },
+      "damageComponents": [
+        {
+          "id": "rear-reactor",
+          "displayName": "Rear Reactor",
+          "nodeId": "rear-reactor",
+          "radius": 5.4,
+          "hullDamageMultiplier": 2.75,
+          "hitColor": "#ff4fd8",
+          "destructionColor": "#ff75e6"
+        }
+      ],
+      "movement": {
+        "maximumForwardSpeed": 12,
+        "acceleration": 3.5,
+        "deceleration": 5,
+        "turnRateDegrees": 30,
+        "pursuitRange": 2400,
+        "preferredRange": 280
+      },
+      "audio": {
+        "engine": {
+          "mode": "external",
+          "primaryWaveform": "triangle",
+          "secondaryWaveform": "square",
+          "baseFrequency": 28,
+          "maximumFrequency": 52,
+          "harmonicRatio": 1.5,
+          "volume": 0.11,
+          "secondaryVolume": 0.12,
+          "noiseVolume": 0.012,
+          "idleLevel": 0.28,
+          "speedInfluence": 0.55,
+          "thrustInfluence": 0.22,
+          "lowpassBaseFrequency": 240,
+          "lowpassMaximumFrequency": 620,
+          "nearDistance": 45,
+          "audibleRange": 1800,
+          "rolloff": 1.7,
+          "panStrength": 0.55,
+          "dopplerStrength": 0.08,
+          "response": 1.8
+        }
+      },
+      "turret": {
+        "muzzleSocket": "primaryMuzzle",
+        "yawRateDegrees": 200,
+        "pitchRateDegrees": 45,
+        "trackingRange": 2600,
+        "targetHeightOffset": 0
+      },
+      "combat": {
+        "detectionRange": 2200,
+        "firingRange": 1200,
+        "aimToleranceDegrees": 1,
+        "minimumFireAltitude": 0,
+        "requiresLineOfSight": true,
+        "aimPrediction": 1,
+        "aimErrorDegrees": 1,
+        "aimErrorRefreshSeconds": 1.1,
+        "maximumPredictionSeconds": 5
+      },
+      "effects": {
+        "shieldHitColor": "#66ddff",
+        "shieldBreakColor": "#d8ffff",
+        "hullHitColor": "#ffb35c",
+        "shieldRadiusMultiplier": 1.18
+      },
+      "radar": {
+        "classification": "hostile-armoured-vehicle",
+        "signature": 2.4
+      },
+      "missionTags": [
+        "enemy",
+        "ground-vehicle",
+        "combat-target"
+      ]
+    },
+    {
+      "id": "prism-energy-bolt",
+      "displayName": "Prism Energy Bolt",
+      "modelId": "prism-energy-bolt",
+      "behaviorId": "straight-projectile",
+      "faction": "hostile",
+      "targetable": false,
+      "health": 1,
+      "weapons": [],
+      "collision": {
+        "radius": 0.5
+      },
+      "projectile": {
+        "damage": 12,
+        "speed": 320,
+        "lifetime": 4.5,
+        "maximumRange": 1500
+      },
+      "missionTags": [
+        "projectile",
+        "enemy-projectile"
+      ]
+    },
+    {
+      "id": "warp-skimmer-missile-projectile",
+      "displayName": "Skimmer Lance Missile",
+      "modelId": "rift-guided-missile",
+      "behaviorId": "guided-projectile",
+      "faction": "friendly",
+      "targetable": false,
+      "health": 1,
+      "weapons": [],
+      "equipment": [],
+      "collision": {
+        "radius": 2
+      },
+      "projectile": {
+        "speed": 310,
+        "lifetime": 8,
+        "maximumRange": 2200
+      },
+      "missionTags": [
+        "projectile",
+        "player-projectile",
+        "missile"
+      ]
+    },
+    {
+      "id": "needlewing-target-drone",
+      "displayName": "Needlewing Target Drone",
+      "modelId": "needlewing",
+      "behaviorId": "airborne-target-drone",
+      "faction": "hostile",
+      "targetable": true,
+      "health": 55,
+      "weapons": [
+        "needlewing-pursuit-missile"
+      ],
+      "equipment": [],
+      "collision": {
+        "radius": 13
+      },
+      "movement": {
+        "startingSpeed": 72,
+        "maximumForwardSpeed": 95,
+        "acceleration": 22,
+        "turnRateDegrees": 42,
+        "maximumBankDegrees": 48,
+        "bankRateDegrees": 110,
+        "patrolRadius": 650,
+        "patrolAltitude": 170,
+        "altitudeVariation": 80,
+        "minimumAltitude": 70,
+        "waypointTolerance": 75,
+        "waypointSeconds": 6,
+        "missileEvasionRange": 340
+      },
+      "audio": {
+        "engine": {
+          "mode": "external",
+          "primaryWaveform": "sine",
+          "secondaryWaveform": "triangle",
+          "tertiaryWaveform": "sine",
+          "baseFrequency": 155,
+          "maximumFrequency": 223,
+          "harmonicRatio": 1.52,
+          "tertiaryHarmonicRatio": 2.28,
+          "volume": 0.112,
+          "secondaryVolume": 0.403,
+          "tertiaryVolume": 0.161,
+          "noiseVolume": 0,
+          "idleLevel": 0.15,
+          "speedInfluence": 0.054,
+          "thrustInfluence": 0.055,
+          "thrustPitchInfluence": 0.05,
+          "lowpassBaseFrequency": 1050,
+          "lowpassMaximumFrequency": 1440,
+          "lowpassQ": 0.35,
+          "filterSpeedInfluence": 1,
+          "filterThrustInfluence": 0,
+          "nearDistance": 70,
+          "audibleRange": 2600,
+          "rolloff": 1.55,
+          "panStrength": 0.7,
+          "dopplerStrength": 0.16,
+          "response": 2.2
+        }
+      },
+      "radar": {
+        "classification": "hostile-target-drone",
+        "signature": 1.15
+      },
+      "combat": {
+        "detectionRange": 1750,
+        "firingRange": 1550,
+        "minimumFireAltitude": 0,
+        "requiresLineOfSight": true,
+        "missileInitialDelaySeconds": 2.5,
+        "missileAttackApproach": true,
+        "maximumCombatPitchDegrees": 15,
+        "attackAltitudeOffset": 40,
+        "attackTurnRange": 1400
+      },
+      "missionTags": [
+        "enemy",
+        "airborne",
+        "target-drone",
+        "missile-test-target"
+      ]
+    },
+    {
+      "id": "needlewing-pursuit-missile-projectile",
+      "displayName": "Needlewing Pursuit Missile",
+      "modelId": "player-guided-missile",
+      "behaviorId": "guided-projectile",
+      "faction": "hostile",
+      "targetable": false,
+      "health": 1,
+      "weapons": [],
+      "equipment": [],
+      "collision": {
+        "radius": 2
+      },
+      "projectile": {
+        "speed": 270,
+        "lifetime": 8,
+        "maximumRange": 1900
+      },
+      "missionTags": [
+        "projectile",
+        "enemy-projectile",
+        "missile"
+      ]
+    },
+    {
+      "id": "solar-conduction-gate",
+      "displayName": "Solar Conduction Gate",
+      "modelId": "solar-conduction-array",
+      "behaviorId": "fly-through-target",
+      "faction": "friendly",
+      "targetable": true,
+      "health": 1000,
+      "weapons": [],
+      "equipment": [],
+      "collision": {
+        "radius": 10
+      },
+      "flyThrough": {
+        "direction": "forward",
+        "planeOffset": 0,
+        "halfWidth": 32,
+        "minimumHeight": 10,
+        "maximumHeight": 85,
+        "flattenRadius": 235
+      },
+      "radar": {
+        "classification": "navigation-gate",
+        "signature": 2
+      },
+      "missionTags": [
+        "navigation",
+        "fly-through-target"
+      ]
+    },
+    {
+      "id": "helios-comms-array",
+      "displayName": "Helios Communications Array",
+      "modelId": "helios-signal-relay",
+      "behaviorId": "static-structure",
+      "faction": "friendly",
+      "targetable": true,
+      "health": 350,
+      "weapons": [],
+      "equipment": [],
+      "collision": {
+        "radius": 34
+      },
+      "radar": {
+        "classification": "friendly-communications",
+        "signature": 3
+      },
+      "missionTags": [
+        "base",
+        "communications",
+        "defence-objective"
+      ]
+    },
+    {
+      "id": "obsidian-bunker",
+      "displayName": "Obsidian Night Bunker",
+      "description": "A fortified Vesper Rift contract hub embedded in Obsidian Night's blackglass highlands.",
+      "modelId": "helios-bunker",
+      "behaviorId": "static-structure",
+      "faction": "friendly",
+      "targetable": true,
+      "navigationTarget": "always",
+      "bunker": {
+        "dockingMeshTier": "standard",
+        "captureRadius": 85,
+        "maximumCaptureHeight": 100,
+        "maximumCaptureSpeed": 180,
+        "dockingMeshArmSeconds": 0.75,
+        "dockingMeshBrakingSeconds": 0.85,
+        "dockingMeshMaximumTiltDegrees": 20,
+        "dockingMeshCaptureSeconds": 2.8,
+        "dockingMeshReleaseSeconds": 2,
+        "deployHoldSeconds": 0.5,
+        "launchSpeed": 55,
+        "launchAccelerationSeconds": 1.6,
+        "launchAccelerationStartFraction": 0.15,
+        "launchPitchDegrees": 6,
+        "services": [
+          "mission",
+          "automatic-service",
+          "hangar",
+          "supplies",
+          "planet-data",
+          "deploy"
+        ]
+      },
+      "health": 1600,
+      "weapons": [],
+      "equipment": [],
+      "radar": {
+        "classification": "friendly-base",
+        "signature": 3.4
+      },
+      "missionTags": [
+        "base",
+        "navigation",
+        "obsidian-night"
+      ]
+    },
+    {
+      "id": "dusk-convoy-carrier",
+      "displayName": "Dusk Cargo Carrier",
+      "description": "A heavy tracked freight carrier used to move shielded cargo through hostile frontier terrain.",
+      "modelId": "dusk-carrier",
+      "behaviorId": "ground-vehicle-pursuit",
+      "faction": "hostile",
+      "targetable": true,
+      "health": 170,
+      "weapons": [],
+      "equipment": [
+        "prism-deflector-mk1",
+        "prism-reactive-armour"
+      ],
+      "collision": {
+        "radius": 21
+      },
+      "movement": {
+        "maximumForwardSpeed": 16,
+        "acceleration": 2.4,
+        "deceleration": 4,
+        "turnRateDegrees": 24,
+        "pursuitRange": 0,
+        "preferredRange": 0
+      },
+      "audio": {
+        "engine": {
+          "mode": "external",
+          "primaryWaveform": "triangle",
+          "secondaryWaveform": "square",
+          "baseFrequency": 24,
+          "maximumFrequency": 46,
+          "harmonicRatio": 1.42,
+          "volume": 0.13,
+          "secondaryVolume": 0.1,
+          "noiseVolume": 0.016,
+          "idleLevel": 0.34,
+          "speedInfluence": 0.5,
+          "thrustInfluence": 0.2,
+          "lowpassBaseFrequency": 210,
+          "lowpassMaximumFrequency": 560,
+          "nearDistance": 55,
+          "audibleRange": 2100,
+          "rolloff": 1.65,
+          "panStrength": 0.5,
+          "dopplerStrength": 0.06,
+          "response": 1.5
+        }
+      },
+      "effects": {
+        "shieldHitColor": "#aa79ff",
+        "shieldBreakColor": "#eadcff",
+        "hullHitColor": "#ff9b68",
+        "shieldRadiusMultiplier": 1.16
+      },
+      "radar": {
+        "classification": "hostile-cargo-vehicle",
+        "signature": 3
+      },
+      "missionTags": [
+        "enemy",
+        "ground-vehicle",
+        "cargo",
+        "convoy-primary"
+      ]
+    },
+    {
+      "id": "helios-range-target",
+      "displayName": "Helios Range Target",
+      "description": "A stationary, unarmed and lightly armoured target pylon used for pilot lock-on and weapons qualification.",
+      "modelId": "ember-node",
+      "behaviorId": "static-structure",
+      "faction": "hostile",
+      "targetable": true,
+      "health": 18,
+      "weapons": [],
+      "equipment": [],
+      "collision": {
+        "radius": 11
+      },
+      "effects": {
+        "hullHitColor": "#7ff7ff"
+      },
+      "radar": {
+        "classification": "training-target",
+        "signature": 1.35
+      },
+      "missionTags": [
+        "enemy",
+        "ground-target",
+        "training-target",
+        "flight-check-target"
+      ]
+    },
+    {
+      "id": "niveus-bunker",
+      "displayName": "Niveus Glacier Bunker",
+      "description": "A heavily insulated Caelum Verge contract hub anchored into the Niveus ice shelf, with redundant heat loops and autonomous structural repair.",
+      "modelId": "helios-bunker",
+      "behaviorId": "static-structure",
+      "faction": "friendly",
+      "targetable": true,
+      "navigationTarget": "always",
+      "bunker": {
+        "dockingMeshTier": "standard",
+        "captureRadius": 85,
+        "maximumCaptureHeight": 100,
+        "maximumCaptureSpeed": 180,
+        "dockingMeshArmSeconds": 0.75,
+        "dockingMeshBrakingSeconds": 0.85,
+        "dockingMeshMaximumTiltDegrees": 20,
+        "dockingMeshCaptureSeconds": 2.8,
+        "dockingMeshReleaseSeconds": 2,
+        "deployHoldSeconds": 0.5,
+        "launchSpeed": 55,
+        "launchAccelerationSeconds": 1.6,
+        "launchAccelerationStartFraction": 0.15,
+        "launchPitchDegrees": 6,
+        "services": [
+          "mission",
+          "automatic-service",
+          "hangar",
+          "supplies",
+          "planet-data",
+          "deploy"
+        ]
+      },
+      "health": 1800,
+      "weapons": [],
+      "equipment": [],
+      "radar": {
+        "classification": "friendly-base",
+        "signature": 3.5
+      },
+      "missionTags": [
+        "base",
+        "navigation",
+        "niveus"
+      ]
+    },
+    {
+      "id": "niveus-thermal-relay",
+      "displayName": "Niveus Thermal Relay",
+      "description": "A heated survey installation that maps subglacial fractures and keeps the surrounding navigation grid from freezing out.",
+      "modelId": "helios-signal-relay",
+      "behaviorId": "static-structure",
+      "faction": "friendly",
+      "targetable": true,
+      "health": 460,
+      "weapons": [],
+      "equipment": [],
+      "collision": {
+        "radius": 34
+      },
+      "effects": {
+        "shieldHitColor": "#8cecff",
+        "shieldBreakColor": "#e8fdff",
+        "hullHitColor": "#ffb86b",
+        "shieldRadiusMultiplier": 1.16
+      },
+      "radar": {
+        "classification": "friendly-thermal-relay",
+        "signature": 3.2
+      },
+      "missionTags": [
+        "base",
+        "survey",
+        "thermal-relay",
+        "defence-objective",
+        "niveus"
+      ]
+    },
+    {
+      "id": "mining-facility",
+      "displayName": "Mining Facility",
+      "description": "A vast automated extraction and refining complex. Its bucket-wheel excavator feeds raw material through the crusher and conveyor network into three armoured storage silos.",
+      "modelId": "mining-facility",
+      "behaviorId": "static-structure",
+      "faction": "hostile",
+      "targetable": true,
+      "health": 2400,
+      "weapons": [],
+      "equipment": [],
+      "collision": {
+        "radius": 142
+      },
+      "effects": {
+        "shieldHitColor": "#78f3e4",
+        "shieldBreakColor": "#e8fffb",
+        "hullHitColor": "#ff9c4a",
+        "shieldRadiusMultiplier": 1.08
+      },
+      "impactResponse": {
+        "jolt": false,
+        "hitEffect": "structure",
+        "hitSound": "metal",
+        "effectScale": 1.2,
+        "soundVolume": 0.06,
+        "audioCooldownSeconds": 0.12
+      },
+      "radar": {
+        "classification": "industrial-mining-complex",
+        "signature": 5.5
+      },
+      "missionTags": [
+        "structure",
+        "industrial",
+        "mining",
+        "facility",
+        "strategic-target",
+        "defence-objective"
+      ]
+    },
+    {
+      "id": "packmule-cargo-container",
+      "displayName": "RCU-12 Packmule Cargo Container",
+      "description": "A pressure-stable modular freight container fitted with magnetic handling clamps and an inventory transponder for remote recovery.",
+      "modelId": "rcu-12-packmule-cargo-container",
+      "behaviorId": "static-structure",
+      "faction": "neutral",
+      "targetable": true,
+      "health": 80,
+      "weapons": [],
+      "equipment": [],
+      "collision": {
+        "radius": 2.2
+      },
+      "cargo": {
+        "destructible": true,
+        "inventoryBeacon": true
+      },
+      "impactResponse": {
+        "jolt": false,
+        "hitEffect": "structure",
+        "hitSound": "metal",
+        "effectScale": 0.35,
+        "soundVolume": 0.035,
+        "audioCooldownSeconds": 0.14
+      },
+      "effects": {
+        "hullHitColor": "#ffb45e"
+      },
+      "radar": {
+        "classification": "mission-cargo",
+        "signature": 1.8
+      },
+      "missionTags": [
+        "cargo",
+        "recoverable",
+        "packmule"
+      ]
+    }
+  ]
+}

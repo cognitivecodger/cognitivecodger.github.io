@@ -1,0 +1,1760 @@
+{
+  "format": "star-drifter-mission-repository",
+  "formatVersion": 2,
+  "missions": [
+    {
+      "id": "v2-flight-test",
+      "name": "Sandline Systems Check",
+      "description": "Complete a paid flight-readiness sweep and destroy three stationary qualification targets before returning the contractor craft.",
+      "planetId": "helios-desert",
+      "contractType": "training",
+      "issuer": "Helios Flight Operations",
+      "threatRating": 1,
+      "baseReward": 250,
+      "repeatable": true,
+      "reputationReward": 1,
+      "progressionTags": [
+        "helios-charter"
+      ],
+      "briefing": "Helios Flight Operations needs an independent pilot to complete a local readiness sweep from the bunker. Exercise the craft's flight controls, cameras, contact selection and scan displays, then lock onto and destroy all three unarmed range pylons before returning safely for recovery.",
+      "knownThreats": [
+        {
+          "entityId": "helios-range-target",
+          "note": "Three stationary, unarmed and lightly armoured qualification pylons."
+        }
+      ],
+      "friendlyAssets": [
+        {
+          "entityId": "helios-bunker",
+          "note": "Departure, automatic servicing and recovery facility."
+        }
+      ],
+      "recommendedEquipment": [
+        {
+          "id": "helios-deflector-mk1",
+          "note": "Standard flight protection for low-risk systems testing."
+        },
+        {
+          "id": "warp-skimmer-laser",
+          "note": "Use the primary laser to complete the lock-on and firing qualification."
+        }
+      ],
+      "requiresPlayerWeapons": true,
+      "player": {
+        "entityId": "warp-skimmer-player",
+        "startAtBunker": true,
+        "position": [
+          0,
+          85,
+          -650
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "startingSpeed": 55
+      },
+      "placements": [
+        {
+          "id": "flight-test-bunker",
+          "entityId": "helios-bunker",
+          "position": [
+            0,
+            0,
+            650
+          ],
+          "rotation": [
+            0,
+            180,
+            0
+          ]
+        },
+        {
+          "id": "beacon-west",
+          "entityId": "mining-beacon",
+          "position": [
+            -650,
+            0,
+            100
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "id": "beacon-east",
+          "entityId": "mining-beacon",
+          "position": [
+            650,
+            0,
+            100
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "id": "beacon-north",
+          "entityId": "mining-beacon",
+          "position": [
+            0,
+            0,
+            1300
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "id": "sandline-target-alpha",
+          "name": "Range Pylon Alpha",
+          "entityId": "helios-range-target",
+          "position": [
+            -320,
+            0,
+            -260
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "surface": "land"
+        },
+        {
+          "id": "sandline-target-beta",
+          "name": "Range Pylon Beta",
+          "entityId": "helios-range-target",
+          "position": [
+            40,
+            0,
+            -540
+          ],
+          "rotation": [
+            0,
+            45,
+            0
+          ],
+          "surface": "land"
+        },
+        {
+          "id": "sandline-target-gamma",
+          "name": "Range Pylon Gamma",
+          "entityId": "helios-range-target",
+          "position": [
+            380,
+            0,
+            -820
+          ],
+          "rotation": [
+            0,
+            90,
+            0
+          ],
+          "surface": "land"
+        }
+      ],
+      "objectiveSequence": [
+        {
+          "id": "flight-systems-check",
+          "type": "destroy-entities",
+          "tag": "flight-check-target",
+          "text": "Lock onto and destroy the three stationary range pylons.",
+          "completeText": "Weapons and targeting qualification complete."
+        }
+      ],
+      "completionConditions": [
+        {
+          "type": "all-entities-with-tag-destroyed",
+          "objectiveId": "flight-systems-check",
+          "tag": "flight-check-target"
+        }
+      ],
+      "rewards": [],
+      "requiredCapabilities": []
+    },
+    {
+      "id": "v2-prism-tank-test",
+      "name": "Glass Hammer",
+      "description": "Claim a surface-security bounty on a shielded Prism armour unit operating beyond the Helios perimeter.",
+      "planetId": "helios-desert",
+      "contractType": "bounty",
+      "issuer": "Helios Surface Security",
+      "threatRating": 2,
+      "baseReward": 900,
+      "repeatable": true,
+      "reputationReward": 2,
+      "progressionTags": [
+        "helios-charter"
+      ],
+      "briefing": "Two unauthorised Prism armour contacts have been identified beyond the protected surface corridor. Locate the designated bounty target, break its shielding and destroy it before returning to the bunker for payment.",
+      "knownThreats": [
+        {
+          "entityId": "prism-tank-target",
+          "note": "Shielded ground armour carrying an energy cannon."
+        }
+      ],
+      "friendlyAssets": [
+        {
+          "entityId": "helios-bunker",
+          "note": "Recovery and automatic rearm facility."
+        }
+      ],
+      "recommendedEquipment": [
+        {
+          "id": "warp-skimmer-laser",
+          "note": "Reliable sustained fire against exposed armour."
+        },
+        {
+          "id": "extended-laser-capacitor",
+          "note": "Improves sustained energy-weapon output."
+        }
+      ],
+      "requiresPlayerWeapons": true,
+      "player": {
+        "entityId": "warp-skimmer-player",
+        "startAtBunker": true,
+        "position": [
+          0,
+          90,
+          714
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "startingSpeed": 55
+      },
+      "placements": [
+        {
+          "id": "prism-tank-alpha",
+          "entityId": "prism-tank-target",
+          "position": [
+            -131,
+            0,
+            395
+          ],
+          "rotation": [
+            0,
+            180,
+            0
+          ],
+          "surface": "land"
+        },
+        {
+          "id": "prism-tank-beta",
+          "entityId": "prism-tank-target2",
+          "position": [
+            -241,
+            0,
+            0
+          ],
+          "rotation": [
+            0,
+            90,
+            0
+          ],
+          "surface": "land",
+          "entityOverrides": {
+            "missionTags": [
+              "combat-target"
+            ]
+          }
+        },
+        {
+          "id": "combat-beacon-west",
+          "entityId": "mining-beacon",
+          "position": [
+            -420,
+            0,
+            420
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "surface": "land"
+        },
+        {
+          "id": "combat-beacon-east",
+          "entityId": "mining-beacon",
+          "position": [
+            420,
+            0,
+            420
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "surface": "land"
+        }
+      ],
+      "objectiveSequence": [
+        {
+          "id": "destroy-prism-tank",
+          "type": "destroy-entities",
+          "text": "Select the Prism Tank with Q/E or the shoulder buttons, then destroy it."
+        }
+      ],
+      "completionConditions": [
+        {
+          "type": "all-entities-with-tag-destroyed",
+          "tag": "combat-target"
+        }
+      ],
+      "rewards": [],
+      "requiredCapabilities": []
+    },
+    {
+      "id": "v2-needlewing-missile-trial",
+      "name": "Broken Wing Warrant",
+      "description": "Fulfil an ordnance-office warrant against a hostile Needlewing released over the Helios range.",
+      "planetId": "helios-desert",
+      "contractType": "bounty",
+      "issuer": "Helios Ordnance Evaluation",
+      "threatRating": 2,
+      "baseReward": 750,
+      "repeatable": true,
+      "reputationReward": 2,
+      "progressionTags": [
+        "helios-charter"
+      ],
+      "briefing": "A live Needlewing drone has broken its evaluation corridor and is now classed as a hostile range contact. Acquire a full seeker lock, complete the interception and recover at the bunker.",
+      "knownThreats": [
+        {
+          "entityId": "needlewing-target-drone",
+          "note": "Fast airborne target capable of banking attacks and guided-missile launches."
+        }
+      ],
+      "friendlyAssets": [
+        {
+          "entityId": "helios-bunker",
+          "note": "Provides missile replenishment after recovery."
+        }
+      ],
+      "recommendedEquipment": [
+        {
+          "id": "warp-skimmer-missile",
+          "note": "Primary evaluation weapon for this contract."
+        },
+        {
+          "id": "helios-deflector-mk1",
+          "note": "Protection against retaliatory Needlewing fire."
+        }
+      ],
+      "requiresPlayerWeapons": true,
+      "player": {
+        "entityId": "warp-skimmer-player",
+        "startAtBunker": true,
+        "position": [
+          0,
+          105,
+          -900
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "startingSpeed": 55
+      },
+      "placements": [
+        {
+          "id": "needlewing-drone-alpha",
+          "entityId": "needlewing-target-drone",
+          "position": [
+            0,
+            180,
+            700
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "surface": "air"
+        },
+        {
+          "id": "missile-trial-beacon-west",
+          "entityId": "mining-beacon",
+          "position": [
+            -420,
+            0,
+            420
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "surface": "land"
+        },
+        {
+          "id": "missile-trial-beacon-east",
+          "entityId": "mining-beacon",
+          "position": [
+            420,
+            0,
+            420
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "surface": "land"
+        }
+      ],
+      "objectiveSequence": [
+        {
+          "id": "destroy-needlewing-drone",
+          "type": "destroy-entities",
+          "text": "Track and destroy the Needlewing Target Drone. Fire before lock to test fixed-point guidance, then obtain a full lock to test live pursuit."
+        }
+      ],
+      "completionConditions": [
+        {
+          "type": "all-entities-with-tag-destroyed",
+          "tag": "missile-test-target"
+        }
+      ],
+      "rewards": []
+    },
+    {
+      "id": "v2-conduction-gate-trial",
+      "name": "Sunwire Run",
+      "description": "Carry a navigation calibration packet through three Solar Conduction Gates in the assigned sequence.",
+      "planetId": "helios-desert",
+      "contractType": "courier",
+      "issuer": "Helios Navigation Authority",
+      "threatRating": 1,
+      "baseReward": 400,
+      "repeatable": true,
+      "reputationReward": 1,
+      "progressionTags": [
+        "helios-charter"
+      ],
+      "briefing": "The Navigation Authority needs a calibration packet carried through the marked Solar Conduction Gate route. Cross each aperture in the assigned sequence, preserve the telemetry chain and return to the bunker.",
+      "knownThreats": [],
+      "friendlyAssets": [
+        {
+          "entityId": "solar-conduction-gate",
+          "note": "Navigation course markers identify the required flight path."
+        },
+        {
+          "entityId": "helios-bunker",
+          "note": "Course control and recovery facility."
+        }
+      ],
+      "recommendedEquipment": [],
+      "player": {
+        "entityId": "warp-skimmer-player",
+        "startAtBunker": true,
+        "position": [
+          0,
+          65,
+          700
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "startingSpeed": 80
+      },
+      "placements": [
+        {
+          "id": "conduction-gate-alpha",
+          "entityId": "solar-conduction-gate",
+          "position": [
+            262,
+            0,
+            310
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "surface": "land"
+        },
+        {
+          "id": "conduction-gate-beta",
+          "entityId": "solar-conduction-gate",
+          "position": [
+            -341,
+            0,
+            -243
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "surface": "land"
+        },
+        {
+          "id": "conduction-gate-gamma",
+          "entityId": "solar-conduction-gate",
+          "position": [
+            297,
+            0,
+            -772
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "surface": "land"
+        }
+      ],
+      "objectiveSequence": [
+        {
+          "id": "complete-conduction-gates",
+          "type": "fly-through-targets",
+          "order": "sequence",
+          "text": "Fly through the Solar Conduction Gates in sequence.",
+          "completeText": "Solar conduction course complete",
+          "placementIds": [
+            "conduction-gate-alpha",
+            "conduction-gate-beta",
+            "conduction-gate-gamma"
+          ]
+        }
+      ],
+      "completionConditions": [
+        {
+          "type": "all-fly-through-targets-passed",
+          "objectiveId": "complete-conduction-gates"
+        }
+      ],
+      "rewards": []
+    },
+    {
+      "id": "v2-comms-array-defence",
+      "name": "Signal Hold",
+      "description": "Defend a Helios communications array while a priority transmission is completed under sustained attack.",
+      "planetId": "helios-desert",
+      "contractType": "defence",
+      "issuer": "Helios Communications Directorate",
+      "threatRating": 3,
+      "baseReward": 1600,
+      "repeatable": true,
+      "reputationReward": 3,
+      "progressionTags": [
+        "helios-charter"
+      ],
+      "unlockRequirements": {
+        "completedContractCount": {
+          "planetId": "helios-desert",
+          "progressionTag": "helios-charter",
+          "count": 1,
+          "label": "Helios charter contract"
+        }
+      },
+      "briefing": "A priority transmission requires the surface communications array to remain operational. Hold the defence perimeter while hostile aircraft arrive throughout the transmission window.",
+      "knownThreats": [
+        {
+          "entityId": "needlewing-target-drone",
+          "note": "Multiple airborne attackers expected between 1.2 and 2 kilometres from the array."
+        }
+      ],
+      "friendlyAssets": [
+        {
+          "entityId": "helios-comms-array",
+          "note": "Mission-critical installation; its destruction terminates the contract."
+        },
+        {
+          "entityId": "helios-bunker",
+          "note": "Rear-area recovery and automatic rearm facility."
+        }
+      ],
+      "recommendedEquipment": [
+        {
+          "id": "warp-skimmer-missile",
+          "note": "Useful for rapidly removing dispersed airborne threats."
+        },
+        {
+          "id": "helios-deflector-mk1",
+          "note": "Recommended protection during sustained defensive combat."
+        }
+      ],
+      "requiresPlayerWeapons": true,
+      "player": {
+        "entityId": "warp-skimmer-player",
+        "startAtBunker": true,
+        "position": [
+          0,
+          85,
+          350
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "startingSpeed": 55
+      },
+      "placements": [
+        {
+          "id": "comms-array-alpha",
+          "entityId": "helios-comms-array",
+          "position": [
+            0,
+            0,
+            0
+          ],
+          "rotation": [
+            0,
+            180,
+            0
+          ],
+          "flattenRadius": 100,
+          "surface": "land"
+        }
+      ],
+      "objectiveSequence": [
+        {
+          "id": "defend-comms-array",
+          "type": "defend-placement",
+          "text": "Defend the Helios Communications Array until transmission completes.",
+          "completeText": "Communications transmission secured",
+          "placementId": "comms-array-alpha",
+          "radius": 600,
+          "durationSeconds": 40,
+          "target": "objective",
+          "spawnWindowFraction": 0.75,
+          "minimumSpawnDistance": 1200,
+          "maximumSpawnDistance": 2000,
+          "spawnAltitude": [
+            120,
+            210
+          ],
+          "spawnEntities": [
+            [
+              "needlewing-target-drone",
+              4
+            ]
+          ]
+        }
+      ],
+      "completionConditions": [
+        {
+          "type": "defend-placement-for-duration",
+          "objectiveId": "defend-comms-array"
+        }
+      ],
+      "rewards": []
+    },
+    {
+      "id": "v2-helios-patrol-interception",
+      "name": "Eastern Cutoff",
+      "description": "Intercept a Needlewing patrol leader before it crosses into the eastern protected zone. Its escorts will break formation to engage while the leader accelerates towards safety.",
+      "planetId": "helios-desert",
+      "contractType": "interception",
+      "issuer": "Helios Border Security",
+      "threatRating": 2,
+      "baseReward": 1800,
+      "repeatable": true,
+      "reputationReward": 3,
+      "progressionTags": [
+        "helios-charter"
+      ],
+      "unlockRequirements": {
+        "completedContractCount": {
+          "planetId": "helios-desert",
+          "progressionTag": "helios-charter",
+          "count": 2,
+          "label": "Helios charter contracts"
+        }
+      },
+      "briefing": "A three-aircraft Needlewing patrol is moving towards an eastern protected corridor. Destroy the named patrol leader before it reaches safety. Expect both escorts to break formation and engage while the leader accelerates along its escape route.",
+      "knownThreats": [
+        {
+          "entityId": "needlewing-target-drone",
+          "note": "One named patrol leader with two missile-capable escorts."
+        }
+      ],
+      "friendlyAssets": [
+        {
+          "entityId": "helios-bunker",
+          "note": "Launch, rearm and contract recovery point."
+        }
+      ],
+      "recommendedEquipment": [
+        {
+          "id": "warp-skimmer-missile",
+          "note": "Recommended for the time-sensitive leader interception."
+        },
+        {
+          "id": "helios-deflector-mk1",
+          "note": "Reduces exposure while the escorts are engaging."
+        },
+        {
+          "id": "reinforced-hull-plating",
+          "note": "Additional survivability if the interception becomes prolonged."
+        }
+      ],
+      "requiresPlayerWeapons": true,
+      "player": {
+        "entityId": "warp-skimmer-player",
+        "startAtBunker": true,
+        "position": [
+          0,
+          85,
+          650
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "startingSpeed": 55
+      },
+      "routes": [
+        {
+          "id": "needlewing-eastern-escape-route",
+          "mode": "once",
+          "surface": "air",
+          "altitudeMode": "relative-terrain",
+          "defaultSpeed": 78,
+          "waypointTolerance": 80,
+          "escapeRadius": 90,
+          "reactionSeconds": 12,
+          "waypoints": [
+            {
+              "position": [
+                -1700,
+                180,
+                -1200
+              ],
+              "speed": 72
+            },
+            {
+              "position": [
+                -800,
+                165,
+                -450
+              ],
+              "speed": 76
+            },
+            {
+              "position": [
+                250,
+                190,
+                300
+              ],
+              "speed": 82
+            },
+            {
+              "position": [
+                1350,
+                175,
+                1200
+              ],
+              "speed": 88
+            }
+          ]
+        }
+      ],
+      "placements": [
+        {
+          "id": "needlewing-patrol-leader",
+          "name": "Needlewing Patrol Leader",
+          "entityId": "needlewing-target-drone",
+          "position": [
+            -1700,
+            180,
+            -1200
+          ],
+          "rotation": [
+            0,
+            50,
+            0
+          ],
+          "surface": "air",
+          "routeId": "needlewing-eastern-escape-route",
+          "routeGroupId": "needlewing-patrol",
+          "routeRole": "primary",
+          "formationOffset": [
+            0,
+            0,
+            0
+          ],
+          "attackedBehaviour": "flee"
+        },
+        {
+          "id": "needlewing-patrol-escort-left",
+          "entityId": "needlewing-target-drone",
+          "position": [
+            -1815,
+            205,
+            -1175
+          ],
+          "rotation": [
+            0,
+            50,
+            0
+          ],
+          "surface": "air",
+          "routeId": "needlewing-eastern-escape-route",
+          "routeGroupId": "needlewing-patrol",
+          "routeRole": "escort",
+          "formationOffset": [
+            -105,
+            25,
+            -75
+          ],
+          "attackedBehaviour": "engage-and-return"
+        },
+        {
+          "id": "needlewing-patrol-escort-right",
+          "entityId": "needlewing-target-drone",
+          "position": [
+            -1690,
+            205,
+            -1328
+          ],
+          "rotation": [
+            0,
+            50,
+            0
+          ],
+          "surface": "air",
+          "routeId": "needlewing-eastern-escape-route",
+          "routeGroupId": "needlewing-patrol",
+          "routeRole": "escort",
+          "formationOffset": [
+            105,
+            25,
+            -75
+          ],
+          "attackedBehaviour": "engage-and-return"
+        },
+        {
+          "id": "eastern-protected-zone-beacon",
+          "entityId": "mining-beacon",
+          "position": [
+            1350,
+            0,
+            1200
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "surface": "land"
+        }
+      ],
+      "objectiveSequence": [
+        {
+          "id": "intercept-needlewing-patrol",
+          "type": "intercept-route-group",
+          "routeGroupId": "needlewing-patrol",
+          "requiredRoles": [
+            "primary"
+          ],
+          "requiredCount": 1,
+          "failOnEscape": true,
+          "text": "Destroy the Needlewing patrol leader before it reaches the protected zone.",
+          "completeText": "Patrol leader intercepted",
+          "escapeText": "Needlewing patrol leader escaped into the protected zone."
+        }
+      ],
+      "completionConditions": [
+        {
+          "type": "intercept-route-group",
+          "objectiveId": "intercept-needlewing-patrol"
+        }
+      ],
+      "rewards": []
+    },
+    {
+      "id": "v2-obsidian-blackglass-convoy",
+      "name": "Obsidian Night: Blackglass Run",
+      "description": "Intercept an armoured Dusk cargo carrier and its Prism Tank escorts before the convoy reaches a Vesper Rift extraction corridor.",
+      "planetId": "obsidian-night",
+      "contractType": "interception",
+      "issuer": "Vesper Rift Recovery Office",
+      "threatRating": 3,
+      "baseReward": 3600,
+      "repeatable": true,
+      "reputationReward": 5,
+      "progressionTags": [
+        "vesper-charter"
+      ],
+      "briefing": "A shielded cargo carrier is crossing Obsidian Night's southern blackglass corridor with two armed Prism escorts. Destroy the named carrier before it reaches the eastern extraction point. The carrier will accelerate when attacked while both escorts break formation to engage. Visibility is poor and the terrain is severe; use the target scanner and return to the Obsidian bunker for payment.",
+      "knownThreats": [
+        {
+          "entityId": "dusk-convoy-carrier",
+          "note": "Mission-critical armoured cargo vehicle. It is shielded, unarmed and expected to flee when attacked."
+        },
+        {
+          "entityId": "prism-tank-target",
+          "note": "Two armed escorts with exposed rear reactors will leave formation to engage."
+        }
+      ],
+      "friendlyAssets": [
+        {
+          "entityId": "obsidian-bunker",
+          "note": "Launch, servicing, navigation and contract-recovery point."
+        }
+      ],
+      "recommendedEquipment": [
+        {
+          "id": "warp-skimmer-missile",
+          "note": "Recommended for stopping the carrier before it reaches extraction."
+        },
+        {
+          "id": "helios-deflector-mk1",
+          "note": "Protection against sustained Prism cannon fire."
+        },
+        {
+          "id": "helios-vector-drive-mk2",
+          "note": "Useful for crossing the broken terrain and overtaking the convoy."
+        }
+      ],
+      "requiresPlayerWeapons": true,
+      "player": {
+        "entityId": "warp-skimmer-player",
+        "startAtBunker": true,
+        "position": [
+          0,
+          85,
+          650
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "startingSpeed": 55
+      },
+      "routes": [
+        {
+          "id": "blackglass-southern-corridor",
+          "mode": "once",
+          "surface": "land",
+          "defaultSpeed": 16,
+          "waypointTolerance": 55,
+          "escapeRadius": 70,
+          "reactionSeconds": 18,
+          "waypoints": [
+            {
+              "position": [
+                -1700,
+                0,
+                -900
+              ],
+              "speed": 14
+            },
+            {
+              "position": [
+                -1250,
+                0,
+                -1050
+              ],
+              "speed": 15
+            },
+            {
+              "position": [
+                -800,
+                0,
+                -850
+              ],
+              "speed": 16
+            },
+            {
+              "position": [
+                -300,
+                0,
+                -1050
+              ],
+              "speed": 17
+            },
+            {
+              "position": [
+                250,
+                0,
+                -900
+              ],
+              "speed": 17
+            },
+            {
+              "position": [
+                750,
+                0,
+                -1080
+              ],
+              "speed": 18
+            },
+            {
+              "position": [
+                1250,
+                0,
+                -850
+              ],
+              "speed": 19
+            },
+            {
+              "position": [
+                1750,
+                0,
+                -700
+              ],
+              "speed": 20
+            }
+          ]
+        }
+      ],
+      "placements": [
+        {
+          "id": "blackglass-cargo-carrier",
+          "name": "Blackglass Cargo Carrier",
+          "entityId": "dusk-convoy-carrier",
+          "position": [
+            -1700,
+            0,
+            -900
+          ],
+          "rotation": [
+            0,
+            -72,
+            0
+          ],
+          "surface": "land",
+          "routeId": "blackglass-southern-corridor",
+          "routeGroupId": "blackglass-convoy",
+          "routeRole": "primary",
+          "formationOffset": [
+            0,
+            0,
+            0
+          ],
+          "attackedBehaviour": "flee",
+          "entityOverrides": {
+            "health": 210,
+            "movement": {
+              "maximumForwardSpeed": 20,
+              "acceleration": 3,
+              "turnRateDegrees": 28
+            },
+            "radar": {
+              "signature": 3.4
+            }
+          }
+        },
+        {
+          "id": "blackglass-escort-ash",
+          "name": "Prism Escort Ash",
+          "entityId": "prism-tank-target",
+          "position": [
+            -1747,
+            0,
+            -834
+          ],
+          "rotation": [
+            0,
+            108,
+            0
+          ],
+          "surface": "land",
+          "routeId": "blackglass-southern-corridor",
+          "routeGroupId": "blackglass-convoy",
+          "routeRole": "escort",
+          "formationOffset": [
+            -48,
+            0,
+            -65
+          ],
+          "attackedBehaviour": "engage-and-return",
+          "entityOverrides": {
+            "movement": {
+              "maximumForwardSpeed": 20,
+              "acceleration": 4.5,
+              "turnRateDegrees": 34
+            }
+          }
+        },
+        {
+          "id": "blackglass-escort-cinder",
+          "name": "Prism Escort Cinder",
+          "entityId": "prism-tank-target",
+          "position": [
+            -1777,
+            0,
+            -926
+          ],
+          "rotation": [
+            0,
+            108,
+            0
+          ],
+          "surface": "land",
+          "routeId": "blackglass-southern-corridor",
+          "routeGroupId": "blackglass-convoy",
+          "routeRole": "escort",
+          "formationOffset": [
+            48,
+            0,
+            -65
+          ],
+          "attackedBehaviour": "engage-and-return",
+          "entityOverrides": {
+            "movement": {
+              "maximumForwardSpeed": 20,
+              "acceleration": 4.5,
+              "turnRateDegrees": 34
+            }
+          }
+        },
+        {
+          "id": "blackglass-extraction-marker",
+          "name": "Eastern Extraction Marker",
+          "entityId": "mining-beacon",
+          "position": [
+            1750,
+            0,
+            -700
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "surface": "land"
+        }
+      ],
+      "objectiveSequence": [
+        {
+          "id": "intercept-blackglass-convoy",
+          "type": "intercept-route-group",
+          "routeGroupId": "blackglass-convoy",
+          "requiredRoles": [
+            "primary"
+          ],
+          "requiredCount": 1,
+          "failOnEscape": true,
+          "text": "Destroy the Blackglass Cargo Carrier before it reaches the eastern extraction point.",
+          "completeText": "Blackglass cargo carrier intercepted",
+          "escapeText": "The Blackglass Cargo Carrier escaped through the eastern extraction corridor."
+        }
+      ],
+      "completionConditions": [
+        {
+          "type": "intercept-route-group",
+          "objectiveId": "intercept-blackglass-convoy"
+        }
+      ],
+      "rewards": []
+    },
+    {
+      "id": "v2-niveus-frostline-hold",
+      "name": "Frostline Hold",
+      "description": "Protect a remote Niveus thermal relay while it completes a subglacial fracture scan under sustained airborne attack.",
+      "planetId": "niveus",
+      "contractType": "defence",
+      "issuer": "Caelum Cryosphere Survey",
+      "threatRating": 3,
+      "baseReward": 2600,
+      "repeatable": true,
+      "reputationReward": 4,
+      "progressionTags": [
+        "caelum-charter"
+      ],
+      "briefing": "The Frostline thermal relay has begun mapping a newly active fracture beneath the eastern ice shelf. Its heat signature has drawn a Needlewing raider flight into the survey corridor. Reach the relay, remain inside its defence perimeter and keep the installation operational until the fifty-five-second scan completes. Attackers may divide their attention between the relay and your craft. Recover at the Niveus Glacier Bunker when the archive packet is secure.",
+      "knownThreats": [
+        {
+          "entityId": "needlewing-target-drone",
+          "note": "Five missile-capable Needlewing raiders expected between 1.5 and 2.2 kilometres from the relay."
+        }
+      ],
+      "friendlyAssets": [
+        {
+          "entityId": "niveus-thermal-relay",
+          "note": "Mission-critical heated survey installation. Its destruction terminates the contract."
+        },
+        {
+          "entityId": "niveus-bunker",
+          "note": "Launch, automatic servicing, navigation and contract-recovery point."
+        }
+      ],
+      "recommendedEquipment": [
+        {
+          "id": "warp-skimmer-missile",
+          "note": "Useful for engaging attackers before they cross the relay perimeter."
+        },
+        {
+          "id": "helios-deflector-mk1",
+          "note": "Recommended protection during sustained defensive combat."
+        },
+        {
+          "id": "helios-vector-drive-mk2",
+          "note": "Improves transit time between the bunker and the remote Frostline installation."
+        }
+      ],
+      "requiresPlayerWeapons": true,
+      "player": {
+        "entityId": "warp-skimmer-player",
+        "startAtBunker": true,
+        "position": [
+          0,
+          85,
+          650
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "startingSpeed": 55
+      },
+      "placements": [
+        {
+          "id": "frostline-thermal-relay",
+          "name": "Frostline Thermal Relay",
+          "entityId": "niveus-thermal-relay",
+          "position": [
+            0,
+            0,
+            -900
+          ],
+          "rotation": [
+            0,
+            180,
+            0
+          ],
+          "flattenRadius": 115,
+          "surface": "land"
+        }
+      ],
+      "objectiveSequence": [
+        {
+          "id": "defend-frostline-relay",
+          "type": "defend-placement",
+          "text": "Defend the Frostline Thermal Relay until the subglacial scan completes.",
+          "completeText": "Frostline fracture scan secured",
+          "placementId": "frostline-thermal-relay",
+          "radius": 650,
+          "durationSeconds": 55,
+          "target": "random",
+          "spawnWindowFraction": 0.76,
+          "minimumSpawnDistance": 1500,
+          "maximumSpawnDistance": 2200,
+          "spawnAltitude": [
+            140,
+            260
+          ],
+          "spawnEntities": [
+            [
+              "needlewing-target-drone",
+              5
+            ]
+          ]
+        }
+      ],
+      "completionConditions": [
+        {
+          "type": "defend-placement-for-duration",
+          "objectiveId": "defend-frostline-relay"
+        }
+      ],
+      "rewards": []
+    },
+    {
+      "id": "Mine removal",
+      "name": "Mine removal",
+      "description": "Destroy the mining facilities on Morrow.\n",
+      "planetId": "morrow",
+      "contractType": "sabotage",
+      "issuer": "Independent Contract Board",
+      "threatRating": 1,
+      "baseReward": 500,
+      "repeatable": true,
+      "reputationReward": 1,
+      "progressionTags": [],
+      "briefing": "Mission briefing.",
+      "knownThreats": [],
+      "friendlyAssets": [],
+      "recommendedEquipment": [],
+      "requiresPlayerWeapons": true,
+      "player": {
+        "entityId": "warp-skimmer-player",
+        "startAtBunker": true,
+        "position": [
+          1,
+          85,
+          -652
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "startingSpeed": 55
+      },
+      "placements": [
+        {
+          "id": "mining facility 1",
+          "entityId": "mining-facility",
+          "position": [
+            -3879,
+            0,
+            -721
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "surface": "land",
+          "entityOverrides": {
+            "missionTags": [
+              "mine-removal-target"
+            ]
+          }
+        }
+      ],
+      "routes": [],
+      "objectiveSequence": [
+        {
+          "id": "objective-1",
+          "type": "destroy-entities",
+          "text": "Destroy the mining facility.",
+          "tag": "mine-removal-target"
+        }
+      ],
+      "completionConditions": [
+        {
+          "type": "all-entities-with-tag-destroyed",
+          "objectiveId": "objective-1",
+          "tag": "mine-removal-target"
+        }
+      ],
+      "rewards": [],
+      "requiredCapabilities": []
+    },
+    {
+      "id": "v2-packmule-recovery",
+      "name": "Dustoff Manifest",
+      "description": "Recover two abandoned Packmule cargo containers from a raided survey convoy and return them safely to the Helios bunker.",
+      "planetId": "helios-desert",
+      "contractType": "courier",
+      "issuer": "Razorfin Aerospace Recovery Office",
+      "threatRating": 2,
+      "baseReward": 1250,
+      "repeatable": true,
+      "reputationReward": 1,
+      "progressionTags": [
+        "helios-charter",
+        "cargo-recovery"
+      ],
+      "briefing": "A survey convoy abandoned two RCU-12 containers after a Needlewing attack south-west of the bunker. Fit any cargo-transfer Utility module, approach each container inside its operating range and hold position while the automatic translocation field stabilises. Once both units are aboard, return to the Helios bunker and dock to transfer the recovered manifest and receive payment.",
+      "knownThreats": [
+        {
+          "entityId": "needlewing-target-drone",
+          "note": "Two Needlewing raiders remain close to the abandoned freight. A short-range translocator will require exposure inside their patrol area."
+        }
+      ],
+      "friendlyAssets": [
+        {
+          "entityId": "helios-bunker",
+          "note": "Docking destination, automatic cargo transfer, service and final recovery point."
+        },
+        {
+          "entityId": "packmule-cargo-container",
+          "note": "Two neutral RCU-12 containers broadcasting inventory beacons."
+        }
+      ],
+      "recommendedEquipment": [
+        {
+          "id": "packmule-translocator-mk1",
+          "note": "Minimum cargo-transfer capability. Longer-range variants reduce exposure to the raiders."
+        }
+      ],
+      "requiredCapabilities": [
+        "cargo-transfer"
+      ],
+      "requiresPlayerWeapons": true,
+      "player": {
+        "entityId": "warp-skimmer-player",
+        "startAtBunker": true,
+        "position": [
+          0,
+          85,
+          650
+        ],
+        "rotation": [
+          0,
+          180,
+          0
+        ],
+        "startingSpeed": 55
+      },
+      "placements": [
+        {
+          "id": "dustoff-packmule-alpha",
+          "name": "Recovery Cargo Alpha",
+          "entityId": "packmule-cargo-container",
+          "position": [
+            -410,
+            0,
+            -1219
+          ],
+          "rotation": [
+            0,
+            18,
+            0
+          ],
+          "surface": "land",
+          "entityOverrides": {
+            "missionTags": [
+              "dustoff-recovery-cargo"
+            ]
+          }
+        },
+        {
+          "id": "dustoff-packmule-beta",
+          "name": "Recovery Cargo Beta",
+          "entityId": "packmule-cargo-container",
+          "position": [
+            486,
+            0,
+            -1462
+          ],
+          "rotation": [
+            0,
+            -27,
+            0
+          ],
+          "surface": "land",
+          "entityOverrides": {
+            "missionTags": [
+              "dustoff-recovery-cargo"
+            ]
+          }
+        },
+        {
+          "id": "dustoff-raider-alpha",
+          "name": "Packmule Raider Alpha",
+          "entityId": "needlewing-target-drone",
+          "position": [
+            -410,
+            175,
+            -650
+          ],
+          "rotation": [
+            0,
+            35,
+            0
+          ],
+          "surface": "air"
+        },
+        {
+          "id": "dustoff-raider-beta",
+          "name": "Packmule Raider Beta",
+          "entityId": "needlewing-target-drone",
+          "position": [
+            390,
+            190,
+            -720
+          ],
+          "rotation": [
+            0,
+            -42,
+            0
+          ],
+          "surface": "air"
+        }
+      ],
+      "routes": [],
+      "objectiveSequence": [
+        {
+          "id": "recover-packmule-manifest",
+          "type": "pickup-deliver-cargo",
+          "cargoTag": "dustoff-recovery-cargo",
+          "destinationPlacementId": "bunker",
+          "deliveryMethod": "dock",
+          "requiredQuantity": 2,
+          "failIfCargoDestroyed": true,
+          "text": "Recover both Packmule containers and return them to the Helios bunker.",
+          "collectionText": "Packmule container secured",
+          "deliveryText": "Return to the Helios bunker and dock.",
+          "completeText": "Recovered manifest transferred to bunker storage."
+        }
+      ],
+      "completionConditions": [
+        {
+          "type": "cargo-delivered",
+          "objectiveId": "recover-packmule-manifest"
+        }
+      ],
+      "rewards": []
+    },
+    {
+      "id": "v2-whiteout-triangulation",
+      "name": "Whiteout Triangulation",
+      "description": "Resolve four nearly identical thermal contacts on Niveus and identify the concealed relay carrying a stolen survey cipher.",
+      "planetId": "niveus",
+      "contractType": "reconnaissance",
+      "issuer": "Niveus Cartographic Office",
+      "threatRating": 3,
+      "baseReward": 2200,
+      "repeatable": true,
+      "reputationReward": 2,
+      "progressionTags": [
+        "niveus-survey",
+        "reconnaissance"
+      ],
+      "briefing": "A stolen cartographic cipher is broadcasting through one of four thermal relays buried in the Niveus whiteout. The contacts share the same surface signature, so visual identification is impossible. Fit a target-scan Utility module, select each survey echo and keep the craft pointed at it while the analysis bar resolves. The correct relay is guarded at close range; a better scanner can identify it from farther outside the defensive pocket.",
+      "knownThreats": [
+        {
+          "entityId": "prism-tank-target",
+          "note": "Armoured ground units form a close defensive ring around the genuine relay."
+        },
+        {
+          "entityId": "needlewing-target-drone",
+          "note": "Needlewing aircraft patrol above the objective and can disrupt a close scanning pass."
+        }
+      ],
+      "friendlyAssets": [
+        {
+          "entityId": "niveus-bunker",
+          "note": "Contract hub, automatic service point and final recovery destination."
+        },
+        {
+          "entityId": "niveus-thermal-relay",
+          "note": "Four visually identical survey contacts; only one contains the cipher signature."
+        }
+      ],
+      "recommendedEquipment": [
+        {
+          "id": "survey-scanner-mk1",
+          "note": "Minimum target-scan capability. Improved scanners reduce the time spent inside the defensive ring."
+        }
+      ],
+      "requiredCapabilities": [
+        "target-scan"
+      ],
+      "requiresPlayerWeapons": true,
+      "player": {
+        "entityId": "warp-skimmer-player",
+        "startAtBunker": true,
+        "position": [
+          0,
+          85,
+          650
+        ],
+        "rotation": [
+          0,
+          180,
+          0
+        ],
+        "startingSpeed": 55
+      },
+      "placements": [
+        {
+          "id": "whiteout-echo-alpha",
+          "name": "Survey Echo Alpha",
+          "entityId": "niveus-thermal-relay",
+          "position": [
+            -1150,
+            0,
+            -600
+          ],
+          "rotation": [
+            0,
+            24,
+            0
+          ],
+          "surface": "land",
+          "entityOverrides": {
+            "missionTags": [
+              "whiteout-survey-contact"
+            ]
+          }
+        },
+        {
+          "id": "whiteout-echo-beta",
+          "name": "Survey Echo Beta",
+          "entityId": "niveus-thermal-relay",
+          "position": [
+            650,
+            0,
+            -1450
+          ],
+          "rotation": [
+            0,
+            -18,
+            0
+          ],
+          "surface": "land",
+          "entityOverrides": {
+            "missionTags": [
+              "whiteout-survey-contact",
+              "whiteout-cipher-relay"
+            ]
+          }
+        },
+        {
+          "id": "whiteout-echo-gamma",
+          "name": "Survey Echo Gamma",
+          "entityId": "niveus-thermal-relay",
+          "position": [
+            1550,
+            0,
+            -450
+          ],
+          "rotation": [
+            0,
+            61,
+            0
+          ],
+          "surface": "land",
+          "entityOverrides": {
+            "missionTags": [
+              "whiteout-survey-contact"
+            ]
+          }
+        },
+        {
+          "id": "whiteout-echo-delta",
+          "name": "Survey Echo Delta",
+          "entityId": "niveus-thermal-relay",
+          "position": [
+            -350,
+            0,
+            -1850
+          ],
+          "rotation": [
+            0,
+            -47,
+            0
+          ],
+          "surface": "land",
+          "entityOverrides": {
+            "missionTags": [
+              "whiteout-survey-contact"
+            ]
+          }
+        },
+        {
+          "id": "whiteout-guard-west",
+          "name": "Cipher Guard West",
+          "entityId": "prism-tank-target",
+          "position": [
+            430,
+            0,
+            -1370
+          ],
+          "rotation": [
+            0,
+            72,
+            0
+          ],
+          "surface": "land"
+        },
+        {
+          "id": "whiteout-guard-east",
+          "name": "Cipher Guard East",
+          "entityId": "prism-tank-target2",
+          "position": [
+            855,
+            0,
+            -1515
+          ],
+          "rotation": [
+            0,
+            -96,
+            0
+          ],
+          "surface": "land"
+        },
+        {
+          "id": "whiteout-guard-south",
+          "name": "Cipher Guard South",
+          "entityId": "prism-tank-target",
+          "position": [
+            610,
+            0,
+            -1710
+          ],
+          "rotation": [
+            0,
+            8,
+            0
+          ],
+          "surface": "land"
+        },
+        {
+          "id": "whiteout-patrol-one",
+          "name": "Cipher Patrol One",
+          "entityId": "needlewing-target-drone",
+          "position": [
+            720,
+            190,
+            -1160
+          ],
+          "rotation": [
+            0,
+            165,
+            0
+          ],
+          "surface": "air"
+        },
+        {
+          "id": "whiteout-patrol-two",
+          "name": "Cipher Patrol Two",
+          "entityId": "needlewing-target-drone",
+          "position": [
+            970,
+            220,
+            -1630
+          ],
+          "rotation": [
+            0,
+            -58,
+            0
+          ],
+          "surface": "air"
+        }
+      ],
+      "routes": [],
+      "objectiveSequence": [
+        {
+          "id": "identify-whiteout-cipher",
+          "type": "scan-targets",
+          "tag": "whiteout-survey-contact",
+          "completionTag": "whiteout-cipher-relay",
+          "requiredCount": 1,
+          "failIfTargetDestroyed": true,
+          "text": "Scan the four survey echoes and identify the relay carrying the stolen cipher.",
+          "matchText": "Stolen cartographic cipher signature confirmed",
+          "decoyText": "Thermal relay resolved - no cipher signature",
+          "failureText": "The cipher relay was destroyed before its data could be identified",
+          "completeText": "Cipher relay identified and coordinates secured"
+        }
+      ],
+      "completionConditions": [
+        {
+          "type": "scan-targets-complete",
+          "objectiveId": "identify-whiteout-cipher"
+        }
+      ],
+      "rewards": []
+    }
+  ]
+}

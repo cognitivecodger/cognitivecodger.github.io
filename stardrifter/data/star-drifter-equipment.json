@@ -1,0 +1,2978 @@
+{
+  "format": "star-drifter-equipment-repository",
+  "formatVersion": 1,
+  "manufacturers": [
+    {
+      "id": "novacrest-dynamics",
+      "displayName": "Novacrest Dynamics",
+      "logo": "data/gfx/NovaCrest White.png",
+      "marketPosition": "budget",
+      "description": "Affordable, durable hardware built around conventional components. Novacrest equipment is inexpensive to acquire but tends to be heavier on power and less specialised."
+    },
+    {
+      "id": "astrodyne-systems",
+      "displayName": "Astrodyne Systems",
+      "logo": "data/gfx/Astrodyne White.png",
+      "marketPosition": "professional",
+      "description": "Dependable professional equipment balancing output, power demand and purchase cost for working pilots and security fleets."
+    },
+    {
+      "id": "razorfin-aerospace",
+      "displayName": "Razorfin Aerospace",
+      "logo": "data/gfx/Razorfin White.png",
+      "marketPosition": "performance",
+      "description": "Aggressive high-performance systems tuned for pursuit, manoeuvrability and combat response, usually at the cost of increased power demand."
+    },
+    {
+      "id": "astravault-systems",
+      "displayName": "Astravault Systems",
+      "logo": "data/gfx/Astrovault White.png",
+      "marketPosition": "prestige",
+      "description": "Rare precision technology delivering exceptional efficiency and advanced performance at a correspondingly exceptional price."
+    }
+  ],
+  "equipment": [
+    {
+      "id": "helios-deflector-mk1",
+      "displayName": "Novacrest Bulwark Deflector Mk I",
+      "manufacturerId": "novacrest-dynamics",
+      "manufacturer": "Novacrest Dynamics",
+      "mark": 1,
+      "description": "A balanced energy shield with strong energy absorption and limited kinetic deflection.",
+      "type": "shield",
+      "slot": "shield",
+      "powerRequirement": 20,
+      "price": 700,
+      "resaleValue": 420,
+      "shield": {
+        "capacity": 100,
+        "rechargePerSecond": 12,
+        "rechargeDelay": 3,
+        "energyAbsorption": 0.8,
+        "kineticAbsorption": 0.25
+      },
+      "tags": [
+        "player-compatible",
+        "tier-1",
+        "shield"
+      ]
+    },
+    {
+      "id": "reinforced-hull-plating",
+      "displayName": "Novacrest Bastion Plating Mk I",
+      "manufacturerId": "novacrest-dynamics",
+      "manufacturer": "Novacrest Dynamics",
+      "mark": 1,
+      "description": "Adds hull strength and reduces kinetic damage at a small improvement against energy damage.",
+      "type": "armour",
+      "slot": "armour",
+      "powerRequirement": 0,
+      "price": 650,
+      "resaleValue": 390,
+      "armour": {
+        "bonusHull": 40,
+        "energyMultiplier": 0.95,
+        "kineticMultiplier": 0.7
+      },
+      "tags": [
+        "player-compatible",
+        "tier-1",
+        "armour"
+      ]
+    },
+    {
+      "id": "extended-laser-capacitor",
+      "displayName": "Novacrest Flux Core Mk I",
+      "manufacturerId": "novacrest-dynamics",
+      "manufacturer": "Novacrest Dynamics",
+      "mark": 1,
+      "description": "A standard 100 FLX craft power core supplying the ship and every fitted system from a single dependable output budget.",
+      "type": "capacitor",
+      "slot": "capacitor",
+      "powerCapacity": 100,
+      "price": 800,
+      "resaleValue": 480,
+      "capacitor": {
+        "capacityBonus": 30,
+        "rechargePerSecondBonus": 8,
+        "costMultiplier": 0.9,
+        "cooldownMultiplier": 1,
+        "reserveCooldownMultiplier": 1
+      },
+      "tags": [
+        "player-compatible",
+        "tier-1",
+        "capacitor"
+      ]
+    },
+    {
+      "id": "helios-vector-drive-mk1",
+      "displayName": "Novacrest Vector Drive Mk I",
+      "manufacturerId": "novacrest-dynamics",
+      "manufacturer": "Novacrest Dynamics",
+      "mark": 1,
+      "description": "The dependable standard propulsion unit fitted to newly registered Warp Skimmers.",
+      "type": "engine",
+      "slot": "engine",
+      "powerRequirement": 25,
+      "price": 400,
+      "resaleValue": 240,
+      "engine": {
+        "maximumForwardSpeedMultiplier": 1,
+        "accelerationMultiplier": 1,
+        "decelerationMultiplier": 1
+      },
+      "tags": [
+        "player-compatible",
+        "tier-1",
+        "engine",
+        "starter"
+      ]
+    },
+    {
+      "id": "helios-vector-drive-mk2",
+      "displayName": "Novacrest Vector Drive Mk II",
+      "manufacturerId": "novacrest-dynamics",
+      "manufacturer": "Novacrest Dynamics",
+      "mark": 2,
+      "description": "A tuned mercenary drive with a higher velocity ceiling and more responsive thrust control.",
+      "type": "engine",
+      "slot": "engine",
+      "powerRequirement": 29,
+      "price": 900,
+      "resaleValue": 540,
+      "engine": {
+        "maximumForwardSpeedBonus": 20,
+        "accelerationMultiplier": 1.08,
+        "decelerationMultiplier": 1.05
+      },
+      "tags": [
+        "player-compatible",
+        "tier-2",
+        "engine"
+      ]
+    },
+    {
+      "id": "helios-vector-drive-mk3",
+      "displayName": "Novacrest Vector Drive Mk III",
+      "manufacturerId": "novacrest-dynamics",
+      "manufacturer": "Novacrest Dynamics",
+      "mark": 3,
+      "description": "A high-output pursuit drive intended for dangerous interception and extraction contracts.",
+      "type": "engine",
+      "slot": "engine",
+      "powerRequirement": 34,
+      "price": 2300,
+      "resaleValue": 1380,
+      "engine": {
+        "maximumForwardSpeedBonus": 45,
+        "accelerationMultiplier": 1.18,
+        "decelerationMultiplier": 1.12
+      },
+      "tags": [
+        "player-compatible",
+        "tier-3",
+        "engine"
+      ]
+    },
+    {
+      "id": "helios-flight-control-mk1",
+      "displayName": "Novacrest Helm Avionics Mk I",
+      "manufacturerId": "novacrest-dynamics",
+      "manufacturer": "Novacrest Dynamics",
+      "mark": 1,
+      "description": "Standard stabilisation, vectoring and bank-control avionics for light strike craft.",
+      "type": "flight-control",
+      "slot": "flight-control",
+      "powerRequirement": 5,
+      "price": 350,
+      "resaleValue": 210,
+      "flightControl": {
+        "sidestepSpeedMultiplier": 1,
+        "yawRateMultiplier": 1,
+        "pitchRateMultiplier": 1,
+        "maximumBankMultiplier": 1
+      },
+      "tags": [
+        "player-compatible",
+        "tier-1",
+        "flight-control",
+        "starter"
+      ]
+    },
+    {
+      "id": "helios-flight-control-mk2",
+      "displayName": "Novacrest Helm Avionics Mk II",
+      "manufacturerId": "novacrest-dynamics",
+      "manufacturer": "Novacrest Dynamics",
+      "mark": 2,
+      "description": "Improved response processors and vectoring actuators for tighter combat manoeuvres.",
+      "type": "flight-control",
+      "slot": "flight-control",
+      "powerRequirement": 6,
+      "price": 850,
+      "resaleValue": 510,
+      "flightControl": {
+        "sidestepSpeedBonus": 4,
+        "yawRateMultiplier": 1.12,
+        "pitchRateMultiplier": 1.12,
+        "maximumBankDegreesBonus": 6
+      },
+      "tags": [
+        "player-compatible",
+        "tier-2",
+        "flight-control"
+      ]
+    },
+    {
+      "id": "helios-flight-control-mk3",
+      "displayName": "Novacrest Helm Avionics Mk III",
+      "manufacturerId": "novacrest-dynamics",
+      "manufacturer": "Novacrest Dynamics",
+      "mark": 3,
+      "description": "Competition-grade control hardware delivering aggressive response across every manoeuvring axis.",
+      "type": "flight-control",
+      "slot": "flight-control",
+      "powerRequirement": 7,
+      "price": 2100,
+      "resaleValue": 1260,
+      "flightControl": {
+        "sidestepSpeedBonus": 8,
+        "yawRateMultiplier": 1.22,
+        "pitchRateMultiplier": 1.22,
+        "maximumBankDegreesBonus": 10
+      },
+      "tags": [
+        "player-compatible",
+        "tier-3",
+        "flight-control"
+      ]
+    },
+    {
+      "id": "packmule-translocator-mk1",
+      "displayName": "Novacrest Packmule Translocator Mk I",
+      "manufacturerId": "novacrest-dynamics",
+      "manufacturer": "Novacrest Dynamics",
+      "mark": 1,
+      "description": "An entry-level cargo recovery field that transfers tagged freight across short distances. Its limited reach demands a close, low pass through any surrounding defences.",
+      "type": "utility",
+      "slot": "utility",
+      "powerRequirement": 2,
+      "price": 500,
+      "resaleValue": 300,
+      "capabilities": {
+        "cargo-transfer": {
+          "range": 90,
+          "transferSeconds": 1.8
+        }
+      },
+      "tags": [
+        "player-compatible",
+        "tier-1",
+        "utility",
+        "cargo-translocator",
+        "capability:cargo-transfer"
+      ]
+    },
+    {
+      "id": "packmule-translocator-mk2",
+      "displayName": "Novacrest Packmule Translocator Mk II",
+      "manufacturerId": "novacrest-dynamics",
+      "manufacturer": "Novacrest Dynamics",
+      "mark": 2,
+      "description": "A stabilised medium-range cargo translocator that recovers freight without forcing the pilot directly over its position.",
+      "type": "utility",
+      "slot": "utility",
+      "powerRequirement": 3,
+      "price": 1400,
+      "resaleValue": 840,
+      "capabilities": {
+        "cargo-transfer": {
+          "range": 180,
+          "transferSeconds": 1.45
+        }
+      },
+      "tags": [
+        "player-compatible",
+        "tier-2",
+        "utility",
+        "cargo-translocator",
+        "capability:cargo-transfer"
+      ]
+    },
+    {
+      "id": "packmule-translocator-mk3",
+      "displayName": "Novacrest Packmule Translocator Mk III",
+      "manufacturerId": "novacrest-dynamics",
+      "manufacturer": "Novacrest Dynamics",
+      "mark": 3,
+      "description": "A high-end recovery field with enough reach to extract mission cargo from outside many defensive envelopes.",
+      "type": "utility",
+      "slot": "utility",
+      "powerRequirement": 5,
+      "price": 3600,
+      "resaleValue": 2160,
+      "capabilities": {
+        "cargo-transfer": {
+          "range": 340,
+          "transferSeconds": 1.1
+        }
+      },
+      "tags": [
+        "player-compatible",
+        "tier-3",
+        "utility",
+        "cargo-translocator",
+        "capability:cargo-transfer"
+      ]
+    },
+    {
+      "id": "survey-scanner-mk1",
+      "displayName": "Novacrest Survey Scanner Mk I",
+      "manufacturerId": "novacrest-dynamics",
+      "manufacturer": "Novacrest Dynamics",
+      "mark": 1,
+      "description": "A compact short-range analysis suite for resolving tagged structures and anomalous contacts. Its limited reach forces the pilot close to defended survey sites.",
+      "type": "utility",
+      "slot": "utility",
+      "powerRequirement": 2,
+      "price": 600,
+      "resaleValue": 360,
+      "capabilities": {
+        "target-scan": {
+          "range": 450,
+          "scanSeconds": 4.2,
+          "coneDegrees": 24,
+          "retentionSeconds": 1.2,
+          "decayPerSecond": 0.3
+        }
+      },
+      "tags": [
+        "player-compatible",
+        "tier-1",
+        "utility",
+        "survey-scanner",
+        "capability:target-scan"
+      ]
+    },
+    {
+      "id": "survey-scanner-mk2",
+      "displayName": "Novacrest Survey Scanner Mk II",
+      "manufacturerId": "novacrest-dynamics",
+      "manufacturer": "Novacrest Dynamics",
+      "mark": 2,
+      "description": "A stabilised medium-range survey array with improved contact retention, allowing useful analysis passes outside many light defensive envelopes.",
+      "type": "utility",
+      "slot": "utility",
+      "powerRequirement": 3,
+      "price": 1700,
+      "resaleValue": 1020,
+      "capabilities": {
+        "target-scan": {
+          "range": 800,
+          "scanSeconds": 3.7,
+          "coneDegrees": 30,
+          "retentionSeconds": 1.8,
+          "decayPerSecond": 0.22
+        }
+      },
+      "tags": [
+        "player-compatible",
+        "tier-2",
+        "utility",
+        "survey-scanner",
+        "capability:target-scan"
+      ]
+    },
+    {
+      "id": "survey-scanner-mk3",
+      "displayName": "Novacrest Survey Scanner Mk III",
+      "manufacturerId": "novacrest-dynamics",
+      "manufacturer": "Novacrest Dynamics",
+      "mark": 3,
+      "description": "A long-range military survey suite with a broad acquisition cone and resilient signal memory, designed to identify objectives beyond dense defensive screens.",
+      "type": "utility",
+      "slot": "utility",
+      "powerRequirement": 5,
+      "price": 4200,
+      "resaleValue": 2520,
+      "capabilities": {
+        "target-scan": {
+          "range": 1300,
+          "scanSeconds": 3.2,
+          "coneDegrees": 38,
+          "retentionSeconds": 2.8,
+          "decayPerSecond": 0.16
+        }
+      },
+      "tags": [
+        "player-compatible",
+        "tier-3",
+        "utility",
+        "survey-scanner",
+        "capability:target-scan"
+      ]
+    },
+    {
+      "id": "novacrest-flux-core-mk2",
+      "displayName": "Novacrest Flux Core Mk II",
+      "manufacturerId": "novacrest-dynamics",
+      "manufacturer": "Novacrest Dynamics",
+      "mark": 2,
+      "description": "Rugged commercial hardware prioritising affordability and straightforward field maintenance. This Mark II flux core represents a proven field upgrade.",
+      "type": "capacitor",
+      "slot": "capacitor",
+      "price": 1500,
+      "resaleValue": 900,
+      "powerCapacity": 115,
+      "capacitor": {
+        "capacityBonus": 40,
+        "rechargePerSecondBonus": 10,
+        "costMultiplier": 0.87,
+        "cooldownMultiplier": 0.98,
+        "reserveCooldownMultiplier": 0.97
+      },
+      "tags": [
+        "player-compatible",
+        "tier-2",
+        "capacitor",
+        "manufacturer:novacrest"
+      ]
+    },
+    {
+      "id": "novacrest-flux-core-mk3",
+      "displayName": "Novacrest Flux Core Mk III",
+      "manufacturerId": "novacrest-dynamics",
+      "manufacturer": "Novacrest Dynamics",
+      "mark": 3,
+      "description": "Rugged commercial hardware prioritising affordability and straightforward field maintenance. This Mark III flux core represents advanced contract-grade hardware.",
+      "type": "capacitor",
+      "slot": "capacitor",
+      "price": 2800,
+      "resaleValue": 1680,
+      "powerCapacity": 132,
+      "capacitor": {
+        "capacityBonus": 52,
+        "rechargePerSecondBonus": 12,
+        "costMultiplier": 0.84,
+        "cooldownMultiplier": 0.95,
+        "reserveCooldownMultiplier": 0.94
+      },
+      "tags": [
+        "player-compatible",
+        "tier-3",
+        "capacitor",
+        "manufacturer:novacrest"
+      ]
+    },
+    {
+      "id": "novacrest-flux-core-mk4",
+      "displayName": "Novacrest Flux Core Mk IV",
+      "manufacturerId": "novacrest-dynamics",
+      "manufacturer": "Novacrest Dynamics",
+      "mark": 4,
+      "description": "Rugged commercial hardware prioritising affordability and straightforward field maintenance. This Mark IV flux core represents the manufacturer's flagship specification.",
+      "type": "capacitor",
+      "slot": "capacitor",
+      "price": 4800,
+      "resaleValue": 2880,
+      "powerCapacity": 150,
+      "capacitor": {
+        "capacityBonus": 66,
+        "rechargePerSecondBonus": 14,
+        "costMultiplier": 0.8,
+        "cooldownMultiplier": 0.92,
+        "reserveCooldownMultiplier": 0.9
+      },
+      "tags": [
+        "player-compatible",
+        "tier-4",
+        "capacitor",
+        "manufacturer:novacrest"
+      ]
+    },
+    {
+      "id": "astrodyne-flux-core-mk1",
+      "displayName": "Astrodyne Pulse Core Mk I",
+      "manufacturerId": "astrodyne-systems",
+      "manufacturer": "Astrodyne Systems",
+      "mark": 1,
+      "description": "Professional-grade hardware balancing output, efficiency and dependable operation. This Mark I pulse core represents the accessible entry point.",
+      "type": "capacitor",
+      "slot": "capacitor",
+      "price": 980,
+      "resaleValue": 588,
+      "powerCapacity": 105,
+      "capacitor": {
+        "capacityBonus": 32,
+        "rechargePerSecondBonus": 9,
+        "costMultiplier": 0.9,
+        "cooldownMultiplier": 0.98,
+        "reserveCooldownMultiplier": 0.98
+      },
+      "tags": [
+        "player-compatible",
+        "tier-1",
+        "capacitor",
+        "manufacturer:astrodyne"
+      ]
+    },
+    {
+      "id": "astrodyne-flux-core-mk2",
+      "displayName": "Astrodyne Pulse Core Mk II",
+      "manufacturerId": "astrodyne-systems",
+      "manufacturer": "Astrodyne Systems",
+      "mark": 2,
+      "description": "Professional-grade hardware balancing output, efficiency and dependable operation. This Mark II pulse core represents a proven field upgrade.",
+      "type": "capacitor",
+      "slot": "capacitor",
+      "price": 1830,
+      "resaleValue": 1098,
+      "powerCapacity": 122,
+      "capacitor": {
+        "capacityBonus": 45,
+        "rechargePerSecondBonus": 12,
+        "costMultiplier": 0.86,
+        "cooldownMultiplier": 0.94,
+        "reserveCooldownMultiplier": 0.94
+      },
+      "tags": [
+        "player-compatible",
+        "tier-2",
+        "capacitor",
+        "manufacturer:astrodyne"
+      ]
+    },
+    {
+      "id": "astrodyne-flux-core-mk3",
+      "displayName": "Astrodyne Pulse Core Mk III",
+      "manufacturerId": "astrodyne-systems",
+      "manufacturer": "Astrodyne Systems",
+      "mark": 3,
+      "description": "Professional-grade hardware balancing output, efficiency and dependable operation. This Mark III pulse core represents advanced contract-grade hardware.",
+      "type": "capacitor",
+      "slot": "capacitor",
+      "price": 3420,
+      "resaleValue": 2052,
+      "powerCapacity": 142,
+      "capacitor": {
+        "capacityBonus": 60,
+        "rechargePerSecondBonus": 15,
+        "costMultiplier": 0.82,
+        "cooldownMultiplier": 0.9,
+        "reserveCooldownMultiplier": 0.9
+      },
+      "tags": [
+        "player-compatible",
+        "tier-3",
+        "capacitor",
+        "manufacturer:astrodyne"
+      ]
+    },
+    {
+      "id": "astrodyne-flux-core-mk4",
+      "displayName": "Astrodyne Pulse Core Mk IV",
+      "manufacturerId": "astrodyne-systems",
+      "manufacturer": "Astrodyne Systems",
+      "mark": 4,
+      "description": "Professional-grade hardware balancing output, efficiency and dependable operation. This Mark IV pulse core represents the manufacturer's flagship specification.",
+      "type": "capacitor",
+      "slot": "capacitor",
+      "price": 5860,
+      "resaleValue": 3516,
+      "powerCapacity": 165,
+      "capacitor": {
+        "capacityBonus": 78,
+        "rechargePerSecondBonus": 18,
+        "costMultiplier": 0.78,
+        "cooldownMultiplier": 0.86,
+        "reserveCooldownMultiplier": 0.86
+      },
+      "tags": [
+        "player-compatible",
+        "tier-4",
+        "capacitor",
+        "manufacturer:astrodyne"
+      ]
+    },
+    {
+      "id": "razorfin-flux-core-mk1",
+      "displayName": "Razorfin Overdrive Core Mk I",
+      "manufacturerId": "razorfin-aerospace",
+      "manufacturer": "Razorfin Aerospace",
+      "mark": 1,
+      "description": "Combat-focused hardware tuned for rapid response and uncompromising performance. This Mark I overdrive core represents the accessible entry point.",
+      "type": "capacitor",
+      "slot": "capacitor",
+      "price": 1200,
+      "resaleValue": 720,
+      "powerCapacity": 115,
+      "capacitor": {
+        "capacityBonus": 38,
+        "rechargePerSecondBonus": 11,
+        "costMultiplier": 0.92,
+        "cooldownMultiplier": 0.94,
+        "reserveCooldownMultiplier": 0.96
+      },
+      "tags": [
+        "player-compatible",
+        "tier-1",
+        "capacitor",
+        "manufacturer:razorfin"
+      ]
+    },
+    {
+      "id": "razorfin-flux-core-mk2",
+      "displayName": "Razorfin Overdrive Core Mk II",
+      "manufacturerId": "razorfin-aerospace",
+      "manufacturer": "Razorfin Aerospace",
+      "mark": 2,
+      "description": "Combat-focused hardware tuned for rapid response and uncompromising performance. This Mark II overdrive core represents a proven field upgrade.",
+      "type": "capacitor",
+      "slot": "capacitor",
+      "price": 2250,
+      "resaleValue": 1350,
+      "powerCapacity": 135,
+      "capacitor": {
+        "capacityBonus": 55,
+        "rechargePerSecondBonus": 15,
+        "costMultiplier": 0.88,
+        "cooldownMultiplier": 0.88,
+        "reserveCooldownMultiplier": 0.91
+      },
+      "tags": [
+        "player-compatible",
+        "tier-2",
+        "capacitor",
+        "manufacturer:razorfin"
+      ]
+    },
+    {
+      "id": "razorfin-flux-core-mk3",
+      "displayName": "Razorfin Overdrive Core Mk III",
+      "manufacturerId": "razorfin-aerospace",
+      "manufacturer": "Razorfin Aerospace",
+      "mark": 3,
+      "description": "Combat-focused hardware tuned for rapid response and uncompromising performance. This Mark III overdrive core represents advanced contract-grade hardware.",
+      "type": "capacitor",
+      "slot": "capacitor",
+      "price": 4200,
+      "resaleValue": 2520,
+      "powerCapacity": 160,
+      "capacitor": {
+        "capacityBonus": 75,
+        "rechargePerSecondBonus": 20,
+        "costMultiplier": 0.84,
+        "cooldownMultiplier": 0.82,
+        "reserveCooldownMultiplier": 0.86
+      },
+      "tags": [
+        "player-compatible",
+        "tier-3",
+        "capacitor",
+        "manufacturer:razorfin"
+      ]
+    },
+    {
+      "id": "razorfin-flux-core-mk4",
+      "displayName": "Razorfin Overdrive Core Mk IV",
+      "manufacturerId": "razorfin-aerospace",
+      "manufacturer": "Razorfin Aerospace",
+      "mark": 4,
+      "description": "Combat-focused hardware tuned for rapid response and uncompromising performance. This Mark IV overdrive core represents the manufacturer's flagship specification.",
+      "type": "capacitor",
+      "slot": "capacitor",
+      "price": 7200,
+      "resaleValue": 4320,
+      "powerCapacity": 190,
+      "capacitor": {
+        "capacityBonus": 100,
+        "rechargePerSecondBonus": 26,
+        "costMultiplier": 0.8,
+        "cooldownMultiplier": 0.76,
+        "reserveCooldownMultiplier": 0.81
+      },
+      "tags": [
+        "player-compatible",
+        "tier-4",
+        "capacitor",
+        "manufacturer:razorfin"
+      ]
+    },
+    {
+      "id": "astravault-flux-core-mk1",
+      "displayName": "Astravault Singularity Core Mk I",
+      "manufacturerId": "astravault-systems",
+      "manufacturer": "Astravault Systems",
+      "mark": 1,
+      "description": "Prestige technology combining exceptional efficiency with exacting performance. This Mark I singularity core represents the accessible entry point.",
+      "type": "capacitor",
+      "slot": "capacitor",
+      "price": 1640,
+      "resaleValue": 984,
+      "powerCapacity": 110,
+      "capacitor": {
+        "capacityBonus": 35,
+        "rechargePerSecondBonus": 12,
+        "costMultiplier": 0.82,
+        "cooldownMultiplier": 0.95,
+        "reserveCooldownMultiplier": 0.92
+      },
+      "tags": [
+        "player-compatible",
+        "tier-1",
+        "capacitor",
+        "manufacturer:astravault"
+      ]
+    },
+    {
+      "id": "astravault-flux-core-mk2",
+      "displayName": "Astravault Singularity Core Mk II",
+      "manufacturerId": "astravault-systems",
+      "manufacturer": "Astravault Systems",
+      "mark": 2,
+      "description": "Prestige technology combining exceptional efficiency with exacting performance. This Mark II singularity core represents a proven field upgrade.",
+      "type": "capacitor",
+      "slot": "capacitor",
+      "price": 3070,
+      "resaleValue": 1842,
+      "powerCapacity": 135,
+      "capacitor": {
+        "capacityBonus": 52,
+        "rechargePerSecondBonus": 17,
+        "costMultiplier": 0.76,
+        "cooldownMultiplier": 0.9,
+        "reserveCooldownMultiplier": 0.86
+      },
+      "tags": [
+        "player-compatible",
+        "tier-2",
+        "capacitor",
+        "manufacturer:astravault"
+      ]
+    },
+    {
+      "id": "astravault-flux-core-mk3",
+      "displayName": "Astravault Singularity Core Mk III",
+      "manufacturerId": "astravault-systems",
+      "manufacturer": "Astravault Systems",
+      "mark": 3,
+      "description": "Prestige technology combining exceptional efficiency with exacting performance. This Mark III singularity core represents advanced contract-grade hardware.",
+      "type": "capacitor",
+      "slot": "capacitor",
+      "price": 5740,
+      "resaleValue": 3444,
+      "powerCapacity": 165,
+      "capacitor": {
+        "capacityBonus": 72,
+        "rechargePerSecondBonus": 23,
+        "costMultiplier": 0.7,
+        "cooldownMultiplier": 0.84,
+        "reserveCooldownMultiplier": 0.8
+      },
+      "tags": [
+        "player-compatible",
+        "tier-3",
+        "capacitor",
+        "manufacturer:astravault"
+      ]
+    },
+    {
+      "id": "astravault-flux-core-mk4",
+      "displayName": "Astravault Singularity Core Mk IV",
+      "manufacturerId": "astravault-systems",
+      "manufacturer": "Astravault Systems",
+      "mark": 4,
+      "description": "Prestige technology combining exceptional efficiency with exacting performance. This Mark IV singularity core represents the manufacturer's flagship specification.",
+      "type": "capacitor",
+      "slot": "capacitor",
+      "price": 9840,
+      "resaleValue": 5904,
+      "powerCapacity": 200,
+      "capacitor": {
+        "capacityBonus": 96,
+        "rechargePerSecondBonus": 30,
+        "costMultiplier": 0.64,
+        "cooldownMultiplier": 0.78,
+        "reserveCooldownMultiplier": 0.72
+      },
+      "tags": [
+        "player-compatible",
+        "tier-4",
+        "capacitor",
+        "manufacturer:astravault"
+      ]
+    },
+    {
+      "id": "novacrest-vector-drive-mk4",
+      "displayName": "Novacrest Vector Drive Mk IV",
+      "manufacturerId": "novacrest-dynamics",
+      "manufacturer": "Novacrest Dynamics",
+      "mark": 4,
+      "description": "Rugged commercial hardware prioritising affordability and straightforward field maintenance. This Mark IV vector drive represents the manufacturer's flagship specification.",
+      "type": "engine",
+      "slot": "engine",
+      "powerRequirement": 40,
+      "price": 4200,
+      "resaleValue": 2520,
+      "engine": {
+        "maximumForwardSpeedBonus": 70,
+        "accelerationMultiplier": 1.27,
+        "decelerationMultiplier": 1.2
+      },
+      "tags": [
+        "player-compatible",
+        "tier-4",
+        "engine",
+        "manufacturer:novacrest"
+      ]
+    },
+    {
+      "id": "astrodyne-vector-drive-mk1",
+      "displayName": "Astrodyne Stellar Drive Mk I",
+      "manufacturerId": "astrodyne-systems",
+      "manufacturer": "Astrodyne Systems",
+      "mark": 1,
+      "description": "Professional-grade hardware balancing output, efficiency and dependable operation. This Mark I stellar drive represents the accessible entry point.",
+      "type": "engine",
+      "slot": "engine",
+      "powerRequirement": 23,
+      "price": 490,
+      "resaleValue": 294,
+      "engine": {
+        "maximumForwardSpeedBonus": 8,
+        "accelerationMultiplier": 1.04,
+        "decelerationMultiplier": 1.04
+      },
+      "tags": [
+        "player-compatible",
+        "tier-1",
+        "engine",
+        "manufacturer:astrodyne"
+      ]
+    },
+    {
+      "id": "astrodyne-vector-drive-mk2",
+      "displayName": "Astrodyne Stellar Drive Mk II",
+      "manufacturerId": "astrodyne-systems",
+      "manufacturer": "Astrodyne Systems",
+      "mark": 2,
+      "description": "Professional-grade hardware balancing output, efficiency and dependable operation. This Mark II stellar drive represents a proven field upgrade.",
+      "type": "engine",
+      "slot": "engine",
+      "powerRequirement": 27,
+      "price": 1100,
+      "resaleValue": 660,
+      "engine": {
+        "maximumForwardSpeedBonus": 26,
+        "accelerationMultiplier": 1.12,
+        "decelerationMultiplier": 1.1
+      },
+      "tags": [
+        "player-compatible",
+        "tier-2",
+        "engine",
+        "manufacturer:astrodyne"
+      ]
+    },
+    {
+      "id": "astrodyne-vector-drive-mk3",
+      "displayName": "Astrodyne Stellar Drive Mk III",
+      "manufacturerId": "astrodyne-systems",
+      "manufacturer": "Astrodyne Systems",
+      "mark": 3,
+      "description": "Professional-grade hardware balancing output, efficiency and dependable operation. This Mark III stellar drive represents advanced contract-grade hardware.",
+      "type": "engine",
+      "slot": "engine",
+      "powerRequirement": 32,
+      "price": 2810,
+      "resaleValue": 1686,
+      "engine": {
+        "maximumForwardSpeedBonus": 50,
+        "accelerationMultiplier": 1.22,
+        "decelerationMultiplier": 1.18
+      },
+      "tags": [
+        "player-compatible",
+        "tier-3",
+        "engine",
+        "manufacturer:astrodyne"
+      ]
+    },
+    {
+      "id": "astrodyne-vector-drive-mk4",
+      "displayName": "Astrodyne Stellar Drive Mk IV",
+      "manufacturerId": "astrodyne-systems",
+      "manufacturer": "Astrodyne Systems",
+      "mark": 4,
+      "description": "Professional-grade hardware balancing output, efficiency and dependable operation. This Mark IV stellar drive represents the manufacturer's flagship specification.",
+      "type": "engine",
+      "slot": "engine",
+      "powerRequirement": 38,
+      "price": 5120,
+      "resaleValue": 3072,
+      "engine": {
+        "maximumForwardSpeedBonus": 78,
+        "accelerationMultiplier": 1.33,
+        "decelerationMultiplier": 1.28
+      },
+      "tags": [
+        "player-compatible",
+        "tier-4",
+        "engine",
+        "manufacturer:astrodyne"
+      ]
+    },
+    {
+      "id": "razorfin-vector-drive-mk1",
+      "displayName": "Razorfin Pursuit Drive Mk I",
+      "manufacturerId": "razorfin-aerospace",
+      "manufacturer": "Razorfin Aerospace",
+      "mark": 1,
+      "description": "Combat-focused hardware tuned for rapid response and uncompromising performance. This Mark I pursuit drive represents the accessible entry point.",
+      "type": "engine",
+      "slot": "engine",
+      "powerRequirement": 28,
+      "price": 600,
+      "resaleValue": 360,
+      "engine": {
+        "maximumForwardSpeedBonus": 15,
+        "accelerationMultiplier": 1.1,
+        "decelerationMultiplier": 1.08
+      },
+      "tags": [
+        "player-compatible",
+        "tier-1",
+        "engine",
+        "manufacturer:razorfin"
+      ]
+    },
+    {
+      "id": "razorfin-vector-drive-mk2",
+      "displayName": "Razorfin Pursuit Drive Mk II",
+      "manufacturerId": "razorfin-aerospace",
+      "manufacturer": "Razorfin Aerospace",
+      "mark": 2,
+      "description": "Combat-focused hardware tuned for rapid response and uncompromising performance. This Mark II pursuit drive represents a proven field upgrade.",
+      "type": "engine",
+      "slot": "engine",
+      "powerRequirement": 34,
+      "price": 1350,
+      "resaleValue": 810,
+      "engine": {
+        "maximumForwardSpeedBonus": 38,
+        "accelerationMultiplier": 1.21,
+        "decelerationMultiplier": 1.17
+      },
+      "tags": [
+        "player-compatible",
+        "tier-2",
+        "engine",
+        "manufacturer:razorfin"
+      ]
+    },
+    {
+      "id": "razorfin-vector-drive-mk3",
+      "displayName": "Razorfin Pursuit Drive Mk III",
+      "manufacturerId": "razorfin-aerospace",
+      "manufacturer": "Razorfin Aerospace",
+      "mark": 3,
+      "description": "Combat-focused hardware tuned for rapid response and uncompromising performance. This Mark III pursuit drive represents advanced contract-grade hardware.",
+      "type": "engine",
+      "slot": "engine",
+      "powerRequirement": 40,
+      "price": 3450,
+      "resaleValue": 2070,
+      "engine": {
+        "maximumForwardSpeedBonus": 68,
+        "accelerationMultiplier": 1.34,
+        "decelerationMultiplier": 1.28
+      },
+      "tags": [
+        "player-compatible",
+        "tier-3",
+        "engine",
+        "manufacturer:razorfin"
+      ]
+    },
+    {
+      "id": "razorfin-vector-drive-mk4",
+      "displayName": "Razorfin Pursuit Drive Mk IV",
+      "manufacturerId": "razorfin-aerospace",
+      "manufacturer": "Razorfin Aerospace",
+      "mark": 4,
+      "description": "Combat-focused hardware tuned for rapid response and uncompromising performance. This Mark IV pursuit drive represents the manufacturer's flagship specification.",
+      "type": "engine",
+      "slot": "engine",
+      "powerRequirement": 45,
+      "price": 6300,
+      "resaleValue": 3780,
+      "engine": {
+        "maximumForwardSpeedBonus": 100,
+        "accelerationMultiplier": 1.48,
+        "decelerationMultiplier": 1.4
+      },
+      "tags": [
+        "player-compatible",
+        "tier-4",
+        "engine",
+        "manufacturer:razorfin"
+      ]
+    },
+    {
+      "id": "astravault-vector-drive-mk1",
+      "displayName": "Astravault Phantom Drive Mk I",
+      "manufacturerId": "astravault-systems",
+      "manufacturer": "Astravault Systems",
+      "mark": 1,
+      "description": "Prestige technology combining exceptional efficiency with exacting performance. This Mark I phantom drive represents the accessible entry point.",
+      "type": "engine",
+      "slot": "engine",
+      "powerRequirement": 20,
+      "price": 820,
+      "resaleValue": 492,
+      "engine": {
+        "maximumForwardSpeedBonus": 12,
+        "accelerationMultiplier": 1.08,
+        "decelerationMultiplier": 1.1
+      },
+      "tags": [
+        "player-compatible",
+        "tier-1",
+        "engine",
+        "manufacturer:astravault"
+      ]
+    },
+    {
+      "id": "astravault-vector-drive-mk2",
+      "displayName": "Astravault Phantom Drive Mk II",
+      "manufacturerId": "astravault-systems",
+      "manufacturer": "Astravault Systems",
+      "mark": 2,
+      "description": "Prestige technology combining exceptional efficiency with exacting performance. This Mark II phantom drive represents a proven field upgrade.",
+      "type": "engine",
+      "slot": "engine",
+      "powerRequirement": 23,
+      "price": 1840,
+      "resaleValue": 1104,
+      "engine": {
+        "maximumForwardSpeedBonus": 34,
+        "accelerationMultiplier": 1.18,
+        "decelerationMultiplier": 1.22
+      },
+      "tags": [
+        "player-compatible",
+        "tier-2",
+        "engine",
+        "manufacturer:astravault"
+      ]
+    },
+    {
+      "id": "astravault-vector-drive-mk3",
+      "displayName": "Astravault Phantom Drive Mk III",
+      "manufacturerId": "astravault-systems",
+      "manufacturer": "Astravault Systems",
+      "mark": 3,
+      "description": "Prestige technology combining exceptional efficiency with exacting performance. This Mark III phantom drive represents advanced contract-grade hardware.",
+      "type": "engine",
+      "slot": "engine",
+      "powerRequirement": 27,
+      "price": 4720,
+      "resaleValue": 2832,
+      "engine": {
+        "maximumForwardSpeedBonus": 62,
+        "accelerationMultiplier": 1.3,
+        "decelerationMultiplier": 1.36
+      },
+      "tags": [
+        "player-compatible",
+        "tier-3",
+        "engine",
+        "manufacturer:astravault"
+      ]
+    },
+    {
+      "id": "astravault-vector-drive-mk4",
+      "displayName": "Astravault Phantom Drive Mk IV",
+      "manufacturerId": "astravault-systems",
+      "manufacturer": "Astravault Systems",
+      "mark": 4,
+      "description": "Prestige technology combining exceptional efficiency with exacting performance. This Mark IV phantom drive represents the manufacturer's flagship specification.",
+      "type": "engine",
+      "slot": "engine",
+      "powerRequirement": 32,
+      "price": 8610,
+      "resaleValue": 5166,
+      "engine": {
+        "maximumForwardSpeedBonus": 92,
+        "accelerationMultiplier": 1.43,
+        "decelerationMultiplier": 1.52
+      },
+      "tags": [
+        "player-compatible",
+        "tier-4",
+        "engine",
+        "manufacturer:astravault"
+      ]
+    },
+    {
+      "id": "novacrest-deflector-mk2",
+      "displayName": "Novacrest Bulwark Deflector Mk II",
+      "manufacturerId": "novacrest-dynamics",
+      "manufacturer": "Novacrest Dynamics",
+      "mark": 2,
+      "description": "Rugged commercial hardware prioritising affordability and straightforward field maintenance. This Mark II bulwark deflector represents a proven field upgrade.",
+      "type": "shield",
+      "slot": "shield",
+      "powerRequirement": 25,
+      "price": 1350,
+      "resaleValue": 810,
+      "shield": {
+        "capacity": 125,
+        "rechargePerSecond": 15,
+        "rechargeDelay": 2.8,
+        "energyAbsorption": 0.82,
+        "kineticAbsorption": 0.3
+      },
+      "tags": [
+        "player-compatible",
+        "tier-2",
+        "shield",
+        "manufacturer:novacrest"
+      ]
+    },
+    {
+      "id": "novacrest-deflector-mk3",
+      "displayName": "Novacrest Bulwark Deflector Mk III",
+      "manufacturerId": "novacrest-dynamics",
+      "manufacturer": "Novacrest Dynamics",
+      "mark": 3,
+      "description": "Rugged commercial hardware prioritising affordability and straightforward field maintenance. This Mark III bulwark deflector represents advanced contract-grade hardware.",
+      "type": "shield",
+      "slot": "shield",
+      "powerRequirement": 30,
+      "price": 2600,
+      "resaleValue": 1560,
+      "shield": {
+        "capacity": 155,
+        "rechargePerSecond": 18,
+        "rechargeDelay": 2.6,
+        "energyAbsorption": 0.84,
+        "kineticAbsorption": 0.35
+      },
+      "tags": [
+        "player-compatible",
+        "tier-3",
+        "shield",
+        "manufacturer:novacrest"
+      ]
+    },
+    {
+      "id": "novacrest-deflector-mk4",
+      "displayName": "Novacrest Bulwark Deflector Mk IV",
+      "manufacturerId": "novacrest-dynamics",
+      "manufacturer": "Novacrest Dynamics",
+      "mark": 4,
+      "description": "Rugged commercial hardware prioritising affordability and straightforward field maintenance. This Mark IV bulwark deflector represents the manufacturer's flagship specification.",
+      "type": "shield",
+      "slot": "shield",
+      "powerRequirement": 36,
+      "price": 4600,
+      "resaleValue": 2760,
+      "shield": {
+        "capacity": 190,
+        "rechargePerSecond": 22,
+        "rechargeDelay": 2.4,
+        "energyAbsorption": 0.86,
+        "kineticAbsorption": 0.4
+      },
+      "tags": [
+        "player-compatible",
+        "tier-4",
+        "shield",
+        "manufacturer:novacrest"
+      ]
+    },
+    {
+      "id": "astrodyne-deflector-mk1",
+      "displayName": "Astrodyne Aegis Deflector Mk I",
+      "manufacturerId": "astrodyne-systems",
+      "manufacturer": "Astrodyne Systems",
+      "mark": 1,
+      "description": "Professional-grade hardware balancing output, efficiency and dependable operation. This Mark I aegis deflector represents the accessible entry point.",
+      "type": "shield",
+      "slot": "shield",
+      "powerRequirement": 20,
+      "price": 850,
+      "resaleValue": 510,
+      "shield": {
+        "capacity": 95,
+        "rechargePerSecond": 13,
+        "rechargeDelay": 2.8,
+        "energyAbsorption": 0.78,
+        "kineticAbsorption": 0.32
+      },
+      "tags": [
+        "player-compatible",
+        "tier-1",
+        "shield",
+        "manufacturer:astrodyne"
+      ]
+    },
+    {
+      "id": "astrodyne-deflector-mk2",
+      "displayName": "Astrodyne Aegis Deflector Mk II",
+      "manufacturerId": "astrodyne-systems",
+      "manufacturer": "Astrodyne Systems",
+      "mark": 2,
+      "description": "Professional-grade hardware balancing output, efficiency and dependable operation. This Mark II aegis deflector represents a proven field upgrade.",
+      "type": "shield",
+      "slot": "shield",
+      "powerRequirement": 24,
+      "price": 1650,
+      "resaleValue": 990,
+      "shield": {
+        "capacity": 125,
+        "rechargePerSecond": 17,
+        "rechargeDelay": 2.5,
+        "energyAbsorption": 0.81,
+        "kineticAbsorption": 0.38
+      },
+      "tags": [
+        "player-compatible",
+        "tier-2",
+        "shield",
+        "manufacturer:astrodyne"
+      ]
+    },
+    {
+      "id": "astrodyne-deflector-mk3",
+      "displayName": "Astrodyne Aegis Deflector Mk III",
+      "manufacturerId": "astrodyne-systems",
+      "manufacturer": "Astrodyne Systems",
+      "mark": 3,
+      "description": "Professional-grade hardware balancing output, efficiency and dependable operation. This Mark III aegis deflector represents advanced contract-grade hardware.",
+      "type": "shield",
+      "slot": "shield",
+      "powerRequirement": 29,
+      "price": 3170,
+      "resaleValue": 1902,
+      "shield": {
+        "capacity": 160,
+        "rechargePerSecond": 22,
+        "rechargeDelay": 2.2,
+        "energyAbsorption": 0.84,
+        "kineticAbsorption": 0.44
+      },
+      "tags": [
+        "player-compatible",
+        "tier-3",
+        "shield",
+        "manufacturer:astrodyne"
+      ]
+    },
+    {
+      "id": "astrodyne-deflector-mk4",
+      "displayName": "Astrodyne Aegis Deflector Mk IV",
+      "manufacturerId": "astrodyne-systems",
+      "manufacturer": "Astrodyne Systems",
+      "mark": 4,
+      "description": "Professional-grade hardware balancing output, efficiency and dependable operation. This Mark IV aegis deflector represents the manufacturer's flagship specification.",
+      "type": "shield",
+      "slot": "shield",
+      "powerRequirement": 34,
+      "price": 5610,
+      "resaleValue": 3366,
+      "shield": {
+        "capacity": 200,
+        "rechargePerSecond": 28,
+        "rechargeDelay": 2,
+        "energyAbsorption": 0.87,
+        "kineticAbsorption": 0.5
+      },
+      "tags": [
+        "player-compatible",
+        "tier-4",
+        "shield",
+        "manufacturer:astrodyne"
+      ]
+    },
+    {
+      "id": "razorfin-deflector-mk1",
+      "displayName": "Razorfin Raptor Deflector Mk I",
+      "manufacturerId": "razorfin-aerospace",
+      "manufacturer": "Razorfin Aerospace",
+      "mark": 1,
+      "description": "Combat-focused hardware tuned for rapid response and uncompromising performance. This Mark I raptor deflector represents the accessible entry point.",
+      "type": "shield",
+      "slot": "shield",
+      "powerRequirement": 24,
+      "price": 1050,
+      "resaleValue": 630,
+      "shield": {
+        "capacity": 85,
+        "rechargePerSecond": 16,
+        "rechargeDelay": 2.4,
+        "energyAbsorption": 0.76,
+        "kineticAbsorption": 0.24
+      },
+      "tags": [
+        "player-compatible",
+        "tier-1",
+        "shield",
+        "manufacturer:razorfin"
+      ]
+    },
+    {
+      "id": "razorfin-deflector-mk2",
+      "displayName": "Razorfin Raptor Deflector Mk II",
+      "manufacturerId": "razorfin-aerospace",
+      "manufacturer": "Razorfin Aerospace",
+      "mark": 2,
+      "description": "Combat-focused hardware tuned for rapid response and uncompromising performance. This Mark II raptor deflector represents a proven field upgrade.",
+      "type": "shield",
+      "slot": "shield",
+      "powerRequirement": 29,
+      "price": 2030,
+      "resaleValue": 1218,
+      "shield": {
+        "capacity": 112,
+        "rechargePerSecond": 21,
+        "rechargeDelay": 2.1,
+        "energyAbsorption": 0.8,
+        "kineticAbsorption": 0.29
+      },
+      "tags": [
+        "player-compatible",
+        "tier-2",
+        "shield",
+        "manufacturer:razorfin"
+      ]
+    },
+    {
+      "id": "razorfin-deflector-mk3",
+      "displayName": "Razorfin Raptor Deflector Mk III",
+      "manufacturerId": "razorfin-aerospace",
+      "manufacturer": "Razorfin Aerospace",
+      "mark": 3,
+      "description": "Combat-focused hardware tuned for rapid response and uncompromising performance. This Mark III raptor deflector represents advanced contract-grade hardware.",
+      "type": "shield",
+      "slot": "shield",
+      "powerRequirement": 35,
+      "price": 3900,
+      "resaleValue": 2340,
+      "shield": {
+        "capacity": 145,
+        "rechargePerSecond": 28,
+        "rechargeDelay": 1.8,
+        "energyAbsorption": 0.84,
+        "kineticAbsorption": 0.34
+      },
+      "tags": [
+        "player-compatible",
+        "tier-3",
+        "shield",
+        "manufacturer:razorfin"
+      ]
+    },
+    {
+      "id": "razorfin-deflector-mk4",
+      "displayName": "Razorfin Raptor Deflector Mk IV",
+      "manufacturerId": "razorfin-aerospace",
+      "manufacturer": "Razorfin Aerospace",
+      "mark": 4,
+      "description": "Combat-focused hardware tuned for rapid response and uncompromising performance. This Mark IV raptor deflector represents the manufacturer's flagship specification.",
+      "type": "shield",
+      "slot": "shield",
+      "powerRequirement": 40,
+      "price": 6900,
+      "resaleValue": 4140,
+      "shield": {
+        "capacity": 180,
+        "rechargePerSecond": 36,
+        "rechargeDelay": 1.5,
+        "energyAbsorption": 0.88,
+        "kineticAbsorption": 0.4
+      },
+      "tags": [
+        "player-compatible",
+        "tier-4",
+        "shield",
+        "manufacturer:razorfin"
+      ]
+    },
+    {
+      "id": "astravault-deflector-mk1",
+      "displayName": "Astravault Halo Deflector Mk I",
+      "manufacturerId": "astravault-systems",
+      "manufacturer": "Astravault Systems",
+      "mark": 1,
+      "description": "Prestige technology combining exceptional efficiency with exacting performance. This Mark I halo deflector represents the accessible entry point.",
+      "type": "shield",
+      "slot": "shield",
+      "powerRequirement": 18,
+      "price": 1430,
+      "resaleValue": 858,
+      "shield": {
+        "capacity": 105,
+        "rechargePerSecond": 15,
+        "rechargeDelay": 2.5,
+        "energyAbsorption": 0.84,
+        "kineticAbsorption": 0.34
+      },
+      "tags": [
+        "player-compatible",
+        "tier-1",
+        "shield",
+        "manufacturer:astravault"
+      ]
+    },
+    {
+      "id": "astravault-deflector-mk2",
+      "displayName": "Astravault Halo Deflector Mk II",
+      "manufacturerId": "astravault-systems",
+      "manufacturer": "Astravault Systems",
+      "mark": 2,
+      "description": "Prestige technology combining exceptional efficiency with exacting performance. This Mark II halo deflector represents a proven field upgrade.",
+      "type": "shield",
+      "slot": "shield",
+      "powerRequirement": 21,
+      "price": 2770,
+      "resaleValue": 1662,
+      "shield": {
+        "capacity": 140,
+        "rechargePerSecond": 21,
+        "rechargeDelay": 2.1,
+        "energyAbsorption": 0.87,
+        "kineticAbsorption": 0.42
+      },
+      "tags": [
+        "player-compatible",
+        "tier-2",
+        "shield",
+        "manufacturer:astravault"
+      ]
+    },
+    {
+      "id": "astravault-deflector-mk3",
+      "displayName": "Astravault Halo Deflector Mk III",
+      "manufacturerId": "astravault-systems",
+      "manufacturer": "Astravault Systems",
+      "mark": 3,
+      "description": "Prestige technology combining exceptional efficiency with exacting performance. This Mark III halo deflector represents advanced contract-grade hardware.",
+      "type": "shield",
+      "slot": "shield",
+      "powerRequirement": 25,
+      "price": 5330,
+      "resaleValue": 3198,
+      "shield": {
+        "capacity": 180,
+        "rechargePerSecond": 29,
+        "rechargeDelay": 1.7,
+        "energyAbsorption": 0.9,
+        "kineticAbsorption": 0.5
+      },
+      "tags": [
+        "player-compatible",
+        "tier-3",
+        "shield",
+        "manufacturer:astravault"
+      ]
+    },
+    {
+      "id": "astravault-deflector-mk4",
+      "displayName": "Astravault Halo Deflector Mk IV",
+      "manufacturerId": "astravault-systems",
+      "manufacturer": "Astravault Systems",
+      "mark": 4,
+      "description": "Prestige technology combining exceptional efficiency with exacting performance. This Mark IV halo deflector represents the manufacturer's flagship specification.",
+      "type": "shield",
+      "slot": "shield",
+      "powerRequirement": 30,
+      "price": 9430,
+      "resaleValue": 5658,
+      "shield": {
+        "capacity": 230,
+        "rechargePerSecond": 39,
+        "rechargeDelay": 1.3,
+        "energyAbsorption": 0.93,
+        "kineticAbsorption": 0.58
+      },
+      "tags": [
+        "player-compatible",
+        "tier-4",
+        "shield",
+        "manufacturer:astravault"
+      ]
+    },
+    {
+      "id": "novacrest-armour-mk2",
+      "displayName": "Novacrest Bastion Plating Mk II",
+      "manufacturerId": "novacrest-dynamics",
+      "manufacturer": "Novacrest Dynamics",
+      "mark": 2,
+      "description": "Rugged commercial hardware prioritising affordability and straightforward field maintenance. This Mark II bastion plating represents a proven field upgrade.",
+      "type": "armour",
+      "slot": "armour",
+      "powerRequirement": 0,
+      "price": 1250,
+      "resaleValue": 750,
+      "armour": {
+        "bonusHull": 60,
+        "energyMultiplier": 0.91,
+        "kineticMultiplier": 0.64
+      },
+      "tags": [
+        "player-compatible",
+        "tier-2",
+        "armour",
+        "manufacturer:novacrest"
+      ]
+    },
+    {
+      "id": "novacrest-armour-mk3",
+      "displayName": "Novacrest Bastion Plating Mk III",
+      "manufacturerId": "novacrest-dynamics",
+      "manufacturer": "Novacrest Dynamics",
+      "mark": 3,
+      "description": "Rugged commercial hardware prioritising affordability and straightforward field maintenance. This Mark III bastion plating represents advanced contract-grade hardware.",
+      "type": "armour",
+      "slot": "armour",
+      "powerRequirement": 0,
+      "price": 2400,
+      "resaleValue": 1440,
+      "armour": {
+        "bonusHull": 85,
+        "energyMultiplier": 0.87,
+        "kineticMultiplier": 0.57
+      },
+      "tags": [
+        "player-compatible",
+        "tier-3",
+        "armour",
+        "manufacturer:novacrest"
+      ]
+    },
+    {
+      "id": "novacrest-armour-mk4",
+      "displayName": "Novacrest Bastion Plating Mk IV",
+      "manufacturerId": "novacrest-dynamics",
+      "manufacturer": "Novacrest Dynamics",
+      "mark": 4,
+      "description": "Rugged commercial hardware prioritising affordability and straightforward field maintenance. This Mark IV bastion plating represents the manufacturer's flagship specification.",
+      "type": "armour",
+      "slot": "armour",
+      "powerRequirement": 0,
+      "price": 4200,
+      "resaleValue": 2520,
+      "armour": {
+        "bonusHull": 115,
+        "energyMultiplier": 0.83,
+        "kineticMultiplier": 0.5
+      },
+      "tags": [
+        "player-compatible",
+        "tier-4",
+        "armour",
+        "manufacturer:novacrest"
+      ]
+    },
+    {
+      "id": "astrodyne-armour-mk1",
+      "displayName": "Astrodyne Cerametal Plating Mk I",
+      "manufacturerId": "astrodyne-systems",
+      "manufacturer": "Astrodyne Systems",
+      "mark": 1,
+      "description": "Professional-grade hardware balancing output, efficiency and dependable operation. This Mark I cerametal plating represents the accessible entry point.",
+      "type": "armour",
+      "slot": "armour",
+      "powerRequirement": 0,
+      "price": 790,
+      "resaleValue": 474,
+      "armour": {
+        "bonusHull": 35,
+        "energyMultiplier": 0.9,
+        "kineticMultiplier": 0.74
+      },
+      "tags": [
+        "player-compatible",
+        "tier-1",
+        "armour",
+        "manufacturer:astrodyne"
+      ]
+    },
+    {
+      "id": "astrodyne-armour-mk2",
+      "displayName": "Astrodyne Cerametal Plating Mk II",
+      "manufacturerId": "astrodyne-systems",
+      "manufacturer": "Astrodyne Systems",
+      "mark": 2,
+      "description": "Professional-grade hardware balancing output, efficiency and dependable operation. This Mark II cerametal plating represents a proven field upgrade.",
+      "type": "armour",
+      "slot": "armour",
+      "powerRequirement": 0,
+      "price": 1530,
+      "resaleValue": 918,
+      "armour": {
+        "bonusHull": 58,
+        "energyMultiplier": 0.84,
+        "kineticMultiplier": 0.67
+      },
+      "tags": [
+        "player-compatible",
+        "tier-2",
+        "armour",
+        "manufacturer:astrodyne"
+      ]
+    },
+    {
+      "id": "astrodyne-armour-mk3",
+      "displayName": "Astrodyne Cerametal Plating Mk III",
+      "manufacturerId": "astrodyne-systems",
+      "manufacturer": "Astrodyne Systems",
+      "mark": 3,
+      "description": "Professional-grade hardware balancing output, efficiency and dependable operation. This Mark III cerametal plating represents advanced contract-grade hardware.",
+      "type": "armour",
+      "slot": "armour",
+      "powerRequirement": 0,
+      "price": 2930,
+      "resaleValue": 1758,
+      "armour": {
+        "bonusHull": 84,
+        "energyMultiplier": 0.78,
+        "kineticMultiplier": 0.6
+      },
+      "tags": [
+        "player-compatible",
+        "tier-3",
+        "armour",
+        "manufacturer:astrodyne"
+      ]
+    },
+    {
+      "id": "astrodyne-armour-mk4",
+      "displayName": "Astrodyne Cerametal Plating Mk IV",
+      "manufacturerId": "astrodyne-systems",
+      "manufacturer": "Astrodyne Systems",
+      "mark": 4,
+      "description": "Professional-grade hardware balancing output, efficiency and dependable operation. This Mark IV cerametal plating represents the manufacturer's flagship specification.",
+      "type": "armour",
+      "slot": "armour",
+      "powerRequirement": 0,
+      "price": 5120,
+      "resaleValue": 3072,
+      "armour": {
+        "bonusHull": 112,
+        "energyMultiplier": 0.72,
+        "kineticMultiplier": 0.53
+      },
+      "tags": [
+        "player-compatible",
+        "tier-4",
+        "armour",
+        "manufacturer:astrodyne"
+      ]
+    },
+    {
+      "id": "razorfin-armour-mk1",
+      "displayName": "Razorfin Strike Plating Mk I",
+      "manufacturerId": "razorfin-aerospace",
+      "manufacturer": "Razorfin Aerospace",
+      "mark": 1,
+      "description": "Combat-focused hardware tuned for rapid response and uncompromising performance. This Mark I strike plating represents the accessible entry point.",
+      "type": "armour",
+      "slot": "armour",
+      "powerRequirement": 0,
+      "price": 980,
+      "resaleValue": 588,
+      "armour": {
+        "bonusHull": 25,
+        "energyMultiplier": 0.92,
+        "kineticMultiplier": 0.82
+      },
+      "tags": [
+        "player-compatible",
+        "tier-1",
+        "armour",
+        "manufacturer:razorfin"
+      ]
+    },
+    {
+      "id": "razorfin-armour-mk2",
+      "displayName": "Razorfin Strike Plating Mk II",
+      "manufacturerId": "razorfin-aerospace",
+      "manufacturer": "Razorfin Aerospace",
+      "mark": 2,
+      "description": "Combat-focused hardware tuned for rapid response and uncompromising performance. This Mark II strike plating represents a proven field upgrade.",
+      "type": "armour",
+      "slot": "armour",
+      "powerRequirement": 0,
+      "price": 1880,
+      "resaleValue": 1128,
+      "armour": {
+        "bonusHull": 42,
+        "energyMultiplier": 0.86,
+        "kineticMultiplier": 0.74
+      },
+      "tags": [
+        "player-compatible",
+        "tier-2",
+        "armour",
+        "manufacturer:razorfin"
+      ]
+    },
+    {
+      "id": "razorfin-armour-mk3",
+      "displayName": "Razorfin Strike Plating Mk III",
+      "manufacturerId": "razorfin-aerospace",
+      "manufacturer": "Razorfin Aerospace",
+      "mark": 3,
+      "description": "Combat-focused hardware tuned for rapid response and uncompromising performance. This Mark III strike plating represents advanced contract-grade hardware.",
+      "type": "armour",
+      "slot": "armour",
+      "powerRequirement": 0,
+      "price": 3600,
+      "resaleValue": 2160,
+      "armour": {
+        "bonusHull": 62,
+        "energyMultiplier": 0.8,
+        "kineticMultiplier": 0.66
+      },
+      "tags": [
+        "player-compatible",
+        "tier-3",
+        "armour",
+        "manufacturer:razorfin"
+      ]
+    },
+    {
+      "id": "razorfin-armour-mk4",
+      "displayName": "Razorfin Strike Plating Mk IV",
+      "manufacturerId": "razorfin-aerospace",
+      "manufacturer": "Razorfin Aerospace",
+      "mark": 4,
+      "description": "Combat-focused hardware tuned for rapid response and uncompromising performance. This Mark IV strike plating represents the manufacturer's flagship specification.",
+      "type": "armour",
+      "slot": "armour",
+      "powerRequirement": 0,
+      "price": 6300,
+      "resaleValue": 3780,
+      "armour": {
+        "bonusHull": 86,
+        "energyMultiplier": 0.74,
+        "kineticMultiplier": 0.58
+      },
+      "tags": [
+        "player-compatible",
+        "tier-4",
+        "armour",
+        "manufacturer:razorfin"
+      ]
+    },
+    {
+      "id": "astravault-armour-mk1",
+      "displayName": "Astravault Phaseweave Plating Mk I",
+      "manufacturerId": "astravault-systems",
+      "manufacturer": "Astravault Systems",
+      "mark": 1,
+      "description": "Prestige technology combining exceptional efficiency with exacting performance. This Mark I phaseweave plating represents the accessible entry point.",
+      "type": "armour",
+      "slot": "armour",
+      "powerRequirement": 0,
+      "price": 1330,
+      "resaleValue": 798,
+      "armour": {
+        "bonusHull": 30,
+        "energyMultiplier": 0.82,
+        "kineticMultiplier": 0.86
+      },
+      "tags": [
+        "player-compatible",
+        "tier-1",
+        "armour",
+        "manufacturer:astravault"
+      ]
+    },
+    {
+      "id": "astravault-armour-mk2",
+      "displayName": "Astravault Phaseweave Plating Mk II",
+      "manufacturerId": "astravault-systems",
+      "manufacturer": "Astravault Systems",
+      "mark": 2,
+      "description": "Prestige technology combining exceptional efficiency with exacting performance. This Mark II phaseweave plating represents a proven field upgrade.",
+      "type": "armour",
+      "slot": "armour",
+      "powerRequirement": 0,
+      "price": 2560,
+      "resaleValue": 1536,
+      "armour": {
+        "bonusHull": 50,
+        "energyMultiplier": 0.74,
+        "kineticMultiplier": 0.79
+      },
+      "tags": [
+        "player-compatible",
+        "tier-2",
+        "armour",
+        "manufacturer:astravault"
+      ]
+    },
+    {
+      "id": "astravault-armour-mk3",
+      "displayName": "Astravault Phaseweave Plating Mk III",
+      "manufacturerId": "astravault-systems",
+      "manufacturer": "Astravault Systems",
+      "mark": 3,
+      "description": "Prestige technology combining exceptional efficiency with exacting performance. This Mark III phaseweave plating represents advanced contract-grade hardware.",
+      "type": "armour",
+      "slot": "armour",
+      "powerRequirement": 0,
+      "price": 4920,
+      "resaleValue": 2952,
+      "armour": {
+        "bonusHull": 74,
+        "energyMultiplier": 0.66,
+        "kineticMultiplier": 0.72
+      },
+      "tags": [
+        "player-compatible",
+        "tier-3",
+        "armour",
+        "manufacturer:astravault"
+      ]
+    },
+    {
+      "id": "astravault-armour-mk4",
+      "displayName": "Astravault Phaseweave Plating Mk IV",
+      "manufacturerId": "astravault-systems",
+      "manufacturer": "Astravault Systems",
+      "mark": 4,
+      "description": "Prestige technology combining exceptional efficiency with exacting performance. This Mark IV phaseweave plating represents the manufacturer's flagship specification.",
+      "type": "armour",
+      "slot": "armour",
+      "powerRequirement": 0,
+      "price": 8610,
+      "resaleValue": 5166,
+      "armour": {
+        "bonusHull": 100,
+        "energyMultiplier": 0.58,
+        "kineticMultiplier": 0.65
+      },
+      "tags": [
+        "player-compatible",
+        "tier-4",
+        "armour",
+        "manufacturer:astravault"
+      ]
+    },
+    {
+      "id": "novacrest-avionics-mk4",
+      "displayName": "Novacrest Helm Avionics Mk IV",
+      "manufacturerId": "novacrest-dynamics",
+      "manufacturer": "Novacrest Dynamics",
+      "mark": 4,
+      "description": "Rugged commercial hardware prioritising affordability and straightforward field maintenance. This Mark IV helm avionics represents the manufacturer's flagship specification.",
+      "type": "flight-control",
+      "slot": "flight-control",
+      "powerRequirement": 8,
+      "price": 3900,
+      "resaleValue": 2340,
+      "flightControl": {
+        "sidestepSpeedBonus": 12,
+        "yawRateMultiplier": 1.3,
+        "pitchRateMultiplier": 1.3,
+        "maximumBankDegreesBonus": 14
+      },
+      "tags": [
+        "player-compatible",
+        "tier-4",
+        "flight-control",
+        "manufacturer:novacrest"
+      ]
+    },
+    {
+      "id": "astrodyne-avionics-mk1",
+      "displayName": "Astrodyne Vector Avionics Mk I",
+      "manufacturerId": "astrodyne-systems",
+      "manufacturer": "Astrodyne Systems",
+      "mark": 1,
+      "description": "Professional-grade hardware balancing output, efficiency and dependable operation. This Mark I vector avionics represents the accessible entry point.",
+      "type": "flight-control",
+      "slot": "flight-control",
+      "powerRequirement": 5,
+      "price": 430,
+      "resaleValue": 258,
+      "flightControl": {
+        "sidestepSpeedBonus": 2,
+        "yawRateMultiplier": 1.05,
+        "pitchRateMultiplier": 1.05,
+        "maximumBankDegreesBonus": 2
+      },
+      "tags": [
+        "player-compatible",
+        "tier-1",
+        "flight-control",
+        "manufacturer:astrodyne"
+      ]
+    },
+    {
+      "id": "astrodyne-avionics-mk2",
+      "displayName": "Astrodyne Vector Avionics Mk II",
+      "manufacturerId": "astrodyne-systems",
+      "manufacturer": "Astrodyne Systems",
+      "mark": 2,
+      "description": "Professional-grade hardware balancing output, efficiency and dependable operation. This Mark II vector avionics represents a proven field upgrade.",
+      "type": "flight-control",
+      "slot": "flight-control",
+      "powerRequirement": 6,
+      "price": 1040,
+      "resaleValue": 624,
+      "flightControl": {
+        "sidestepSpeedBonus": 5,
+        "yawRateMultiplier": 1.14,
+        "pitchRateMultiplier": 1.14,
+        "maximumBankDegreesBonus": 6
+      },
+      "tags": [
+        "player-compatible",
+        "tier-2",
+        "flight-control",
+        "manufacturer:astrodyne"
+      ]
+    },
+    {
+      "id": "astrodyne-avionics-mk3",
+      "displayName": "Astrodyne Vector Avionics Mk III",
+      "manufacturerId": "astrodyne-systems",
+      "manufacturer": "Astrodyne Systems",
+      "mark": 3,
+      "description": "Professional-grade hardware balancing output, efficiency and dependable operation. This Mark III vector avionics represents advanced contract-grade hardware.",
+      "type": "flight-control",
+      "slot": "flight-control",
+      "powerRequirement": 7,
+      "price": 2560,
+      "resaleValue": 1536,
+      "flightControl": {
+        "sidestepSpeedBonus": 9,
+        "yawRateMultiplier": 1.24,
+        "pitchRateMultiplier": 1.24,
+        "maximumBankDegreesBonus": 10
+      },
+      "tags": [
+        "player-compatible",
+        "tier-3",
+        "flight-control",
+        "manufacturer:astrodyne"
+      ]
+    },
+    {
+      "id": "astrodyne-avionics-mk4",
+      "displayName": "Astrodyne Vector Avionics Mk IV",
+      "manufacturerId": "astrodyne-systems",
+      "manufacturer": "Astrodyne Systems",
+      "mark": 4,
+      "description": "Professional-grade hardware balancing output, efficiency and dependable operation. This Mark IV vector avionics represents the manufacturer's flagship specification.",
+      "type": "flight-control",
+      "slot": "flight-control",
+      "powerRequirement": 8,
+      "price": 4760,
+      "resaleValue": 2856,
+      "flightControl": {
+        "sidestepSpeedBonus": 14,
+        "yawRateMultiplier": 1.36,
+        "pitchRateMultiplier": 1.36,
+        "maximumBankDegreesBonus": 15
+      },
+      "tags": [
+        "player-compatible",
+        "tier-4",
+        "flight-control",
+        "manufacturer:astrodyne"
+      ]
+    },
+    {
+      "id": "razorfin-avionics-mk1",
+      "displayName": "Razorfin Talon Avionics Mk I",
+      "manufacturerId": "razorfin-aerospace",
+      "manufacturer": "Razorfin Aerospace",
+      "mark": 1,
+      "description": "Combat-focused hardware tuned for rapid response and uncompromising performance. This Mark I talon avionics represents the accessible entry point.",
+      "type": "flight-control",
+      "slot": "flight-control",
+      "powerRequirement": 6,
+      "price": 530,
+      "resaleValue": 318,
+      "flightControl": {
+        "sidestepSpeedBonus": 4,
+        "yawRateMultiplier": 1.1,
+        "pitchRateMultiplier": 1.08,
+        "maximumBankDegreesBonus": 4
+      },
+      "tags": [
+        "player-compatible",
+        "tier-1",
+        "flight-control",
+        "manufacturer:razorfin"
+      ]
+    },
+    {
+      "id": "razorfin-avionics-mk2",
+      "displayName": "Razorfin Talon Avionics Mk II",
+      "manufacturerId": "razorfin-aerospace",
+      "manufacturer": "Razorfin Aerospace",
+      "mark": 2,
+      "description": "Combat-focused hardware tuned for rapid response and uncompromising performance. This Mark II talon avionics represents a proven field upgrade.",
+      "type": "flight-control",
+      "slot": "flight-control",
+      "powerRequirement": 8,
+      "price": 1280,
+      "resaleValue": 768,
+      "flightControl": {
+        "sidestepSpeedBonus": 8,
+        "yawRateMultiplier": 1.2,
+        "pitchRateMultiplier": 1.17,
+        "maximumBankDegreesBonus": 8
+      },
+      "tags": [
+        "player-compatible",
+        "tier-2",
+        "flight-control",
+        "manufacturer:razorfin"
+      ]
+    },
+    {
+      "id": "razorfin-avionics-mk3",
+      "displayName": "Razorfin Talon Avionics Mk III",
+      "manufacturerId": "razorfin-aerospace",
+      "manufacturer": "Razorfin Aerospace",
+      "mark": 3,
+      "description": "Combat-focused hardware tuned for rapid response and uncompromising performance. This Mark III talon avionics represents advanced contract-grade hardware.",
+      "type": "flight-control",
+      "slot": "flight-control",
+      "powerRequirement": 10,
+      "price": 3150,
+      "resaleValue": 1890,
+      "flightControl": {
+        "sidestepSpeedBonus": 13,
+        "yawRateMultiplier": 1.32,
+        "pitchRateMultiplier": 1.28,
+        "maximumBankDegreesBonus": 14
+      },
+      "tags": [
+        "player-compatible",
+        "tier-3",
+        "flight-control",
+        "manufacturer:razorfin"
+      ]
+    },
+    {
+      "id": "razorfin-avionics-mk4",
+      "displayName": "Razorfin Talon Avionics Mk IV",
+      "manufacturerId": "razorfin-aerospace",
+      "manufacturer": "Razorfin Aerospace",
+      "mark": 4,
+      "description": "Combat-focused hardware tuned for rapid response and uncompromising performance. This Mark IV talon avionics represents the manufacturer's flagship specification.",
+      "type": "flight-control",
+      "slot": "flight-control",
+      "powerRequirement": 12,
+      "price": 5850,
+      "resaleValue": 3510,
+      "flightControl": {
+        "sidestepSpeedBonus": 19,
+        "yawRateMultiplier": 1.46,
+        "pitchRateMultiplier": 1.4,
+        "maximumBankDegreesBonus": 20
+      },
+      "tags": [
+        "player-compatible",
+        "tier-4",
+        "flight-control",
+        "manufacturer:razorfin"
+      ]
+    },
+    {
+      "id": "astravault-avionics-mk1",
+      "displayName": "Astravault Oracle Avionics Mk I",
+      "manufacturerId": "astravault-systems",
+      "manufacturer": "Astravault Systems",
+      "mark": 1,
+      "description": "Prestige technology combining exceptional efficiency with exacting performance. This Mark I oracle avionics represents the accessible entry point.",
+      "type": "flight-control",
+      "slot": "flight-control",
+      "powerRequirement": 4,
+      "price": 720,
+      "resaleValue": 432,
+      "flightControl": {
+        "sidestepSpeedBonus": 3,
+        "yawRateMultiplier": 1.08,
+        "pitchRateMultiplier": 1.08,
+        "maximumBankDegreesBonus": 5
+      },
+      "tags": [
+        "player-compatible",
+        "tier-1",
+        "flight-control",
+        "manufacturer:astravault"
+      ]
+    },
+    {
+      "id": "astravault-avionics-mk2",
+      "displayName": "Astravault Oracle Avionics Mk II",
+      "manufacturerId": "astravault-systems",
+      "manufacturer": "Astravault Systems",
+      "mark": 2,
+      "description": "Prestige technology combining exceptional efficiency with exacting performance. This Mark II oracle avionics represents a proven field upgrade.",
+      "type": "flight-control",
+      "slot": "flight-control",
+      "powerRequirement": 5,
+      "price": 1740,
+      "resaleValue": 1044,
+      "flightControl": {
+        "sidestepSpeedBonus": 7,
+        "yawRateMultiplier": 1.18,
+        "pitchRateMultiplier": 1.18,
+        "maximumBankDegreesBonus": 10
+      },
+      "tags": [
+        "player-compatible",
+        "tier-2",
+        "flight-control",
+        "manufacturer:astravault"
+      ]
+    },
+    {
+      "id": "astravault-avionics-mk3",
+      "displayName": "Astravault Oracle Avionics Mk III",
+      "manufacturerId": "astravault-systems",
+      "manufacturer": "Astravault Systems",
+      "mark": 3,
+      "description": "Prestige technology combining exceptional efficiency with exacting performance. This Mark III oracle avionics represents advanced contract-grade hardware.",
+      "type": "flight-control",
+      "slot": "flight-control",
+      "powerRequirement": 6,
+      "price": 4310,
+      "resaleValue": 2586,
+      "flightControl": {
+        "sidestepSpeedBonus": 12,
+        "yawRateMultiplier": 1.3,
+        "pitchRateMultiplier": 1.3,
+        "maximumBankDegreesBonus": 17
+      },
+      "tags": [
+        "player-compatible",
+        "tier-3",
+        "flight-control",
+        "manufacturer:astravault"
+      ]
+    },
+    {
+      "id": "astravault-avionics-mk4",
+      "displayName": "Astravault Oracle Avionics Mk IV",
+      "manufacturerId": "astravault-systems",
+      "manufacturer": "Astravault Systems",
+      "mark": 4,
+      "description": "Prestige technology combining exceptional efficiency with exacting performance. This Mark IV oracle avionics represents the manufacturer's flagship specification.",
+      "type": "flight-control",
+      "slot": "flight-control",
+      "powerRequirement": 7,
+      "price": 7990,
+      "resaleValue": 4794,
+      "flightControl": {
+        "sidestepSpeedBonus": 18,
+        "yawRateMultiplier": 1.43,
+        "pitchRateMultiplier": 1.43,
+        "maximumBankDegreesBonus": 25
+      },
+      "tags": [
+        "player-compatible",
+        "tier-4",
+        "flight-control",
+        "manufacturer:astravault"
+      ]
+    },
+    {
+      "id": "novacrest-translocator-mk4",
+      "displayName": "Novacrest Packmule Translocator Mk IV",
+      "manufacturerId": "novacrest-dynamics",
+      "manufacturer": "Novacrest Dynamics",
+      "mark": 4,
+      "description": "Rugged commercial hardware prioritising affordability and straightforward field maintenance. This Mark IV packmule translocator represents the manufacturer's flagship specification.",
+      "type": "utility",
+      "slot": "utility",
+      "powerRequirement": 7,
+      "price": 6500,
+      "resaleValue": 3900,
+      "capabilities": {
+        "cargo-transfer": {
+          "range": 520,
+          "transferSeconds": 0.85
+        }
+      },
+      "tags": [
+        "player-compatible",
+        "tier-4",
+        "utility",
+        "manufacturer:novacrest",
+        "cargo-translocator",
+        "capability:cargo-transfer"
+      ]
+    },
+    {
+      "id": "astrodyne-translocator-mk1",
+      "displayName": "Astrodyne Relay Translocator Mk I",
+      "manufacturerId": "astrodyne-systems",
+      "manufacturer": "Astrodyne Systems",
+      "mark": 1,
+      "description": "Professional-grade hardware balancing output, efficiency and dependable operation. This Mark I relay translocator represents the accessible entry point.",
+      "type": "utility",
+      "slot": "utility",
+      "powerRequirement": 2,
+      "price": 610,
+      "resaleValue": 366,
+      "capabilities": {
+        "cargo-transfer": {
+          "range": 110,
+          "transferSeconds": 1.65
+        }
+      },
+      "tags": [
+        "player-compatible",
+        "tier-1",
+        "utility",
+        "manufacturer:astrodyne",
+        "cargo-translocator",
+        "capability:cargo-transfer"
+      ]
+    },
+    {
+      "id": "astrodyne-translocator-mk2",
+      "displayName": "Astrodyne Relay Translocator Mk II",
+      "manufacturerId": "astrodyne-systems",
+      "manufacturer": "Astrodyne Systems",
+      "mark": 2,
+      "description": "Professional-grade hardware balancing output, efficiency and dependable operation. This Mark II relay translocator represents a proven field upgrade.",
+      "type": "utility",
+      "slot": "utility",
+      "powerRequirement": 3,
+      "price": 1710,
+      "resaleValue": 1026,
+      "capabilities": {
+        "cargo-transfer": {
+          "range": 220,
+          "transferSeconds": 1.3
+        }
+      },
+      "tags": [
+        "player-compatible",
+        "tier-2",
+        "utility",
+        "manufacturer:astrodyne",
+        "cargo-translocator",
+        "capability:cargo-transfer"
+      ]
+    },
+    {
+      "id": "astrodyne-translocator-mk3",
+      "displayName": "Astrodyne Relay Translocator Mk III",
+      "manufacturerId": "astrodyne-systems",
+      "manufacturer": "Astrodyne Systems",
+      "mark": 3,
+      "description": "Professional-grade hardware balancing output, efficiency and dependable operation. This Mark III relay translocator represents advanced contract-grade hardware.",
+      "type": "utility",
+      "slot": "utility",
+      "powerRequirement": 4,
+      "price": 4390,
+      "resaleValue": 2634,
+      "capabilities": {
+        "cargo-transfer": {
+          "range": 390,
+          "transferSeconds": 1
+        }
+      },
+      "tags": [
+        "player-compatible",
+        "tier-3",
+        "utility",
+        "manufacturer:astrodyne",
+        "cargo-translocator",
+        "capability:cargo-transfer"
+      ]
+    },
+    {
+      "id": "astrodyne-translocator-mk4",
+      "displayName": "Astrodyne Relay Translocator Mk IV",
+      "manufacturerId": "astrodyne-systems",
+      "manufacturer": "Astrodyne Systems",
+      "mark": 4,
+      "description": "Professional-grade hardware balancing output, efficiency and dependable operation. This Mark IV relay translocator represents the manufacturer's flagship specification.",
+      "type": "utility",
+      "slot": "utility",
+      "powerRequirement": 6,
+      "price": 7930,
+      "resaleValue": 4758,
+      "capabilities": {
+        "cargo-transfer": {
+          "range": 600,
+          "transferSeconds": 0.75
+        }
+      },
+      "tags": [
+        "player-compatible",
+        "tier-4",
+        "utility",
+        "manufacturer:astrodyne",
+        "cargo-translocator",
+        "capability:cargo-transfer"
+      ]
+    },
+    {
+      "id": "razorfin-translocator-mk1",
+      "displayName": "Razorfin Harrier Translocator Mk I",
+      "manufacturerId": "razorfin-aerospace",
+      "manufacturer": "Razorfin Aerospace",
+      "mark": 1,
+      "description": "Combat-focused hardware tuned for rapid response and uncompromising performance. This Mark I harrier translocator represents the accessible entry point.",
+      "type": "utility",
+      "slot": "utility",
+      "powerRequirement": 3,
+      "price": 750,
+      "resaleValue": 450,
+      "capabilities": {
+        "cargo-transfer": {
+          "range": 100,
+          "transferSeconds": 1.45
+        }
+      },
+      "tags": [
+        "player-compatible",
+        "tier-1",
+        "utility",
+        "manufacturer:razorfin",
+        "cargo-translocator",
+        "capability:cargo-transfer"
+      ]
+    },
+    {
+      "id": "razorfin-translocator-mk2",
+      "displayName": "Razorfin Harrier Translocator Mk II",
+      "manufacturerId": "razorfin-aerospace",
+      "manufacturer": "Razorfin Aerospace",
+      "mark": 2,
+      "description": "Combat-focused hardware tuned for rapid response and uncompromising performance. This Mark II harrier translocator represents a proven field upgrade.",
+      "type": "utility",
+      "slot": "utility",
+      "powerRequirement": 5,
+      "price": 2100,
+      "resaleValue": 1260,
+      "capabilities": {
+        "cargo-transfer": {
+          "range": 210,
+          "transferSeconds": 1.1
+        }
+      },
+      "tags": [
+        "player-compatible",
+        "tier-2",
+        "utility",
+        "manufacturer:razorfin",
+        "cargo-translocator",
+        "capability:cargo-transfer"
+      ]
+    },
+    {
+      "id": "razorfin-translocator-mk3",
+      "displayName": "Razorfin Harrier Translocator Mk III",
+      "manufacturerId": "razorfin-aerospace",
+      "manufacturer": "Razorfin Aerospace",
+      "mark": 3,
+      "description": "Combat-focused hardware tuned for rapid response and uncompromising performance. This Mark III harrier translocator represents advanced contract-grade hardware.",
+      "type": "utility",
+      "slot": "utility",
+      "powerRequirement": 7,
+      "price": 5400,
+      "resaleValue": 3240,
+      "capabilities": {
+        "cargo-transfer": {
+          "range": 380,
+          "transferSeconds": 0.82
+        }
+      },
+      "tags": [
+        "player-compatible",
+        "tier-3",
+        "utility",
+        "manufacturer:razorfin",
+        "cargo-translocator",
+        "capability:cargo-transfer"
+      ]
+    },
+    {
+      "id": "razorfin-translocator-mk4",
+      "displayName": "Razorfin Harrier Translocator Mk IV",
+      "manufacturerId": "razorfin-aerospace",
+      "manufacturer": "Razorfin Aerospace",
+      "mark": 4,
+      "description": "Combat-focused hardware tuned for rapid response and uncompromising performance. This Mark IV harrier translocator represents the manufacturer's flagship specification.",
+      "type": "utility",
+      "slot": "utility",
+      "powerRequirement": 10,
+      "price": 9750,
+      "resaleValue": 5850,
+      "capabilities": {
+        "cargo-transfer": {
+          "range": 580,
+          "transferSeconds": 0.58
+        }
+      },
+      "tags": [
+        "player-compatible",
+        "tier-4",
+        "utility",
+        "manufacturer:razorfin",
+        "cargo-translocator",
+        "capability:cargo-transfer"
+      ]
+    },
+    {
+      "id": "astravault-translocator-mk1",
+      "displayName": "Astravault Eventide Translocator Mk I",
+      "manufacturerId": "astravault-systems",
+      "manufacturer": "Astravault Systems",
+      "mark": 1,
+      "description": "Prestige technology combining exceptional efficiency with exacting performance. This Mark I eventide translocator represents the accessible entry point.",
+      "type": "utility",
+      "slot": "utility",
+      "powerRequirement": 1,
+      "price": 1030,
+      "resaleValue": 618,
+      "capabilities": {
+        "cargo-transfer": {
+          "range": 140,
+          "transferSeconds": 1.5
+        }
+      },
+      "tags": [
+        "player-compatible",
+        "tier-1",
+        "utility",
+        "manufacturer:astravault",
+        "cargo-translocator",
+        "capability:cargo-transfer"
+      ]
+    },
+    {
+      "id": "astravault-translocator-mk2",
+      "displayName": "Astravault Eventide Translocator Mk II",
+      "manufacturerId": "astravault-systems",
+      "manufacturer": "Astravault Systems",
+      "mark": 2,
+      "description": "Prestige technology combining exceptional efficiency with exacting performance. This Mark II eventide translocator represents a proven field upgrade.",
+      "type": "utility",
+      "slot": "utility",
+      "powerRequirement": 2,
+      "price": 2870,
+      "resaleValue": 1722,
+      "capabilities": {
+        "cargo-transfer": {
+          "range": 280,
+          "transferSeconds": 1.15
+        }
+      },
+      "tags": [
+        "player-compatible",
+        "tier-2",
+        "utility",
+        "manufacturer:astravault",
+        "cargo-translocator",
+        "capability:cargo-transfer"
+      ]
+    },
+    {
+      "id": "astravault-translocator-mk3",
+      "displayName": "Astravault Eventide Translocator Mk III",
+      "manufacturerId": "astravault-systems",
+      "manufacturer": "Astravault Systems",
+      "mark": 3,
+      "description": "Prestige technology combining exceptional efficiency with exacting performance. This Mark III eventide translocator represents advanced contract-grade hardware.",
+      "type": "utility",
+      "slot": "utility",
+      "powerRequirement": 3,
+      "price": 7380,
+      "resaleValue": 4428,
+      "capabilities": {
+        "cargo-transfer": {
+          "range": 480,
+          "transferSeconds": 0.82
+        }
+      },
+      "tags": [
+        "player-compatible",
+        "tier-3",
+        "utility",
+        "manufacturer:astravault",
+        "cargo-translocator",
+        "capability:cargo-transfer"
+      ]
+    },
+    {
+      "id": "astravault-translocator-mk4",
+      "displayName": "Astravault Eventide Translocator Mk IV",
+      "manufacturerId": "astravault-systems",
+      "manufacturer": "Astravault Systems",
+      "mark": 4,
+      "description": "Prestige technology combining exceptional efficiency with exacting performance. This Mark IV eventide translocator represents the manufacturer's flagship specification.",
+      "type": "utility",
+      "slot": "utility",
+      "powerRequirement": 5,
+      "price": 13320,
+      "resaleValue": 7992,
+      "capabilities": {
+        "cargo-transfer": {
+          "range": 750,
+          "transferSeconds": 0.55
+        }
+      },
+      "tags": [
+        "player-compatible",
+        "tier-4",
+        "utility",
+        "manufacturer:astravault",
+        "cargo-translocator",
+        "capability:cargo-transfer"
+      ]
+    },
+    {
+      "id": "novacrest-scanner-mk4",
+      "displayName": "Novacrest Survey Scanner Mk IV",
+      "manufacturerId": "novacrest-dynamics",
+      "manufacturer": "Novacrest Dynamics",
+      "mark": 4,
+      "description": "Rugged commercial hardware prioritising affordability and straightforward field maintenance. This Mark IV survey scanner represents the manufacturer's flagship specification.",
+      "type": "utility",
+      "slot": "utility",
+      "powerRequirement": 7,
+      "price": 7600,
+      "resaleValue": 4560,
+      "capabilities": {
+        "target-scan": {
+          "range": 1900,
+          "scanSeconds": 2.7,
+          "coneDegrees": 46,
+          "retentionSeconds": 4,
+          "decayPerSecond": 0.11
+        }
+      },
+      "tags": [
+        "player-compatible",
+        "tier-4",
+        "utility",
+        "manufacturer:novacrest",
+        "survey-scanner",
+        "capability:target-scan"
+      ]
+    },
+    {
+      "id": "astrodyne-scanner-mk1",
+      "displayName": "Astrodyne Deepfield Scanner Mk I",
+      "manufacturerId": "astrodyne-systems",
+      "manufacturer": "Astrodyne Systems",
+      "mark": 1,
+      "description": "Professional-grade hardware balancing output, efficiency and dependable operation. This Mark I deepfield scanner represents the accessible entry point.",
+      "type": "utility",
+      "slot": "utility",
+      "powerRequirement": 2,
+      "price": 730,
+      "resaleValue": 438,
+      "capabilities": {
+        "target-scan": {
+          "range": 500,
+          "scanSeconds": 4,
+          "coneDegrees": 26,
+          "retentionSeconds": 1.4,
+          "decayPerSecond": 0.28
+        }
+      },
+      "tags": [
+        "player-compatible",
+        "tier-1",
+        "utility",
+        "manufacturer:astrodyne",
+        "survey-scanner",
+        "capability:target-scan"
+      ]
+    },
+    {
+      "id": "astrodyne-scanner-mk2",
+      "displayName": "Astrodyne Deepfield Scanner Mk II",
+      "manufacturerId": "astrodyne-systems",
+      "manufacturer": "Astrodyne Systems",
+      "mark": 2,
+      "description": "Professional-grade hardware balancing output, efficiency and dependable operation. This Mark II deepfield scanner represents a proven field upgrade.",
+      "type": "utility",
+      "slot": "utility",
+      "powerRequirement": 3,
+      "price": 2070,
+      "resaleValue": 1242,
+      "capabilities": {
+        "target-scan": {
+          "range": 900,
+          "scanSeconds": 3.4,
+          "coneDegrees": 34,
+          "retentionSeconds": 2.2,
+          "decayPerSecond": 0.2
+        }
+      },
+      "tags": [
+        "player-compatible",
+        "tier-2",
+        "utility",
+        "manufacturer:astrodyne",
+        "survey-scanner",
+        "capability:target-scan"
+      ]
+    },
+    {
+      "id": "astrodyne-scanner-mk3",
+      "displayName": "Astrodyne Deepfield Scanner Mk III",
+      "manufacturerId": "astrodyne-systems",
+      "manufacturer": "Astrodyne Systems",
+      "mark": 3,
+      "description": "Professional-grade hardware balancing output, efficiency and dependable operation. This Mark III deepfield scanner represents advanced contract-grade hardware.",
+      "type": "utility",
+      "slot": "utility",
+      "powerRequirement": 4,
+      "price": 5120,
+      "resaleValue": 3072,
+      "capabilities": {
+        "target-scan": {
+          "range": 1450,
+          "scanSeconds": 2.8,
+          "coneDegrees": 43,
+          "retentionSeconds": 3.3,
+          "decayPerSecond": 0.14
+        }
+      },
+      "tags": [
+        "player-compatible",
+        "tier-3",
+        "utility",
+        "manufacturer:astrodyne",
+        "survey-scanner",
+        "capability:target-scan"
+      ]
+    },
+    {
+      "id": "astrodyne-scanner-mk4",
+      "displayName": "Astrodyne Deepfield Scanner Mk IV",
+      "manufacturerId": "astrodyne-systems",
+      "manufacturer": "Astrodyne Systems",
+      "mark": 4,
+      "description": "Professional-grade hardware balancing output, efficiency and dependable operation. This Mark IV deepfield scanner represents the manufacturer's flagship specification.",
+      "type": "utility",
+      "slot": "utility",
+      "powerRequirement": 6,
+      "price": 9270,
+      "resaleValue": 5562,
+      "capabilities": {
+        "target-scan": {
+          "range": 2100,
+          "scanSeconds": 2.3,
+          "coneDegrees": 52,
+          "retentionSeconds": 4.6,
+          "decayPerSecond": 0.09
+        }
+      },
+      "tags": [
+        "player-compatible",
+        "tier-4",
+        "utility",
+        "manufacturer:astrodyne",
+        "survey-scanner",
+        "capability:target-scan"
+      ]
+    },
+    {
+      "id": "razorfin-scanner-mk1",
+      "displayName": "Razorfin Hunter Scanner Mk I",
+      "manufacturerId": "razorfin-aerospace",
+      "manufacturer": "Razorfin Aerospace",
+      "mark": 1,
+      "description": "Combat-focused hardware tuned for rapid response and uncompromising performance. This Mark I hunter scanner represents the accessible entry point.",
+      "type": "utility",
+      "slot": "utility",
+      "powerRequirement": 3,
+      "price": 900,
+      "resaleValue": 540,
+      "capabilities": {
+        "target-scan": {
+          "range": 480,
+          "scanSeconds": 3.5,
+          "coneDegrees": 22,
+          "retentionSeconds": 1.4,
+          "decayPerSecond": 0.26
+        }
+      },
+      "tags": [
+        "player-compatible",
+        "tier-1",
+        "utility",
+        "manufacturer:razorfin",
+        "survey-scanner",
+        "capability:target-scan"
+      ]
+    },
+    {
+      "id": "razorfin-scanner-mk2",
+      "displayName": "Razorfin Hunter Scanner Mk II",
+      "manufacturerId": "razorfin-aerospace",
+      "manufacturer": "Razorfin Aerospace",
+      "mark": 2,
+      "description": "Combat-focused hardware tuned for rapid response and uncompromising performance. This Mark II hunter scanner represents a proven field upgrade.",
+      "type": "utility",
+      "slot": "utility",
+      "powerRequirement": 5,
+      "price": 2550,
+      "resaleValue": 1530,
+      "capabilities": {
+        "target-scan": {
+          "range": 880,
+          "scanSeconds": 2.9,
+          "coneDegrees": 28,
+          "retentionSeconds": 2,
+          "decayPerSecond": 0.18
+        }
+      },
+      "tags": [
+        "player-compatible",
+        "tier-2",
+        "utility",
+        "manufacturer:razorfin",
+        "survey-scanner",
+        "capability:target-scan"
+      ]
+    },
+    {
+      "id": "razorfin-scanner-mk3",
+      "displayName": "Razorfin Hunter Scanner Mk III",
+      "manufacturerId": "razorfin-aerospace",
+      "manufacturer": "Razorfin Aerospace",
+      "mark": 3,
+      "description": "Combat-focused hardware tuned for rapid response and uncompromising performance. This Mark III hunter scanner represents advanced contract-grade hardware.",
+      "type": "utility",
+      "slot": "utility",
+      "powerRequirement": 7,
+      "price": 6300,
+      "resaleValue": 3780,
+      "capabilities": {
+        "target-scan": {
+          "range": 1420,
+          "scanSeconds": 2.3,
+          "coneDegrees": 35,
+          "retentionSeconds": 3,
+          "decayPerSecond": 0.12
+        }
+      },
+      "tags": [
+        "player-compatible",
+        "tier-3",
+        "utility",
+        "manufacturer:razorfin",
+        "survey-scanner",
+        "capability:target-scan"
+      ]
+    },
+    {
+      "id": "razorfin-scanner-mk4",
+      "displayName": "Razorfin Hunter Scanner Mk IV",
+      "manufacturerId": "razorfin-aerospace",
+      "manufacturer": "Razorfin Aerospace",
+      "mark": 4,
+      "description": "Combat-focused hardware tuned for rapid response and uncompromising performance. This Mark IV hunter scanner represents the manufacturer's flagship specification.",
+      "type": "utility",
+      "slot": "utility",
+      "powerRequirement": 10,
+      "price": 11400,
+      "resaleValue": 6840,
+      "capabilities": {
+        "target-scan": {
+          "range": 2050,
+          "scanSeconds": 1.8,
+          "coneDegrees": 42,
+          "retentionSeconds": 4,
+          "decayPerSecond": 0.08
+        }
+      },
+      "tags": [
+        "player-compatible",
+        "tier-4",
+        "utility",
+        "manufacturer:razorfin",
+        "survey-scanner",
+        "capability:target-scan"
+      ]
+    },
+    {
+      "id": "astravault-scanner-mk1",
+      "displayName": "Astravault FarSight Scanner Mk I",
+      "manufacturerId": "astravault-systems",
+      "manufacturer": "Astravault Systems",
+      "mark": 1,
+      "description": "Prestige technology combining exceptional efficiency with exacting performance. This Mark I farsight scanner represents the accessible entry point.",
+      "type": "utility",
+      "slot": "utility",
+      "powerRequirement": 1,
+      "price": 1230,
+      "resaleValue": 738,
+      "capabilities": {
+        "target-scan": {
+          "range": 600,
+          "scanSeconds": 3.8,
+          "coneDegrees": 30,
+          "retentionSeconds": 2,
+          "decayPerSecond": 0.2
+        }
+      },
+      "tags": [
+        "player-compatible",
+        "tier-1",
+        "utility",
+        "manufacturer:astravault",
+        "survey-scanner",
+        "capability:target-scan"
+      ]
+    },
+    {
+      "id": "astravault-scanner-mk2",
+      "displayName": "Astravault FarSight Scanner Mk II",
+      "manufacturerId": "astravault-systems",
+      "manufacturer": "Astravault Systems",
+      "mark": 2,
+      "description": "Prestige technology combining exceptional efficiency with exacting performance. This Mark II farsight scanner represents a proven field upgrade.",
+      "type": "utility",
+      "slot": "utility",
+      "powerRequirement": 2,
+      "price": 3480,
+      "resaleValue": 2088,
+      "capabilities": {
+        "target-scan": {
+          "range": 1050,
+          "scanSeconds": 3.1,
+          "coneDegrees": 40,
+          "retentionSeconds": 3,
+          "decayPerSecond": 0.14
+        }
+      },
+      "tags": [
+        "player-compatible",
+        "tier-2",
+        "utility",
+        "manufacturer:astravault",
+        "survey-scanner",
+        "capability:target-scan"
+      ]
+    },
+    {
+      "id": "astravault-scanner-mk3",
+      "displayName": "Astravault FarSight Scanner Mk III",
+      "manufacturerId": "astravault-systems",
+      "manufacturer": "Astravault Systems",
+      "mark": 3,
+      "description": "Prestige technology combining exceptional efficiency with exacting performance. This Mark III farsight scanner represents advanced contract-grade hardware.",
+      "type": "utility",
+      "slot": "utility",
+      "powerRequirement": 3,
+      "price": 8610,
+      "resaleValue": 5166,
+      "capabilities": {
+        "target-scan": {
+          "range": 1700,
+          "scanSeconds": 2.5,
+          "coneDegrees": 52,
+          "retentionSeconds": 4.5,
+          "decayPerSecond": 0.09
+        }
+      },
+      "tags": [
+        "player-compatible",
+        "tier-3",
+        "utility",
+        "manufacturer:astravault",
+        "survey-scanner",
+        "capability:target-scan"
+      ]
+    },
+    {
+      "id": "astravault-scanner-mk4",
+      "displayName": "Astravault FarSight Scanner Mk IV",
+      "manufacturerId": "astravault-systems",
+      "manufacturer": "Astravault Systems",
+      "mark": 4,
+      "description": "Prestige technology combining exceptional efficiency with exacting performance. This Mark IV farsight scanner represents the manufacturer's flagship specification.",
+      "type": "utility",
+      "slot": "utility",
+      "powerRequirement": 5,
+      "price": 15580,
+      "resaleValue": 9348,
+      "capabilities": {
+        "target-scan": {
+          "range": 2500,
+          "scanSeconds": 1.9,
+          "coneDegrees": 65,
+          "retentionSeconds": 6,
+          "decayPerSecond": 0.05
+        }
+      },
+      "tags": [
+        "player-compatible",
+        "tier-4",
+        "utility",
+        "manufacturer:astravault",
+        "survey-scanner",
+        "capability:target-scan"
+      ]
+    },
+
+    {
+  "id": "prism-deflector-mk1",
+  "displayName": "Prism Deflector Mk I",
+  "description": "A compact vehicle shield designed to absorb energy fire while providing limited protection against kinetic impacts.",
+  "type": "shield",
+  "slot": "shield",
+
+  "shield": {
+    "capacity": 70,
+    "rechargePerSecond": 5,
+    "rechargeDelay": 4,
+    "energyAbsorption": 0.72,
+    "kineticAbsorption": 0.3
+  },
+
+  "tags": [
+    "enemy-compatible",
+    "vehicle",
+    "tier-1",
+    "shield"
+  ]
+},
+{
+  "id": "prism-reactive-armour",
+  "displayName": "Prism Reactive Armour",
+  "description": "Heavy vehicle armour offering particularly strong resistance against kinetic impacts.",
+  "type": "armour",
+  "slot": "armour",
+
+  "armour": {
+    "bonusHull": 30,
+    "energyMultiplier": 0.9,
+    "kineticMultiplier": 0.58
+  },
+
+  "tags": [
+    "enemy-compatible",
+    "vehicle",
+    "tier-1",
+    "armour"
+  ]
+}
+  ]
+}

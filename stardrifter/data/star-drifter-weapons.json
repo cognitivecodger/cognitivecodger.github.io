@@ -1,0 +1,1609 @@
+{
+  "format": "star-drifter-weapon-repository",
+  "formatVersion": 1,
+  "ammunitionTypes": [
+    {
+      "id": "skimmer-lance-missile",
+      "displayName": "Universal Lance Missile Pack ×4",
+      "roundName": "Lance missile",
+      "description": "A sealed four-round bunker pack of programmable guided missiles compatible with Novacrest, Astrodyne, Razorfin and Astravault Lance racks.",
+      "packSize": 4,
+      "price": 320
+    },
+    {
+      "id": "skimmer-lance-missile-pack-8",
+      "reserveType": "skimmer-lance-missile",
+      "displayName": "Universal Lance Missile Pack ×8",
+      "roundName": "Lance missile",
+      "description": "An eight-round bunker pack of universal guided Lance missiles, supplied at a modest bulk discount.",
+      "packSize": 8,
+      "price": 600
+    },
+    {
+      "id": "skimmer-lance-missile-pack-16",
+      "reserveType": "skimmer-lance-missile",
+      "displayName": "Universal Lance Missile Case ×16",
+      "roundName": "Lance missile",
+      "description": "A reinforced sixteen-round case of universal guided Lance missiles for pilots expecting sustained combat operations.",
+      "packSize": 16,
+      "price": 1120
+    },
+    {
+      "id": "skimmer-lance-missile-pack-32",
+      "reserveType": "skimmer-lance-missile",
+      "displayName": "Universal Lance Missile Crate ×32",
+      "roundName": "Lance missile",
+      "description": "A full thirty-two-round bunker crate of universal guided Lance missiles offering the lowest replacement cost per round.",
+      "packSize": 32,
+      "price": 2000
+    }
+  ],
+  "weapons": [
+    {
+      "id": "warp-skimmer-laser",
+      "displayName": "Astrodyne Vector Laser Mk I",
+      "manufacturerId": "astrodyne-systems",
+      "manufacturer": "Astrodyne Systems",
+      "mark": 1,
+      "description": "A dependable professional twin-emitter laser balancing tracking response, damage and Power Core demand. It requires no physical ammunition.",
+      "price": 500,
+      "resaleValue": 300,
+      "loadoutSlots": [
+        "primary",
+        "secondary"
+      ],
+      "tags": [
+        "player-compatible",
+        "energy-weapon",
+        "tier-1",
+        "starter"
+      ],
+
+      "projectileEntityId": "player-laser-bolt",
+
+      "mountType": "gimballed",
+
+      "sockets": [
+        "left-laser",
+        "right-laser"
+      ],
+
+      "fireMode": "alternating",
+
+      "cooldown": 0.095,
+      "reserveCooldown": 0.303,
+
+      "projectileSpeed": 1350,
+      "damage": {
+        "energy": 8,
+        "kinetic": 5
+      },
+      "maximumRange": 1600,
+      "rangefinderRange": 3200,
+      "power": {
+        "minimumRequirement": 10,
+        "nominalRequirement": 30,
+        "maximumAllocation": 100
+      },
+
+      "capacitorCapacity": 100,
+      "capacitorCost": 7,
+      "capacitorRechargePerSecond": 28,
+      "capacitorReserveThreshold": 20,
+      "capacitorCutoff": 5,
+      "capacitorRestartThreshold": 28,
+
+      "muzzleFlashColor": "#a8ffff",
+      "trailColor": "#72f9ff"
+    },
+    {
+      "id": "helios-boresight-laser-mk1",
+      "displayName": "Novacrest Boresight Laser Mk I",
+      "manufacturerId": "novacrest-dynamics",
+      "manufacturer": "Novacrest Dynamics",
+      "mark": 1,
+      "description": "A rugged, inexpensive energy weapon delivering dependable damage and range from a modest fixed FLX demand.",
+      "price": 300,
+      "resaleValue": 180,
+      "loadoutSlots": [
+        "primary",
+        "secondary"
+      ],
+      "tags": [
+        "player-compatible",
+        "energy-weapon",
+        "tier-1",
+        "fixed-mount"
+      ],
+      "projectileEntityId": "player-laser-bolt",
+      "mountType": "fixed",
+      "sockets": [
+        "left-laser",
+        "right-laser"
+      ],
+      "fireMode": "alternating",
+      "cooldown": 0.11,
+      "reserveCooldown": 0.34,
+      "projectileSpeed": 1400,
+      "damage": {
+        "energy": 9,
+        "kinetic": 5
+      },
+      "maximumRange": 1700,
+      "rangefinderRange": 3200,
+      "power": {
+        "minimumRequirement": 10,
+        "nominalRequirement": 28,
+        "maximumAllocation": 100
+      },
+      "capacitorCapacity": 100,
+      "capacitorCost": 7,
+      "capacitorRechargePerSecond": 28,
+      "capacitorReserveThreshold": 20,
+      "capacitorCutoff": 5,
+      "capacitorRestartThreshold": 28,
+      "muzzleFlashColor": "#ffd98a",
+      "trailColor": "#ffc66f"
+    },
+    {
+      "id": "novacrest-boresight-laser-mk2",
+      "displayName": "Novacrest Boresight Laser Mk II",
+      "manufacturerId": "novacrest-dynamics",
+      "manufacturer": "Novacrest Dynamics",
+      "mark": 2,
+      "description": "A rugged, inexpensive Mark II energy weapon offering improved output while retaining economical power demand.",
+      "price": 850,
+      "resaleValue": 510,
+      "loadoutSlots": [
+        "primary",
+        "secondary"
+      ],
+      "tags": [
+        "player-compatible",
+        "energy-weapon",
+        "tier-2",
+        "fixed-mount",
+        "manufacturer:novacrest"
+      ],
+      "projectileEntityId": "player-laser-bolt",
+      "mountType": "fixed",
+      "sockets": [
+        "left-laser",
+        "right-laser"
+      ],
+      "fireMode": "alternating",
+      "cooldown": 0.105,
+      "reserveCooldown": 0.325,
+      "projectileSpeed": 1475,
+      "damage": {
+        "energy": 11,
+        "kinetic": 6
+      },
+      "maximumRange": 1800,
+      "rangefinderRange": 3300,
+      "power": {
+        "minimumRequirement": 12,
+        "nominalRequirement": 34,
+        "maximumAllocation": 100
+      },
+      "capacitorCapacity": 105,
+      "capacitorCost": 8,
+      "capacitorRechargePerSecond": 29,
+      "capacitorReserveThreshold": 21,
+      "capacitorCutoff": 6,
+      "capacitorRestartThreshold": 29,
+      "muzzleFlashColor": "#ffd98a",
+      "trailColor": "#ffc66f"
+    },
+    {
+      "id": "novacrest-boresight-laser-mk3",
+      "displayName": "Novacrest Boresight Laser Mk III",
+      "manufacturerId": "novacrest-dynamics",
+      "manufacturer": "Novacrest Dynamics",
+      "mark": 3,
+      "description": "A rugged, inexpensive Mark III energy weapon offering contract-grade output while retaining economical power demand.",
+      "price": 1800,
+      "resaleValue": 1080,
+      "loadoutSlots": [
+        "primary",
+        "secondary"
+      ],
+      "tags": [
+        "player-compatible",
+        "energy-weapon",
+        "tier-3",
+        "fixed-mount",
+        "manufacturer:novacrest"
+      ],
+      "projectileEntityId": "player-laser-bolt",
+      "mountType": "fixed",
+      "sockets": [
+        "left-laser",
+        "right-laser"
+      ],
+      "fireMode": "alternating",
+      "cooldown": 0.1,
+      "reserveCooldown": 0.31,
+      "projectileSpeed": 1550,
+      "damage": {
+        "energy": 14,
+        "kinetic": 7
+      },
+      "maximumRange": 1900,
+      "rangefinderRange": 3400,
+      "power": {
+        "minimumRequirement": 15,
+        "nominalRequirement": 42,
+        "maximumAllocation": 100
+      },
+      "capacitorCapacity": 110,
+      "capacitorCost": 9,
+      "capacitorRechargePerSecond": 30,
+      "capacitorReserveThreshold": 22,
+      "capacitorCutoff": 6,
+      "capacitorRestartThreshold": 31,
+      "muzzleFlashColor": "#ffd98a",
+      "trailColor": "#ffc66f"
+    },
+    {
+      "id": "novacrest-boresight-laser-mk4",
+      "displayName": "Novacrest Boresight Laser Mk IV",
+      "manufacturerId": "novacrest-dynamics",
+      "manufacturer": "Novacrest Dynamics",
+      "mark": 4,
+      "description": "A rugged, inexpensive Mark IV energy weapon delivering the manufacturer's strongest output-to-power balance.",
+      "price": 3400,
+      "resaleValue": 2040,
+      "loadoutSlots": [
+        "primary",
+        "secondary"
+      ],
+      "tags": [
+        "player-compatible",
+        "energy-weapon",
+        "tier-4",
+        "fixed-mount",
+        "manufacturer:novacrest"
+      ],
+      "projectileEntityId": "player-laser-bolt",
+      "mountType": "fixed",
+      "sockets": [
+        "left-laser",
+        "right-laser"
+      ],
+      "fireMode": "alternating",
+      "cooldown": 0.095,
+      "reserveCooldown": 0.295,
+      "projectileSpeed": 1650,
+      "damage": {
+        "energy": 17,
+        "kinetic": 8
+      },
+      "maximumRange": 2050,
+      "rangefinderRange": 3600,
+      "power": {
+        "minimumRequirement": 18,
+        "nominalRequirement": 52,
+        "maximumAllocation": 100
+      },
+      "capacitorCapacity": 118,
+      "capacitorCost": 10,
+      "capacitorRechargePerSecond": 32,
+      "capacitorReserveThreshold": 24,
+      "capacitorCutoff": 7,
+      "capacitorRestartThreshold": 33,
+      "muzzleFlashColor": "#ffd98a",
+      "trailColor": "#ffc66f"
+    },
+    {
+      "id": "astrodyne-vector-laser-mk3",
+      "displayName": "Astrodyne Vector Laser Mk III",
+      "manufacturerId": "astrodyne-systems",
+      "manufacturer": "Astrodyne Systems",
+      "mark": 3,
+      "description": "A balanced professional Mark III energy weapon combining dependable damage, range and fixed Power Core demand.",
+      "price": 2800,
+      "resaleValue": 1680,
+      "loadoutSlots": [
+        "primary",
+        "secondary"
+      ],
+      "tags": [
+        "player-compatible",
+        "energy-weapon",
+        "tier-3",
+        "gimballed-mount",
+        "manufacturer:astrodyne"
+      ],
+      "projectileEntityId": "player-laser-bolt",
+      "mountType": "gimballed",
+      "sockets": [
+        "left-laser",
+        "right-laser"
+      ],
+      "fireMode": "alternating",
+      "cooldown": 0.1,
+      "reserveCooldown": 0.32,
+      "projectileSpeed": 1650,
+      "damage": {
+        "energy": 15,
+        "kinetic": 7
+      },
+      "maximumRange": 1900,
+      "rangefinderRange": 3500,
+      "power": {
+        "minimumRequirement": 16,
+        "nominalRequirement": 48,
+        "maximumAllocation": 100
+      },
+      "capacitorCapacity": 120,
+      "capacitorCost": 10,
+      "capacitorRechargePerSecond": 28,
+      "capacitorReserveThreshold": 24,
+      "capacitorCutoff": 7,
+      "capacitorRestartThreshold": 34,
+      "muzzleFlashColor": "#a8ffff",
+      "trailColor": "#72f9ff"
+    },
+    {
+      "id": "astrodyne-vector-laser-mk4",
+      "displayName": "Astrodyne Vector Laser Mk IV",
+      "manufacturerId": "astrodyne-systems",
+      "manufacturer": "Astrodyne Systems",
+      "mark": 4,
+      "description": "A balanced professional Mark IV energy weapon combining flagship damage, range and fixed Power Core demand.",
+      "price": 5000,
+      "resaleValue": 3000,
+      "loadoutSlots": [
+        "primary",
+        "secondary"
+      ],
+      "tags": [
+        "player-compatible",
+        "energy-weapon",
+        "tier-4",
+        "gimballed-mount",
+        "manufacturer:astrodyne"
+      ],
+      "projectileEntityId": "player-laser-bolt",
+      "mountType": "gimballed",
+      "sockets": [
+        "left-laser",
+        "right-laser"
+      ],
+      "fireMode": "alternating",
+      "cooldown": 0.095,
+      "reserveCooldown": 0.3,
+      "projectileSpeed": 1750,
+      "damage": {
+        "energy": 18,
+        "kinetic": 9
+      },
+      "maximumRange": 2100,
+      "rangefinderRange": 3800,
+      "power": {
+        "minimumRequirement": 20,
+        "nominalRequirement": 58,
+        "maximumAllocation": 100
+      },
+      "capacitorCapacity": 130,
+      "capacitorCost": 11,
+      "capacitorRechargePerSecond": 30,
+      "capacitorReserveThreshold": 26,
+      "capacitorCutoff": 8,
+      "capacitorRestartThreshold": 36,
+      "muzzleFlashColor": "#a8ffff",
+      "trailColor": "#72f9ff"
+    },
+    {
+      "id": "razorfin-pulse-repeater-mk1",
+      "displayName": "Razorfin Pulse Repeater Mk I",
+      "manufacturerId": "razorfin-aerospace",
+      "manufacturer": "Razorfin Aerospace",
+      "mark": 1,
+      "description": "A high-response combat Mark I energy weapon tuned for rapid fire and aggressive damage output.",
+      "price": 750,
+      "resaleValue": 450,
+      "loadoutSlots": [
+        "primary",
+        "secondary"
+      ],
+      "tags": [
+        "player-compatible",
+        "energy-weapon",
+        "tier-1",
+        "gimballed-mount",
+        "manufacturer:razorfin"
+      ],
+      "projectileEntityId": "player-laser-bolt",
+      "mountType": "gimballed",
+      "sockets": [
+        "left-laser",
+        "right-laser"
+      ],
+      "fireMode": "alternating",
+      "cooldown": 0.085,
+      "reserveCooldown": 0.28,
+      "projectileSpeed": 1500,
+      "damage": {
+        "energy": 8,
+        "kinetic": 5
+      },
+      "maximumRange": 1650,
+      "rangefinderRange": 3300,
+      "power": {
+        "minimumRequirement": 14,
+        "nominalRequirement": 38,
+        "maximumAllocation": 100
+      },
+      "capacitorCapacity": 105,
+      "capacitorCost": 8,
+      "capacitorRechargePerSecond": 30,
+      "capacitorReserveThreshold": 21,
+      "capacitorCutoff": 6,
+      "capacitorRestartThreshold": 29,
+      "muzzleFlashColor": "#ffb06a",
+      "trailColor": "#ff6655"
+    },
+    {
+      "id": "razorfin-pulse-repeater-mk2",
+      "displayName": "Razorfin Pulse Repeater Mk II",
+      "manufacturerId": "razorfin-aerospace",
+      "manufacturer": "Razorfin Aerospace",
+      "mark": 2,
+      "description": "A high-response combat Mark II energy weapon tuned for rapid fire and increased damage output.",
+      "price": 1900,
+      "resaleValue": 1140,
+      "loadoutSlots": [
+        "primary",
+        "secondary"
+      ],
+      "tags": [
+        "player-compatible",
+        "energy-weapon",
+        "tier-2",
+        "gimballed-mount",
+        "manufacturer:razorfin"
+      ],
+      "projectileEntityId": "player-laser-bolt",
+      "mountType": "gimballed",
+      "sockets": [
+        "left-laser",
+        "right-laser"
+      ],
+      "fireMode": "alternating",
+      "cooldown": 0.078,
+      "reserveCooldown": 0.25,
+      "projectileSpeed": 1600,
+      "damage": {
+        "energy": 10,
+        "kinetic": 6
+      },
+      "maximumRange": 1800,
+      "rangefinderRange": 3500,
+      "power": {
+        "minimumRequirement": 18,
+        "nominalRequirement": 48,
+        "maximumAllocation": 100
+      },
+      "capacitorCapacity": 115,
+      "capacitorCost": 9,
+      "capacitorRechargePerSecond": 32,
+      "capacitorReserveThreshold": 23,
+      "capacitorCutoff": 6,
+      "capacitorRestartThreshold": 32,
+      "muzzleFlashColor": "#ffb06a",
+      "trailColor": "#ff6655"
+    },
+    {
+      "id": "razorfin-pulse-repeater-mk3",
+      "displayName": "Razorfin Pulse Repeater Mk III",
+      "manufacturerId": "razorfin-aerospace",
+      "manufacturer": "Razorfin Aerospace",
+      "mark": 3,
+      "description": "A high-response combat Mark III energy weapon tuned for contract-grade rapid fire and damage output.",
+      "price": 3700,
+      "resaleValue": 2220,
+      "loadoutSlots": [
+        "primary",
+        "secondary"
+      ],
+      "tags": [
+        "player-compatible",
+        "energy-weapon",
+        "tier-3",
+        "gimballed-mount",
+        "manufacturer:razorfin"
+      ],
+      "projectileEntityId": "player-laser-bolt",
+      "mountType": "gimballed",
+      "sockets": [
+        "left-laser",
+        "right-laser"
+      ],
+      "fireMode": "alternating",
+      "cooldown": 0.07,
+      "reserveCooldown": 0.22,
+      "projectileSpeed": 1725,
+      "damage": {
+        "energy": 13,
+        "kinetic": 7
+      },
+      "maximumRange": 1950,
+      "rangefinderRange": 3750,
+      "power": {
+        "minimumRequirement": 22,
+        "nominalRequirement": 60,
+        "maximumAllocation": 100
+      },
+      "capacitorCapacity": 128,
+      "capacitorCost": 10,
+      "capacitorRechargePerSecond": 35,
+      "capacitorReserveThreshold": 26,
+      "capacitorCutoff": 7,
+      "capacitorRestartThreshold": 36,
+      "muzzleFlashColor": "#ffb06a",
+      "trailColor": "#ff6655"
+    },
+    {
+      "id": "razorfin-pulse-repeater-mk4",
+      "displayName": "Razorfin Pulse Repeater Mk IV",
+      "manufacturerId": "razorfin-aerospace",
+      "manufacturer": "Razorfin Aerospace",
+      "mark": 4,
+      "description": "A high-response combat Mark IV energy weapon delivering Razorfin's strongest sustained combat output.",
+      "price": 6800,
+      "resaleValue": 4080,
+      "loadoutSlots": [
+        "primary",
+        "secondary"
+      ],
+      "tags": [
+        "player-compatible",
+        "energy-weapon",
+        "tier-4",
+        "gimballed-mount",
+        "manufacturer:razorfin"
+      ],
+      "projectileEntityId": "player-laser-bolt",
+      "mountType": "gimballed",
+      "sockets": [
+        "left-laser",
+        "right-laser"
+      ],
+      "fireMode": "alternating",
+      "cooldown": 0.062,
+      "reserveCooldown": 0.19,
+      "projectileSpeed": 1850,
+      "damage": {
+        "energy": 16,
+        "kinetic": 9
+      },
+      "maximumRange": 2150,
+      "rangefinderRange": 4100,
+      "power": {
+        "minimumRequirement": 25,
+        "nominalRequirement": 75,
+        "maximumAllocation": 100
+      },
+      "capacitorCapacity": 145,
+      "capacitorCost": 12,
+      "capacitorRechargePerSecond": 38,
+      "capacitorReserveThreshold": 29,
+      "capacitorCutoff": 8,
+      "capacitorRestartThreshold": 41,
+      "muzzleFlashColor": "#ffb06a",
+      "trailColor": "#ff6655"
+    },
+    {
+      "id": "astravault-lumen-lance-mk1",
+      "displayName": "Astravault Lumen Lance Mk I",
+      "manufacturerId": "astravault-systems",
+      "manufacturer": "Astravault Systems",
+      "mark": 1,
+      "description": "A precision prestige Mark I energy weapon delivering refined range and damage from an efficient fixed FLX demand.",
+      "price": 1100,
+      "resaleValue": 660,
+      "loadoutSlots": [
+        "primary",
+        "secondary"
+      ],
+      "tags": [
+        "player-compatible",
+        "energy-weapon",
+        "tier-1",
+        "gimballed-mount",
+        "manufacturer:astravault"
+      ],
+      "projectileEntityId": "player-laser-bolt",
+      "mountType": "gimballed",
+      "sockets": [
+        "left-laser",
+        "right-laser"
+      ],
+      "fireMode": "alternating",
+      "cooldown": 0.105,
+      "reserveCooldown": 0.31,
+      "projectileSpeed": 1600,
+      "damage": {
+        "energy": 10,
+        "kinetic": 4
+      },
+      "maximumRange": 1850,
+      "rangefinderRange": 3600,
+      "power": {
+        "minimumRequirement": 10,
+        "nominalRequirement": 30,
+        "maximumAllocation": 100
+      },
+      "capacitorCapacity": 110,
+      "capacitorCost": 6,
+      "capacitorRechargePerSecond": 30,
+      "capacitorReserveThreshold": 22,
+      "capacitorCutoff": 4,
+      "capacitorRestartThreshold": 31,
+      "muzzleFlashColor": "#f2d5ff",
+      "trailColor": "#b98cff"
+    },
+    {
+      "id": "astravault-lumen-lance-mk2",
+      "displayName": "Astravault Lumen Lance Mk II",
+      "manufacturerId": "astravault-systems",
+      "manufacturer": "Astravault Systems",
+      "mark": 2,
+      "description": "A precision prestige Mark II energy weapon delivering improved range and damage from an efficient fixed FLX demand.",
+      "price": 2500,
+      "resaleValue": 1500,
+      "loadoutSlots": [
+        "primary",
+        "secondary"
+      ],
+      "tags": [
+        "player-compatible",
+        "energy-weapon",
+        "tier-2",
+        "gimballed-mount",
+        "manufacturer:astravault"
+      ],
+      "projectileEntityId": "player-laser-bolt",
+      "mountType": "gimballed",
+      "sockets": [
+        "left-laser",
+        "right-laser"
+      ],
+      "fireMode": "alternating",
+      "cooldown": 0.098,
+      "reserveCooldown": 0.29,
+      "projectileSpeed": 1750,
+      "damage": {
+        "energy": 13,
+        "kinetic": 5
+      },
+      "maximumRange": 2050,
+      "rangefinderRange": 3900,
+      "power": {
+        "minimumRequirement": 12,
+        "nominalRequirement": 36,
+        "maximumAllocation": 100
+      },
+      "capacitorCapacity": 120,
+      "capacitorCost": 7,
+      "capacitorRechargePerSecond": 33,
+      "capacitorReserveThreshold": 24,
+      "capacitorCutoff": 5,
+      "capacitorRestartThreshold": 34,
+      "muzzleFlashColor": "#f2d5ff",
+      "trailColor": "#b98cff"
+    },
+    {
+      "id": "astravault-lumen-lance-mk3",
+      "displayName": "Astravault Lumen Lance Mk III",
+      "manufacturerId": "astravault-systems",
+      "manufacturer": "Astravault Systems",
+      "mark": 3,
+      "description": "A precision prestige Mark III energy weapon delivering exceptional range and damage from an efficient fixed FLX demand.",
+      "price": 4800,
+      "resaleValue": 2880,
+      "loadoutSlots": [
+        "primary",
+        "secondary"
+      ],
+      "tags": [
+        "player-compatible",
+        "energy-weapon",
+        "tier-3",
+        "gimballed-mount",
+        "manufacturer:astravault"
+      ],
+      "projectileEntityId": "player-laser-bolt",
+      "mountType": "gimballed",
+      "sockets": [
+        "left-laser",
+        "right-laser"
+      ],
+      "fireMode": "alternating",
+      "cooldown": 0.09,
+      "reserveCooldown": 0.26,
+      "projectileSpeed": 1900,
+      "damage": {
+        "energy": 16,
+        "kinetic": 6
+      },
+      "maximumRange": 2300,
+      "rangefinderRange": 4300,
+      "power": {
+        "minimumRequirement": 15,
+        "nominalRequirement": 44,
+        "maximumAllocation": 100
+      },
+      "capacitorCapacity": 135,
+      "capacitorCost": 8,
+      "capacitorRechargePerSecond": 37,
+      "capacitorReserveThreshold": 27,
+      "capacitorCutoff": 6,
+      "capacitorRestartThreshold": 38,
+      "muzzleFlashColor": "#f2d5ff",
+      "trailColor": "#b98cff"
+    },
+    {
+      "id": "astravault-lumen-lance-mk4",
+      "displayName": "Astravault Lumen Lance Mk IV",
+      "manufacturerId": "astravault-systems",
+      "manufacturer": "Astravault Systems",
+      "mark": 4,
+      "description": "A precision prestige Mark IV energy weapon delivering flagship range and damage from an exceptionally efficient FLX demand.",
+      "price": 8500,
+      "resaleValue": 5100,
+      "loadoutSlots": [
+        "primary",
+        "secondary"
+      ],
+      "tags": [
+        "player-compatible",
+        "energy-weapon",
+        "tier-4",
+        "gimballed-mount",
+        "manufacturer:astravault"
+      ],
+      "projectileEntityId": "player-laser-bolt",
+      "mountType": "gimballed",
+      "sockets": [
+        "left-laser",
+        "right-laser"
+      ],
+      "fireMode": "alternating",
+      "cooldown": 0.082,
+      "reserveCooldown": 0.23,
+      "projectileSpeed": 2100,
+      "damage": {
+        "energy": 20,
+        "kinetic": 7
+      },
+      "maximumRange": 2600,
+      "rangefinderRange": 4800,
+      "power": {
+        "minimumRequirement": 18,
+        "nominalRequirement": 54,
+        "maximumAllocation": 100
+      },
+      "capacitorCapacity": 155,
+      "capacitorCost": 9,
+      "capacitorRechargePerSecond": 42,
+      "capacitorReserveThreshold": 31,
+      "capacitorCutoff": 6,
+      "capacitorRestartThreshold": 43,
+      "muzzleFlashColor": "#f2d5ff",
+      "trailColor": "#b98cff"
+    },
+    {
+      "id": "novacrest-lance-rack-mk3",
+      "displayName": "Novacrest Lance Rack Mk III",
+      "manufacturerId": "novacrest-dynamics",
+      "manufacturer": "Novacrest Dynamics",
+      "mark": 3,
+      "description": "A rugged, inexpensive Mark III guided-ordnance rack using universal Lance missile packs. Capacity and fire-control performance reflect Novacrest Dynamics's design priorities.",
+      "price": 3200,
+      "resaleValue": 1920,
+      "loadoutSlots": [
+        "ordnance"
+      ],
+      "tags": [
+        "player-compatible",
+        "ordnance",
+        "tier-3",
+        "manufacturer:novacrest"
+      ],
+      "weaponType": "missile",
+      "projectileEntityId": "warp-skimmer-missile-projectile",
+      "sockets": [
+        "guided-missile"
+      ],
+      "fireMode": "single",
+      "cooldown": 0.98,
+      "ammunitionType": "skimmer-lance-missile",
+      "loadedCapacity": 8,
+      "projectileSpeed": 345,
+      "damage": {
+        "energy": 440,
+        "kinetic": 350
+      },
+      "maximumRange": 2500,
+      "power": {
+        "minimumRequirement": 4
+      },
+      "explosionRadius": 26,
+      "lockRange": 2050,
+      "lockAcquireSeconds": 0.85,
+      "turnRateDegrees": 36,
+      "muzzleFlashColor": "#ffd98a",
+      "trailColor": "#ffc66f",
+      "explosionColor": "#ffc66f"
+    },
+    {
+      "id": "novacrest-lance-rack-mk4",
+      "displayName": "Novacrest Lance Rack Mk IV",
+      "manufacturerId": "novacrest-dynamics",
+      "manufacturer": "Novacrest Dynamics",
+      "mark": 4,
+      "description": "A rugged, inexpensive Mark IV guided-ordnance rack using universal Lance missile packs. Capacity and fire-control performance reflect Novacrest Dynamics's design priorities.",
+      "price": 5200,
+      "resaleValue": 3120,
+      "loadoutSlots": [
+        "ordnance"
+      ],
+      "tags": [
+        "player-compatible",
+        "ordnance",
+        "tier-4",
+        "manufacturer:novacrest"
+      ],
+      "weaponType": "missile",
+      "projectileEntityId": "warp-skimmer-missile-projectile",
+      "sockets": [
+        "guided-missile"
+      ],
+      "fireMode": "single",
+      "cooldown": 0.9,
+      "ammunitionType": "skimmer-lance-missile",
+      "loadedCapacity": 10,
+      "projectileSpeed": 360,
+      "damage": {
+        "energy": 440,
+        "kinetic": 350
+      },
+      "maximumRange": 2650,
+      "power": {
+        "minimumRequirement": 5
+      },
+      "explosionRadius": 26,
+      "lockRange": 2200,
+      "lockAcquireSeconds": 0.75,
+      "turnRateDegrees": 40,
+      "muzzleFlashColor": "#ffd98a",
+      "trailColor": "#ffc66f",
+      "explosionColor": "#ffc66f"
+    },
+    {
+      "id": "astrodyne-lance-rack-mk1",
+      "displayName": "Astrodyne Lance Rack Mk I",
+      "manufacturerId": "astrodyne-systems",
+      "manufacturer": "Astrodyne Systems",
+      "mark": 1,
+      "description": "A balanced professional Mark I guided-ordnance rack using universal Lance missile packs. Capacity and fire-control performance reflect Astrodyne Systems's design priorities.",
+      "price": 1100,
+      "resaleValue": 660,
+      "loadoutSlots": [
+        "ordnance"
+      ],
+      "tags": [
+        "player-compatible",
+        "ordnance",
+        "tier-1",
+        "manufacturer:astrodyne"
+      ],
+      "weaponType": "missile",
+      "projectileEntityId": "warp-skimmer-missile-projectile",
+      "sockets": [
+        "guided-missile"
+      ],
+      "fireMode": "single",
+      "cooldown": 1.1,
+      "ammunitionType": "skimmer-lance-missile",
+      "loadedCapacity": 4,
+      "projectileSpeed": 320,
+      "damage": {
+        "energy": 410,
+        "kinetic": 325
+      },
+      "maximumRange": 2300,
+      "power": {
+        "minimumRequirement": 2
+      },
+      "explosionRadius": 24,
+      "lockRange": 1900,
+      "lockAcquireSeconds": 1,
+      "turnRateDegrees": 30,
+      "muzzleFlashColor": "#a8ffff",
+      "trailColor": "#72f9ff",
+      "explosionColor": "#72f9ff"
+    },
+    {
+      "id": "astrodyne-lance-rack-mk2",
+      "displayName": "Astrodyne Lance Rack Mk II",
+      "manufacturerId": "astrodyne-systems",
+      "manufacturer": "Astrodyne Systems",
+      "mark": 2,
+      "description": "A balanced professional Mark II guided-ordnance rack using universal Lance missile packs. Capacity and fire-control performance reflect Astrodyne Systems's design priorities.",
+      "price": 2200,
+      "resaleValue": 1320,
+      "loadoutSlots": [
+        "ordnance"
+      ],
+      "tags": [
+        "player-compatible",
+        "ordnance",
+        "tier-2",
+        "manufacturer:astrodyne"
+      ],
+      "weaponType": "missile",
+      "projectileEntityId": "warp-skimmer-missile-projectile",
+      "sockets": [
+        "guided-missile"
+      ],
+      "fireMode": "single",
+      "cooldown": 1,
+      "ammunitionType": "skimmer-lance-missile",
+      "loadedCapacity": 6,
+      "projectileSpeed": 340,
+      "damage": {
+        "energy": 410,
+        "kinetic": 325
+      },
+      "maximumRange": 2500,
+      "power": {
+        "minimumRequirement": 3
+      },
+      "explosionRadius": 24,
+      "lockRange": 2100,
+      "lockAcquireSeconds": 0.85,
+      "turnRateDegrees": 35,
+      "muzzleFlashColor": "#a8ffff",
+      "trailColor": "#72f9ff",
+      "explosionColor": "#72f9ff"
+    },
+    {
+      "id": "astrodyne-lance-rack-mk3",
+      "displayName": "Astrodyne Lance Rack Mk III",
+      "manufacturerId": "astrodyne-systems",
+      "manufacturer": "Astrodyne Systems",
+      "mark": 3,
+      "description": "A balanced professional Mark III guided-ordnance rack using universal Lance missile packs. Capacity and fire-control performance reflect Astrodyne Systems's design priorities.",
+      "price": 3800,
+      "resaleValue": 2280,
+      "loadoutSlots": [
+        "ordnance"
+      ],
+      "tags": [
+        "player-compatible",
+        "ordnance",
+        "tier-3",
+        "manufacturer:astrodyne"
+      ],
+      "weaponType": "missile",
+      "projectileEntityId": "warp-skimmer-missile-projectile",
+      "sockets": [
+        "guided-missile"
+      ],
+      "fireMode": "single",
+      "cooldown": 0.9,
+      "ammunitionType": "skimmer-lance-missile",
+      "loadedCapacity": 8,
+      "projectileSpeed": 360,
+      "damage": {
+        "energy": 410,
+        "kinetic": 325
+      },
+      "maximumRange": 2750,
+      "power": {
+        "minimumRequirement": 4
+      },
+      "explosionRadius": 24,
+      "lockRange": 2350,
+      "lockAcquireSeconds": 0.72,
+      "turnRateDegrees": 40,
+      "muzzleFlashColor": "#a8ffff",
+      "trailColor": "#72f9ff",
+      "explosionColor": "#72f9ff"
+    },
+    {
+      "id": "astrodyne-lance-rack-mk4",
+      "displayName": "Astrodyne Lance Rack Mk IV",
+      "manufacturerId": "astrodyne-systems",
+      "manufacturer": "Astrodyne Systems",
+      "mark": 4,
+      "description": "A balanced professional Mark IV guided-ordnance rack using universal Lance missile packs. Capacity and fire-control performance reflect Astrodyne Systems's design priorities.",
+      "price": 6200,
+      "resaleValue": 3720,
+      "loadoutSlots": [
+        "ordnance"
+      ],
+      "tags": [
+        "player-compatible",
+        "ordnance",
+        "tier-4",
+        "manufacturer:astrodyne"
+      ],
+      "weaponType": "missile",
+      "projectileEntityId": "warp-skimmer-missile-projectile",
+      "sockets": [
+        "guided-missile"
+      ],
+      "fireMode": "single",
+      "cooldown": 0.8,
+      "ammunitionType": "skimmer-lance-missile",
+      "loadedCapacity": 10,
+      "projectileSpeed": 380,
+      "damage": {
+        "energy": 410,
+        "kinetic": 325
+      },
+      "maximumRange": 3000,
+      "power": {
+        "minimumRequirement": 5
+      },
+      "explosionRadius": 24,
+      "lockRange": 2600,
+      "lockAcquireSeconds": 0.6,
+      "turnRateDegrees": 46,
+      "muzzleFlashColor": "#a8ffff",
+      "trailColor": "#72f9ff",
+      "explosionColor": "#72f9ff"
+    },
+    {
+      "id": "razorfin-talon-rack-mk1",
+      "displayName": "Razorfin Talon Rack Mk I",
+      "manufacturerId": "razorfin-aerospace",
+      "manufacturer": "Razorfin Aerospace",
+      "mark": 1,
+      "description": "A high-response combat Mark I guided-ordnance rack using universal Lance missile packs. Capacity and fire-control performance reflect Razorfin Aerospace's design priorities.",
+      "price": 1500,
+      "resaleValue": 900,
+      "loadoutSlots": [
+        "ordnance"
+      ],
+      "tags": [
+        "player-compatible",
+        "ordnance",
+        "tier-1",
+        "manufacturer:razorfin"
+      ],
+      "weaponType": "missile",
+      "projectileEntityId": "warp-skimmer-missile-projectile",
+      "sockets": [
+        "guided-missile"
+      ],
+      "fireMode": "single",
+      "cooldown": 0.95,
+      "ammunitionType": "skimmer-lance-missile",
+      "loadedCapacity": 3,
+      "projectileSpeed": 350,
+      "damage": {
+        "energy": 420,
+        "kinetic": 330
+      },
+      "maximumRange": 2400,
+      "power": {
+        "minimumRequirement": 3
+      },
+      "explosionRadius": 25,
+      "lockRange": 2000,
+      "lockAcquireSeconds": 0.9,
+      "turnRateDegrees": 36,
+      "muzzleFlashColor": "#ffb06a",
+      "trailColor": "#ff6655",
+      "explosionColor": "#ff6655"
+    },
+    {
+      "id": "razorfin-talon-rack-mk2",
+      "displayName": "Razorfin Talon Rack Mk II",
+      "manufacturerId": "razorfin-aerospace",
+      "manufacturer": "Razorfin Aerospace",
+      "mark": 2,
+      "description": "A high-response combat Mark II guided-ordnance rack using universal Lance missile packs. Capacity and fire-control performance reflect Razorfin Aerospace's design priorities.",
+      "price": 2900,
+      "resaleValue": 1740,
+      "loadoutSlots": [
+        "ordnance"
+      ],
+      "tags": [
+        "player-compatible",
+        "ordnance",
+        "tier-2",
+        "manufacturer:razorfin"
+      ],
+      "weaponType": "missile",
+      "projectileEntityId": "warp-skimmer-missile-projectile",
+      "sockets": [
+        "guided-missile"
+      ],
+      "fireMode": "single",
+      "cooldown": 0.82,
+      "ammunitionType": "skimmer-lance-missile",
+      "loadedCapacity": 5,
+      "projectileSpeed": 380,
+      "damage": {
+        "energy": 420,
+        "kinetic": 330
+      },
+      "maximumRange": 2650,
+      "power": {
+        "minimumRequirement": 4
+      },
+      "explosionRadius": 25,
+      "lockRange": 2250,
+      "lockAcquireSeconds": 0.72,
+      "turnRateDegrees": 44,
+      "muzzleFlashColor": "#ffb06a",
+      "trailColor": "#ff6655",
+      "explosionColor": "#ff6655"
+    },
+    {
+      "id": "razorfin-talon-rack-mk3",
+      "displayName": "Razorfin Talon Rack Mk III",
+      "manufacturerId": "razorfin-aerospace",
+      "manufacturer": "Razorfin Aerospace",
+      "mark": 3,
+      "description": "A high-response combat Mark III guided-ordnance rack using universal Lance missile packs. Capacity and fire-control performance reflect Razorfin Aerospace's design priorities.",
+      "price": 5000,
+      "resaleValue": 3000,
+      "loadoutSlots": [
+        "ordnance"
+      ],
+      "tags": [
+        "player-compatible",
+        "ordnance",
+        "tier-3",
+        "manufacturer:razorfin"
+      ],
+      "weaponType": "missile",
+      "projectileEntityId": "warp-skimmer-missile-projectile",
+      "sockets": [
+        "guided-missile"
+      ],
+      "fireMode": "single",
+      "cooldown": 0.7,
+      "ammunitionType": "skimmer-lance-missile",
+      "loadedCapacity": 7,
+      "projectileSpeed": 415,
+      "damage": {
+        "energy": 420,
+        "kinetic": 330
+      },
+      "maximumRange": 2950,
+      "power": {
+        "minimumRequirement": 6
+      },
+      "explosionRadius": 25,
+      "lockRange": 2550,
+      "lockAcquireSeconds": 0.56,
+      "turnRateDegrees": 52,
+      "muzzleFlashColor": "#ffb06a",
+      "trailColor": "#ff6655",
+      "explosionColor": "#ff6655"
+    },
+    {
+      "id": "razorfin-talon-rack-mk4",
+      "displayName": "Razorfin Talon Rack Mk IV",
+      "manufacturerId": "razorfin-aerospace",
+      "manufacturer": "Razorfin Aerospace",
+      "mark": 4,
+      "description": "A high-response combat Mark IV guided-ordnance rack using universal Lance missile packs. Capacity and fire-control performance reflect Razorfin Aerospace's design priorities.",
+      "price": 8200,
+      "resaleValue": 4920,
+      "loadoutSlots": [
+        "ordnance"
+      ],
+      "tags": [
+        "player-compatible",
+        "ordnance",
+        "tier-4",
+        "manufacturer:razorfin"
+      ],
+      "weaponType": "missile",
+      "projectileEntityId": "warp-skimmer-missile-projectile",
+      "sockets": [
+        "guided-missile"
+      ],
+      "fireMode": "single",
+      "cooldown": 0.58,
+      "ammunitionType": "skimmer-lance-missile",
+      "loadedCapacity": 9,
+      "projectileSpeed": 450,
+      "damage": {
+        "energy": 420,
+        "kinetic": 330
+      },
+      "maximumRange": 3300,
+      "power": {
+        "minimumRequirement": 8
+      },
+      "explosionRadius": 25,
+      "lockRange": 2900,
+      "lockAcquireSeconds": 0.42,
+      "turnRateDegrees": 62,
+      "muzzleFlashColor": "#ffb06a",
+      "trailColor": "#ff6655",
+      "explosionColor": "#ff6655"
+    },
+    {
+      "id": "astravault-halo-rack-mk1",
+      "displayName": "Astravault Halo Rack Mk I",
+      "manufacturerId": "astravault-systems",
+      "manufacturer": "Astravault Systems",
+      "mark": 1,
+      "description": "A precision prestige Mark I guided-ordnance rack using universal Lance missile packs. Capacity and fire-control performance reflect Astravault Systems's design priorities.",
+      "price": 2200,
+      "resaleValue": 1320,
+      "loadoutSlots": [
+        "ordnance"
+      ],
+      "tags": [
+        "player-compatible",
+        "ordnance",
+        "tier-1",
+        "manufacturer:astravault"
+      ],
+      "weaponType": "missile",
+      "projectileEntityId": "warp-skimmer-missile-projectile",
+      "sockets": [
+        "guided-missile"
+      ],
+      "fireMode": "single",
+      "cooldown": 1,
+      "ammunitionType": "skimmer-lance-missile",
+      "loadedCapacity": 4,
+      "projectileSpeed": 340,
+      "damage": {
+        "energy": 410,
+        "kinetic": 325
+      },
+      "maximumRange": 2500,
+      "power": {
+        "minimumRequirement": 1
+      },
+      "explosionRadius": 24,
+      "lockRange": 2150,
+      "lockAcquireSeconds": 0.8,
+      "turnRateDegrees": 38,
+      "muzzleFlashColor": "#f2d5ff",
+      "trailColor": "#b98cff",
+      "explosionColor": "#b98cff"
+    },
+    {
+      "id": "astravault-halo-rack-mk2",
+      "displayName": "Astravault Halo Rack Mk II",
+      "manufacturerId": "astravault-systems",
+      "manufacturer": "Astravault Systems",
+      "mark": 2,
+      "description": "A precision prestige Mark II guided-ordnance rack using universal Lance missile packs. Capacity and fire-control performance reflect Astravault Systems's design priorities.",
+      "price": 4200,
+      "resaleValue": 2520,
+      "loadoutSlots": [
+        "ordnance"
+      ],
+      "tags": [
+        "player-compatible",
+        "ordnance",
+        "tier-2",
+        "manufacturer:astravault"
+      ],
+      "weaponType": "missile",
+      "projectileEntityId": "warp-skimmer-missile-projectile",
+      "sockets": [
+        "guided-missile"
+      ],
+      "fireMode": "single",
+      "cooldown": 0.9,
+      "ammunitionType": "skimmer-lance-missile",
+      "loadedCapacity": 6,
+      "projectileSpeed": 370,
+      "damage": {
+        "energy": 410,
+        "kinetic": 325
+      },
+      "maximumRange": 2850,
+      "power": {
+        "minimumRequirement": 2
+      },
+      "explosionRadius": 24,
+      "lockRange": 2500,
+      "lockAcquireSeconds": 0.62,
+      "turnRateDegrees": 46,
+      "muzzleFlashColor": "#f2d5ff",
+      "trailColor": "#b98cff",
+      "explosionColor": "#b98cff"
+    },
+    {
+      "id": "astravault-halo-rack-mk3",
+      "displayName": "Astravault Halo Rack Mk III",
+      "manufacturerId": "astravault-systems",
+      "manufacturer": "Astravault Systems",
+      "mark": 3,
+      "description": "A precision prestige Mark III guided-ordnance rack using universal Lance missile packs. Capacity and fire-control performance reflect Astravault Systems's design priorities.",
+      "price": 7200,
+      "resaleValue": 4320,
+      "loadoutSlots": [
+        "ordnance"
+      ],
+      "tags": [
+        "player-compatible",
+        "ordnance",
+        "tier-3",
+        "manufacturer:astravault"
+      ],
+      "weaponType": "missile",
+      "projectileEntityId": "warp-skimmer-missile-projectile",
+      "sockets": [
+        "guided-missile"
+      ],
+      "fireMode": "single",
+      "cooldown": 0.8,
+      "ammunitionType": "skimmer-lance-missile",
+      "loadedCapacity": 8,
+      "projectileSpeed": 405,
+      "damage": {
+        "energy": 410,
+        "kinetic": 325
+      },
+      "maximumRange": 3250,
+      "power": {
+        "minimumRequirement": 3
+      },
+      "explosionRadius": 24,
+      "lockRange": 2900,
+      "lockAcquireSeconds": 0.46,
+      "turnRateDegrees": 56,
+      "muzzleFlashColor": "#f2d5ff",
+      "trailColor": "#b98cff",
+      "explosionColor": "#b98cff"
+    },
+    {
+      "id": "astravault-halo-rack-mk4",
+      "displayName": "Astravault Halo Rack Mk IV",
+      "manufacturerId": "astravault-systems",
+      "manufacturer": "Astravault Systems",
+      "mark": 4,
+      "description": "A precision prestige Mark IV guided-ordnance rack using universal Lance missile packs. Capacity and fire-control performance reflect Astravault Systems's design priorities.",
+      "price": 11500,
+      "resaleValue": 6900,
+      "loadoutSlots": [
+        "ordnance"
+      ],
+      "tags": [
+        "player-compatible",
+        "ordnance",
+        "tier-4",
+        "manufacturer:astravault"
+      ],
+      "weaponType": "missile",
+      "projectileEntityId": "warp-skimmer-missile-projectile",
+      "sockets": [
+        "guided-missile"
+      ],
+      "fireMode": "single",
+      "cooldown": 0.7,
+      "ammunitionType": "skimmer-lance-missile",
+      "loadedCapacity": 10,
+      "projectileSpeed": 440,
+      "damage": {
+        "energy": 410,
+        "kinetic": 325
+      },
+      "maximumRange": 3700,
+      "power": {
+        "minimumRequirement": 4
+      },
+      "explosionRadius": 24,
+      "lockRange": 3350,
+      "lockAcquireSeconds": 0.32,
+      "turnRateDegrees": 68,
+      "muzzleFlashColor": "#f2d5ff",
+      "trailColor": "#b98cff",
+      "explosionColor": "#b98cff"
+    },
+
+    {
+  "id": "prism-tank-cannon",
+  "displayName": "Prism Energy Cannon",
+  "projectileEntityId": "prism-energy-bolt",
+
+  "sockets": [
+    "primaryMuzzle"
+  ],
+
+  "fireMode": "single",
+  "cooldown": 1.25,
+
+  "projectileSpeed": 320,
+
+  "damage": {
+    "energy": 12,
+    "kinetic": 3
+  },
+
+  "maximumRange": 1500,
+
+  "muzzleFlashColor": "#d58cff",
+  "trailColor": "#b86cff"
+},
+{
+  "id": "warp-skimmer-missile",
+  "displayName": "Novacrest Lance Rack Mk I",
+  "manufacturerId": "novacrest-dynamics",
+  "manufacturer": "Novacrest Dynamics",
+  "mark": 1,
+  "description": "A rugged guided-ordnance rack carrying four universal Lance missiles with straightforward field-service electronics.",
+  "price": 900,
+  "resaleValue": 540,
+  "loadoutSlots": [
+    "ordnance"
+  ],
+  "tags": [
+    "player-compatible",
+    "ordnance",
+    "tier-1",
+    "starter"
+  ],
+  "weaponType": "missile",
+  "projectileEntityId": "warp-skimmer-missile-projectile",
+  "sockets": ["guided-missile"],
+    "fireMode": "single",
+    "cooldown": 1.15,
+    "ammunitionType": "skimmer-lance-missile",
+    "loadedCapacity": 4,
+    "projectileSpeed": 310,
+  "damage": {
+    "energy": 400,
+    "kinetic": 320
+  },
+  "maximumRange": 2200,
+  "power": {
+    "minimumRequirement": 2
+  },
+  "explosionRadius": 24,
+  "lockRange": 1800,
+  "lockAcquireSeconds": 1.1,
+  "turnRateDegrees": 28,
+  "muzzleFlashColor": "#ffd46a",
+  "trailColor": "#ffb35c",
+  "explosionColor": "#ffb35c"
+},
+{
+  "id": "helios-pulse-laser-mk2",
+  "displayName": "Astrodyne Vector Laser Mk II",
+  "manufacturerId": "astrodyne-systems",
+  "manufacturer": "Astrodyne Systems",
+  "mark": 2,
+  "description": "A higher-output professional energy cannon with harder pulses and improved core coupling. It draws energy from the Power Core and requires no ammunition.",
+  "price": 1450,
+  "resaleValue": 870,
+  "loadoutSlots": [
+    "primary",
+    "secondary"
+  ],
+  "tags": [
+    "player-compatible",
+    "energy-weapon",
+    "tier-2"
+  ],
+  "projectileEntityId": "player-laser-bolt",
+  "mountType": "gimballed",
+  "sockets": [
+    "left-laser",
+    "right-laser"
+  ],
+  "fireMode": "alternating",
+  "cooldown": 0.105,
+  "reserveCooldown": 0.34,
+  "projectileSpeed": 1550,
+  "damage": {
+    "energy": 12,
+    "kinetic": 6
+  },
+  "maximumRange": 1750,
+  "rangefinderRange": 3200,
+  "power": {
+    "minimumRequirement": 13,
+    "nominalRequirement": 40,
+    "maximumAllocation": 100
+  },
+  "capacitorCapacity": 110,
+  "capacitorCost": 9,
+  "capacitorRechargePerSecond": 26,
+  "capacitorReserveThreshold": 24,
+  "capacitorCutoff": 7,
+  "capacitorRestartThreshold": 32,
+  "muzzleFlashColor": "#d4ffff",
+  "trailColor": "#8effff"
+},
+{
+  "id": "skimmer-lance-rack-mk2",
+  "displayName": "Novacrest Lance Rack Mk II",
+  "manufacturerId": "novacrest-dynamics",
+  "manufacturer": "Novacrest Dynamics",
+  "mark": 2,
+  "description": "An expanded guided-ordnance assembly carrying six universal Lance missiles with improved seeker response.",
+  "price": 1850,
+  "resaleValue": 1110,
+  "loadoutSlots": [
+    "ordnance"
+  ],
+  "tags": [
+    "player-compatible",
+    "ordnance",
+    "tier-2"
+  ],
+  "weaponType": "missile",
+  "projectileEntityId": "warp-skimmer-missile-projectile",
+  "sockets": [
+    "guided-missile"
+  ],
+    "fireMode": "single",
+    "cooldown": 1.05,
+    "ammunitionType": "skimmer-lance-missile",
+    "loadedCapacity": 6,
+    "projectileSpeed": 330,
+  "damage": {
+    "energy": 440,
+    "kinetic": 350
+  },
+  "maximumRange": 2350,
+  "power": {
+    "minimumRequirement": 3
+  },
+  "explosionRadius": 26,
+  "lockRange": 1900,
+  "lockAcquireSeconds": 0.95,
+  "turnRateDegrees": 32,
+  "muzzleFlashColor": "#ffe08a",
+  "trailColor": "#ffc06a",
+  "explosionColor": "#ffbd62"
+},
+{
+  "id": "needlewing-pursuit-missile",
+  "displayName": "Needlewing Pursuit Missile",
+  "weaponType": "missile",
+  "projectileEntityId": "needlewing-pursuit-missile-projectile",
+  "sockets": [
+    "left-gun",
+    "right-gun"
+  ],
+  "fireMode": "single",
+  "cooldown": 7.5,
+  "startingAmmunition": 6,
+  "projectileSpeed": 270,
+  "damage": {
+    "energy": 8,
+    "kinetic": 24
+  },
+  "maximumRange": 1900,
+  "explosionRadius": 22,
+  "lockRange": 1550,
+  "lockAcquireSeconds": 2.2,
+  "turnRateDegrees": 36,
+  "seekerConeDegrees": 58,
+  "enemyLockToleranceDegrees": 4.5,
+  "enemyLockBreakDegrees": 10,
+  "lockBreakGraceSeconds": 0.55,
+  "enemyLaunchDelayAfterLockSeconds": 0.65,
+  "launchDelay": 0.24,
+  "releaseSpeed": 62,
+  "dropSpeed": 4,
+  "acceleration": 350,
+  "muzzleFlashColor": "#ff6a59",
+  "trailColor": "#ff725c",
+  "explosionColor": "#ff9a5c"
+}
+
+  ]
+}
