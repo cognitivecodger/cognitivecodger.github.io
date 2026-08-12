@@ -1115,6 +1115,42 @@
         border-color: var(--green);
         color: #bcffd3;
       }
+      #musicDiagnostics {
+        display: grid;
+        gap: 6px;
+        margin-top: 8px;
+      }
+      .musicDiagnosticTrack {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 8px;
+        padding: 8px;
+        border-left: 3px solid var(--blue);
+        background: #0b1927;
+      }
+      .musicDiagnosticTrack.ok {
+        border-color: var(--green);
+      }
+      .musicDiagnosticTrack.error {
+        border-color: var(--red);
+      }
+      .musicDiagnosticTrack.warning {
+        border-color: var(--amber);
+      }
+      .musicDiagnosticTrack b,
+      .musicDiagnosticTrack code {
+        display: block;
+        overflow-wrap: anywhere;
+      }
+      .musicDiagnosticTrack code {
+        margin-top: 3px;
+        color: var(--muted);
+        font-size: 10px;
+      }
+      .musicDiagnosticTrack small {
+        color: var(--muted);
+      }
       #arenaHud {
         position: fixed;
         inset: 0;
@@ -5127,6 +5163,20 @@
             ><button id="devArena">Model Test Arena</button>
           </div>
           <p id="runtimeStatus" class="hint">No active mission.</p>
+        </div>
+        <div class="section">
+          <h3>Music Library</h3>
+          <div class="toolbar">
+            <button id="devCheckMusic" class="primary">Check music.json</button
+            ><button id="devStopMusicPreview">Stop preview</button>
+          </div>
+          <p class="hint">
+            Validates the hosted manifest and every listed MP3. Use Play Track
+            to test the exact URL served by the current host.
+          </p>
+          <div id="musicDiagnostics">
+            <div class="diagnostic">Music library has not been checked.</div>
+          </div>
         </div>
         <div class="section">
           <h3>Validation & Missing References</h3>
@@ -28911,6 +28961,167 @@
         }
       }
       let menuMusic = null;
+      let developerMusicPreview = null;
+      function stopDeveloperMusicPreview(resumeMenuMusic = true) {
+        if (developerMusicPreview) {
+          developerMusicPreview.pause();
+          developerMusicPreview.removeAttribute("src");
+          developerMusicPreview.load();
+          developerMusicPreview = null;
+        }
+        $$('[data-music-preview]').forEach(
+          (button) => (button.textContent = "Play Track"),
+        );
+        if (resumeMenuMusic && app?.mode === "dev") menuMusic?.play();
+      }
+      function playDeveloperMusicPreview(url, button) {
+        stopDeveloperMusicPreview(false);
+        menuMusic?.audio.pause();
+        developerMusicPreview = new Audio(url);
+        developerMusicPreview.preload = "auto";
+        developerMusicPreview.volume = 0.4;
+        button.textContent = "Playing...";
+        developerMusicPreview.addEventListener(
+          "ended",
+          () => stopDeveloperMusicPreview(true),
+          { once: true },
+        );
+        developerMusicPreview.addEventListener(
+          "error",
+          () => {
+            notify("Track preview failed - run Check music.json for details");
+            stopDeveloperMusicPreview(true);
+          },
+          { once: true },
+        );
+        developerMusicPreview.play().catch((error) => {
+          notify(`Track preview blocked: ${error.message}`);
+          stopDeveloperMusicPreview(true);
+        });
+      }
+      function probeHostedAudio(url, timeoutMs = 10000) {
+        return new Promise((resolve) => {
+          const probe = new Audio(),
+            finish = (result) => {
+              clearTimeout(timer);
+              probe.removeAttribute("src");
+              probe.load();
+              resolve(result);
+            },
+            timer = setTimeout(
+              () => finish({ ok: false, detail: "Media probe timed out" }),
+              timeoutMs,
+            );
+          probe.preload = "metadata";
+          probe.addEventListener(
+            "loadedmetadata",
+            () =>
+              finish({
+                ok: true,
+                detail: Number.isFinite(probe.duration)
+                  ? `${probe.duration.toFixed(1)} seconds`
+                  : "Browser decoded audio metadata",
+              }),
+            { once: true },
+          );
+          probe.addEventListener(
+            "error",
+            () =>
+              finish({
+                ok: false,
+                detail: `Media error ${probe.error?.code || "unknown"}`,
+              }),
+            { once: true },
+          );
+          probe.src = url;
+          probe.load();
+        });
+      }
+      async function checkHostedMusicLibrary() {
+        const host = $("#musicDiagnostics"),
+          checkButton = $("#devCheckMusic");
+        checkButton.disabled = true;
+        host.innerHTML =
+          '<div class="diagnostic">Reading hosted music.json...</div>';
+        try {
+          const response = await fetch(MUSIC_MANIFEST, { cache: "no-store" });
+          if (!response.ok)
+            throw new Error(
+              `music.json returned HTTP ${response.status} ${response.statusText}`,
+            );
+          const contentType = response.headers.get("content-type") || "unknown",
+            manifest = await response.json(),
+            files = Array.isArray(manifest)
+              ? manifest
+              : Array.isArray(manifest?.tracks)
+                ? manifest.tracks
+                : null;
+          if (!files)
+            throw new Error("music.json must contain a tracks array");
+          host.innerHTML = `<div class="diagnostic ok"><b>MUSIC_MANIFEST_OK</b> ${files.length} tracks loaded • ${esc(contentType)}<br><code>${esc(new URL(MUSIC_MANIFEST, document.baseURI).href)}</code></div>`;
+          for (const entry of files) {
+            const name = String(
+                typeof entry === "string" ? entry : entry?.file || "",
+              ).trim(),
+              kind = /success\s*\d+/i.test(name)
+                ? "SUCCESS"
+                : /failure\s*\d+/i.test(name)
+                  ? "FAILURE"
+                  : /menu\s*\d+/i.test(name)
+                    ? "MENU"
+                    : "UNCLASSIFIED",
+              url = new URL(
+                MUSIC_DIRECTORY + encodeURIComponent(name),
+                document.baseURI,
+              ).href,
+              row = document.createElement("div");
+            row.className = "musicDiagnosticTrack";
+            row.innerHTML = `<div><b>${esc(kind)} • ${esc(name || "Missing filename")}</b><small>Checking hosted file and browser decoder...</small><code>${esc(url)}</code></div><button data-music-preview disabled>Play Track</button>`;
+            host.appendChild(row);
+            const status = row.querySelector("small"),
+              playButton = row.querySelector("button"),
+              controller = new AbortController(),
+              timeout = setTimeout(() => controller.abort(), 10000);
+            try {
+              const fileResponse = await fetch(url, {
+                  method: "HEAD",
+                  cache: "no-store",
+                  signal: controller.signal,
+                }),
+                mime = fileResponse.headers.get("content-type") || "unknown",
+                bytes = Number(fileResponse.headers.get("content-length")) || 0;
+              clearTimeout(timeout);
+              if (!fileResponse.ok)
+                throw new Error(
+                  `HTTP ${fileResponse.status} ${fileResponse.statusText}`,
+                );
+              const media = await probeHostedAudio(url);
+              if (!media.ok) throw new Error(media.detail);
+              row.classList.add(
+                kind === "UNCLASSIFIED" ? "warning" : "ok",
+              );
+              status.textContent =
+                `${kind === "UNCLASSIFIED" ? "FILE READY - NOT USED BY PLAYLIST" : "READY"} • HTTP ${fileResponse.status} • ${mime}` +
+                (bytes ? ` • ${(bytes / 1048576).toFixed(2)} MB` : "") +
+                ` • ${media.detail}` +
+                (kind === "UNCLASSIFIED"
+                  ? " • Rename with Menu<n>, Success<n>, or Failure<n>"
+                  : "");
+              playButton.disabled = false;
+              playButton.onclick = () =>
+                playDeveloperMusicPreview(url, playButton);
+            } catch (error) {
+              clearTimeout(timeout);
+              row.classList.add("error");
+              status.textContent = `FAILED • ${error.message}`;
+            }
+          }
+        } catch (error) {
+          host.innerHTML = `<div class="diagnostic error"><b>MUSIC_MANIFEST_ERROR</b> ${esc(error.message)}<br><code>${esc(new URL(MUSIC_MANIFEST, document.baseURI).href)}</code></div>`;
+        } finally {
+          checkButton.disabled = false;
+        }
+      }
       function syncMenuMusicForMode(mode) {
         if (!menuMusic) return;
         if (mode === "flight" || mode === "arena")
@@ -30218,13 +30429,20 @@
           bunkerMissionReturnHold.pointer = false;
         };
         $("#devClose").onclick = () => {
+          stopDeveloperMusicPreview(false);
           if (app.needsRebuild) app.title();
           else if (app.previous === "flight" || app.previous === "paused")
             app.resume();
           else app.title();
         };
         $("#devReload").onclick = () => repositories.reloadAll();
-        $("#devValidate").onclick = () => repositories.validate();
+        $("#devValidate").onclick = () => {
+          repositories.validate();
+          checkHostedMusicLibrary();
+        };
+        $("#devCheckMusic").onclick = () => checkHostedMusicLibrary();
+        $("#devStopMusicPreview").onclick = () =>
+          stopDeveloperMusicPreview(true);
         $("#devRebuild").onclick = () => app.rebuild();
         $("#devRestart").onclick = () => app.restart();
         $("#devArena").onclick = () => app.arena();
