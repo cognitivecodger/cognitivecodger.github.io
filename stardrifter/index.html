@@ -28731,6 +28731,7 @@
         setBunkerTab("mission");
       }
       const MUSIC_DIRECTORY = "data/music/",
+        MUSIC_MANIFEST = `${MUSIC_DIRECTORY}music.json`,
         MUSIC_FALLBACK_FILES = [
           "Clockwork Horizon -Menu3.mp3",
           "Copper Labyrinth-Menu1.mp3",
@@ -28766,6 +28767,35 @@
           const tracks = new Map(
             this.tracks.map((track) => [track.url, track]),
           );
+          try {
+            const response = await fetch(MUSIC_MANIFEST, {
+              cache: "no-store",
+            });
+            if (response.ok) {
+              const manifest = await response.json(),
+                files = Array.isArray(manifest)
+                  ? manifest
+                  : Array.isArray(manifest?.tracks)
+                    ? manifest.tracks
+                    : [];
+              for (const entry of files) {
+                const name = String(
+                  typeof entry === "string" ? entry : entry?.file || "",
+                ).trim();
+                if (!/\.mp3$/i.test(name)) continue;
+                const url = new URL(
+                  MUSIC_DIRECTORY + encodeURIComponent(name),
+                  document.baseURI,
+                ).href;
+                tracks.set(url, { name, url });
+              }
+            }
+          } catch (error) {
+            console.info(
+              "Music manifest unavailable; using known tracks.",
+              error,
+            );
+          }
           try {
             const response = await fetch(MUSIC_DIRECTORY, {
               cache: "no-store",
