@@ -1,0 +1,165 @@
+{
+  "format": "star-drifter-craft-repository",
+  "formatVersion": 1,
+  "economy": {
+    "startingCredits": 5000,
+    "currencyCode": "CR",
+    "starterLoadout": {
+      "ownedEquipmentIds": [
+        "helios-deflector-mk1",
+        "reinforced-hull-plating",
+        "extended-laser-capacitor",
+        "helios-vector-drive-mk1",
+        "helios-flight-control-mk1"
+      ],
+      "fittedEquipment": {
+        "shield": "helios-deflector-mk1",
+        "armour": "reinforced-hull-plating",
+        "capacitor": "extended-laser-capacitor",
+        "engine": "helios-vector-drive-mk1",
+        "flight-control": "helios-flight-control-mk1"
+      },
+      "ownedWeaponIds": [
+        "warp-skimmer-laser",
+        "warp-skimmer-missile"
+      ],
+      "fittedWeapons": {
+        "primary": "warp-skimmer-laser",
+        "ordnance": "warp-skimmer-missile"
+      }
+    }
+  },
+  "craft": [
+    {
+      "id": "warp-skimmer",
+      "displayName": "Warp Skimmer",
+      "manufacturer": "Astrodyne Systems",
+      "className": "Light Strike Craft",
+      "description": "A responsive, field-proven planetary strike craft. The Warp Skimmer balances speed, armour and straightforward handling around a dependable twin-cannon and missile layout.",
+      "modelId": "warp-skimmer",
+      "baseEntityId": "warp-skimmer-player",
+      "price": 5000,
+      "resaleValue": 2000,
+      "starterEligible": true,
+      "includesStarterLoadout": true,
+      "loadoutSlots": {
+        "weapons": {
+          "primary": {
+            "available": true,
+            "aimModes": [
+              "fixed",
+              "gimballed"
+            ],
+            "defaultAimMode": "gimballed",
+            "gimbalDegrees": 50,
+            "sockets": [
+              "left-laser",
+              "right-laser"
+            ]
+          },
+          "secondary": {
+            "available": false,
+            "sockets": []
+          },
+          "ordnance": {
+            "available": true,
+            "sockets": [
+              "guided-missile"
+            ]
+          }
+        },
+        "utility": 1
+      }
+    },
+    {
+      "id": "sf-01-razorfin",
+      "displayName": "SF-01 Razorfin",
+      "manufacturer": "Razorfin Aerospace",
+      "className": "Light Strike Craft",
+      "description": "A broad-shouldered frontier fighter built around the same proven light-strike flight specification as the Warp Skimmer. Its distinctive airframe provides an alternative cockpit and hardpoint arrangement without changing starting performance.",
+      "modelId": "sf-01-razorfin",
+      "baseEntityId": "warp-skimmer-player",
+      "price": 5000,
+      "resaleValue": 2000,
+      "starterEligible": true,
+      "includesStarterLoadout": true,
+      "loadoutSlots": {
+        "weapons": {
+          "primary": {
+            "available": true,
+            "aimModes": [
+              "fixed",
+              "gimballed"
+            ],
+            "defaultAimMode": "gimballed",
+            "gimbalDegrees": 50,
+            "sockets": [
+              "razorfin-left-cannon-socket",
+              "razorfin-right-cannon-socket"
+            ]
+          },
+          "secondary": {
+            "available": false,
+            "sockets": []
+          },
+          "ordnance": {
+            "available": true,
+            "sockets": [
+              "razorfin-missile-left-socket",
+              "razorfin-missile-right-socket"
+            ]
+          }
+        },
+        "utility": 1
+      }
+    },
+    {
+      "id": "mg-12-mantis",
+      "displayName": "MG-12 Mantis Gunship",
+      "manufacturer": "Astrodyne Systems",
+      "className": "Medium Strike Gunship",
+      "description": "A heavily armed two-seat strike platform built for escort, suppression and sustained surface operations. The Mantis trades some of the light craft's speed and agility for a reinforced hull, an independent dorsal weapon station, four ordnance release points and a second Utility bay.",
+      "modelId": "mantis-medium-gunship",
+      "baseEntityId": "mantis-medium-gunship-player",
+      "price": 28000,
+      "resaleValue": 11200,
+      "starterEligible": false,
+      "includesStarterLoadout": false,
+      "loadoutSlots": {
+        "weapons": {
+          "primary": {
+            "available": true,
+            "aimModes": [
+              "fixed",
+              "gimballed"
+            ],
+            "defaultAimMode": "gimballed",
+            "gimbalDegrees": 50,
+            "sockets": [
+              "mantis-primary-port-socket",
+              "mantis-primary-starboard-socket"
+            ]
+          },
+          "secondary": {
+            "available": true,
+            "control": "automatic-turret",
+            "aimMode": "turret",
+            "sockets": [
+              "mantis-secondary-turret-socket"
+            ]
+          },
+          "ordnance": {
+            "available": true,
+            "sockets": [
+              "mantis-missile-port-forward",
+              "mantis-missile-starboard-forward",
+              "mantis-missile-port-aft",
+              "mantis-missile-starboard-aft"
+            ]
+          }
+        },
+        "utility": 2
+      }
+    }
+  ]
+}
