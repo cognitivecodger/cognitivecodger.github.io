@@ -177,6 +177,8 @@
             background: #fafafa;
             border-top: 1px solid var(--border);
         }
+        .point-menu { position: fixed; z-index: 1000; min-width: 150px; padding: 5px; border: 1px solid #888; border-radius: 6px; background: #fff; box-shadow: 0 5px 18px rgba(0,0,0,.25); }
+        .point-menu button { width: 100%; }
 
         .status {
             padding: 6px 12px;
@@ -279,6 +281,9 @@
         <div class="group"><label for="penSize">Pen size</label><input id="penSize" type="number" min="1" max="100" value="5" /></div>
         <div class="group"><label for="brushShape">Pen shape</label><select id="brushShape"><option value="circle">Circle</option><option value="square">Square</option></select></div>
         <div class="group"><label for="lineStyle">Line style</label><select id="lineStyle"><option value="solid">Solid</option><option value="dashed">Dashed / striped</option><option value="dotted">Dotted</option></select></div>
+        <div class="group inline"><input id="autoClose" type="checkbox" checked /><label for="autoClose">Autoclose</label></div>
+        <div class="group inline"><input id="fillEnabled" type="checkbox" /><label for="fillEnabled">Fill closed shape</label></div>
+        <div class="group"><label for="fillColor">Fill colour</label><input id="fillColor" type="color" value="#66ccff" /></div>
         <div class="group inline"><input id="showGrid" type="checkbox" checked /><label for="showGrid">Show grid</label></div>
         <div class="group inline"><input id="snapGrid" type="checkbox" /><label for="snapGrid">Snap to grid</label></div>
         <div class="group"><label for="gridSize">Grid size</label><input id="gridSize" type="number" min="5" max="200" value="25" /></div>
@@ -287,6 +292,7 @@
 
     <div class="canvas-wrap"><canvas id="canvas" width="1100" height="700"></canvas></div>
     <div class="status" id="status">Ready.</div>
+    <div id="pointMenu" class="point-menu" hidden><button id="splitPoint" type="button">Split point / reopen</button></div>
     <div class="help"><strong>How to use:</strong> Use the <strong>Canvas</strong> menu to set the actual image size, save/load editable DashpadSketch files, and export a PNG, or copy/open the canvas image from the clipboard command. Use <strong>Selected Object</strong> to change Z layering or delete the current object. Freehand pen: drag to draw. Click-point line: left-click points, right-click to finish. Bézier curve: click a start point, then click an end point; drag the two control handles afterwards. Select/move: click an object, then drag its points or drag the line/body to move the whole object. Delete line segment: click a segment between two points. Press <strong>Delete</strong> to remove the selected object, or <strong>Escape</strong> to cancel the current drawing action.</div>
 
     <dialog id="canvasDialog">
@@ -309,6 +315,11 @@
             const sizeEl = document.getElementById("penSize");
             const brushEl = document.getElementById("brushShape");
             const lineStyleEl = document.getElementById("lineStyle");
+            const autoCloseEl = document.getElementById("autoClose");
+            const fillEnabledEl = document.getElementById("fillEnabled");
+            const fillColorEl = document.getElementById("fillColor");
+            const pointMenuEl = document.getElementById("pointMenu");
+            const splitPointEl = document.getElementById("splitPoint");
             const showGridEl = document.getElementById("showGrid");
             const snapGridEl = document.getElementById("snapGrid");
             const gridSizeEl = document.getElementById("gridSize");
@@ -324,11 +335,12 @@
             const objects = [];
             let selectedIndex = -1, dragMode = null, lastPointer = null;
             let currentStroke = null, polyDraft = null, shapeDraft = null, bezierDraft = null, hoverPoint = null;
+            let splitTarget = null;
 
             function closeMenus() { document.querySelectorAll(".menu[open]").forEach(m => m.removeAttribute("open")); }
             function updateCanvasSizeReadout() { canvasSizeReadoutEl.textContent = `Image: ${canvas.width} × ${canvas.height} px`; }
             function setStatus(text) { const layer = selectedIndex >= 0 && objects[selectedIndex] ? ` Layer ${selectedIndex + 1} of ${objects.length}.` : ""; statusEl.textContent = text + layer; }
-            function currentStyle() { return { color: colourEl.value, width: Math.max(1, Number(sizeEl.value) || 1), brush: brushEl.value, lineStyle: lineStyleEl.value }; }
+            function currentStyle() { return { color: colourEl.value, width: Math.max(1, Number(sizeEl.value) || 1), brush: brushEl.value, lineStyle: lineStyleEl.value, fillEnabled: fillEnabledEl.checked, fillColor: fillColorEl.value }; }
             function getGridSize() { return Math.max(5, Number(gridSizeEl.value) || 25); }
             function snapPoint(p) { if (!snapGridEl.checked) return { x: p.x, y: p.y }; const g = getGridSize(); return { x: Math.round(p.x / g) * g, y: Math.round(p.y / g) * g }; }
             function canvasPoint(evt) { const r = canvas.getBoundingClientRect(); return { x: (evt.clientX - r.left) * (canvas.width / r.width), y: (evt.clientY - r.top) * (canvas.height / r.height) }; }
@@ -354,11 +366,21 @@
             function drawPolyline(obj) {
                 if (!obj.points || obj.points.length < 2) return;
                 ctx.save(); applyStrokeStyle(obj); ctx.beginPath(); let drawing = false;
+                if (obj.closed && obj.fillEnabled && obj.points.length >= 3) {
+                    ctx.moveTo(obj.points[0].x, obj.points[0].y);
+                    for (let i = 1; i < obj.points.length; i++) ctx.lineTo(obj.points[i].x, obj.points[i].y);
+                    ctx.closePath(); ctx.fillStyle = obj.fillColor || obj.color || "#111111"; ctx.fill();
+                    drawing = false; ctx.beginPath();
+                }
                 for (let i = 0; i < obj.points.length - 1; i++) {
                     const on = obj.segments ? obj.segments[i] !== false : true;
                     if (!on) { drawing = false; continue; }
                     if (!drawing) { ctx.moveTo(obj.points[i].x, obj.points[i].y); drawing = true; }
                     ctx.lineTo(obj.points[i + 1].x, obj.points[i + 1].y);
+                }
+                if (obj.closed && (!obj.segments || obj.segments[obj.points.length - 1] !== false)) {
+                    if (!drawing) ctx.moveTo(obj.points[obj.points.length - 1].x, obj.points[obj.points.length - 1].y);
+                    ctx.lineTo(obj.points[0].x, obj.points[0].y);
                 }
                 ctx.stroke(); ctx.restore();
             }
@@ -425,13 +447,42 @@
                 for (let i = objects.length - 1; i >= 0; i--) {
                     const obj = objects[i], tol = Math.max(8, (obj.width || 1) / 2 + 6);
                     if (obj.type === "polyline" || obj.type === "stroke") for (let s = 0; s < obj.points.length - 1; s++) { if (obj.segments && obj.segments[s] === false) continue; const d = distanceToSegment(p, obj.points[s], obj.points[s + 1]); if (d < tol && d < bestDist) { best = { objIndex: i, segmentIndex: s, distance: d }; bestDist = d; } }
+                    if (obj.type === "polyline" && obj.closed && (!obj.segments || obj.segments[obj.points.length - 1] !== false)) { const d = distanceToSegment(p, obj.points[obj.points.length - 1], obj.points[0]); if (d < tol && d < bestDist) { best = { objIndex: i, segmentIndex: obj.points.length - 1, distance: d }; bestDist = d; } }
                     if (obj.type === "rect" || obj.type === "square") { const pairs = rectPairs(); for (let s = 0; s < pairs.length; s++) { if (obj.segments && obj.segments[s] === false) continue; const [a, b] = pairs[s]; const d = distanceToSegment(p, obj.points[a], obj.points[b]); if (d < tol && d < bestDist) { best = { objIndex: i, segmentIndex: s, distance: d }; bestDist = d; } } }
                     if (obj.type === "bezier" && (!obj.segments || obj.segments[0] !== false)) { const d = distanceToBezier(p, obj); if (d < tol && d < bestDist) { best = { objIndex: i, segmentIndex: 0, distance: d }; bestDist = d; } }
                     if (obj.type === "circle") { const d = Math.abs(distance(p, { x: obj.cx, y: obj.cy }) - obj.r); if (d < tol && d < bestDist) { best = { objIndex: i, segmentIndex: null, distance: d }; bestDist = d; } }
                 }
                 return best;
             }
-            function selectAt(p) { const hit = hitSegment(p); if (!hit) { selectedIndex = -1; return false; } selectedIndex = hit.objIndex; return true; }
+            function selectAt(p) { const hit = hitSegment(p); if (!hit) { selectedIndex = -1; return false; } selectedIndex = hit.objIndex; const obj = objects[selectedIndex]; if (obj.type === "polyline" && obj.closed) { fillEnabledEl.checked = !!obj.fillEnabled; fillColorEl.value = obj.fillColor || "#66ccff"; } return true; }
+            function hidePointMenu() { pointMenuEl.hidden = true; splitTarget = null; }
+            function showSplitPointMenu(evt, p) {
+                let target = null;
+                for (let i = objects.length - 1; i >= 0 && !target; i--) {
+                    const obj = objects[i];
+                    if (obj.type !== "polyline" || !obj.closed) continue;
+                    for (let pointIndex = 0; pointIndex < obj.points.length; pointIndex++) {
+                        if (distance(p, obj.points[pointIndex]) <= 14) { target = { objIndex: i, pointIndex }; break; }
+                    }
+                }
+                if (!target) { hidePointMenu(); return false; }
+                splitTarget = target; selectedIndex = target.objIndex;
+                pointMenuEl.style.left = `${evt.clientX}px`; pointMenuEl.style.top = `${evt.clientY}px`;
+                pointMenuEl.hidden = false; render();
+                return true;
+            }
+            function splitClosedPoint() {
+                if (!splitTarget) return;
+                const obj = objects[splitTarget.objIndex];
+                if (!obj || obj.type !== "polyline" || !obj.closed) { hidePointMenu(); return; }
+                const i = splitTarget.pointIndex;
+                obj.points = obj.points.slice(i + 1).concat(obj.points.slice(0, i + 1));
+                obj.closed = false;
+                obj.segments = obj.points.slice(1).map(() => true);
+                selectedIndex = splitTarget.objIndex;
+                hidePointMenu(); render();
+                setStatus("Closed path reopened. Drag either endpoint with Select / move points.");
+            }
             function moveObject(obj, dx, dy) { if (["polyline", "stroke", "rect", "square"].includes(obj.type)) { for (const p of obj.points) { p.x += dx; p.y += dy; } return; } if (obj.type === "circle") { obj.cx += dx; obj.cy += dy; return; } if (obj.type === "bezier") for (const n of ["p0", "p1", "c1", "c2"]) { obj[n].x += dx; obj[n].y += dy; } }
             function scalePoint(p, sx, sy) { p.x *= sx; p.y *= sy; }
             function scaleObject(obj, sx, sy) { const ss = (Math.abs(sx) + Math.abs(sy)) / 2; if (["polyline", "stroke", "rect", "square"].includes(obj.type)) { for (const p of obj.points) scalePoint(p, sx, sy); obj.width = Math.max(1, obj.width * ss); return; } if (obj.type === "circle") { obj.cx *= sx; obj.cy *= sy; obj.r *= ss; obj.width = Math.max(1, obj.width * ss); return; } if (obj.type === "bezier") { for (const n of ["p0", "p1", "c1", "c2"]) scalePoint(obj[n], sx, sy); obj.width = Math.max(1, obj.width * ss); } }
@@ -560,7 +611,9 @@
                     color: typeof obj.color === "string" ? obj.color : "#111111",
                     width: Math.max(1, safeNumber(obj.width, 5)),
                     brush: allowedBrushes.has(obj.brush) ? obj.brush : "circle",
-                    lineStyle: allowedLineStyles.has(obj.lineStyle) ? obj.lineStyle : "solid"
+                    lineStyle: allowedLineStyles.has(obj.lineStyle) ? obj.lineStyle : "solid",
+                    fillEnabled: obj.fillEnabled === true,
+                    fillColor: typeof obj.fillColor === "string" ? obj.fillColor : "#66ccff"
                 };
             }
 
@@ -582,7 +635,8 @@
                     return {
                         type: obj.type,
                         points,
-                        segments: cleanSegments(obj.segments, points.length - 1),
+                        segments: cleanSegments(obj.segments, obj.type === "polyline" && obj.closed ? points.length : points.length - 1),
+                        closed: obj.type === "polyline" && obj.closed === true,
                         ...style
                     };
                 }
@@ -719,7 +773,16 @@
             canvas.addEventListener("pointerdown", evt => {
                 const raw = canvasPoint(evt), p = snapPoint(raw), tool = toolEl.value; if (evt.button === 2) return;
                 if (tool === "pen") { selectedIndex = -1; currentStroke = { type: "stroke", points: [p], segments: [], ...currentStyle() }; setStatus("Drawing freehand stroke."); canvas.setPointerCapture(evt.pointerId); render(); return; }
-                if (tool === "polyline") { selectedIndex = -1; if (!polyDraft) { polyDraft = { points: [p], ...currentStyle() }; setStatus("Click more points. Right-click to finish the line."); } else { polyDraft.points.push(p); setStatus(`${polyDraft.points.length} points. Right-click to finish the line.`); } render(); return; }
+                if (tool === "polyline") {
+                    selectedIndex = -1;
+                    if (!polyDraft) { polyDraft = { points: [p], ...currentStyle() }; setStatus("Click more points. Right-click to finish the line."); }
+                    else if (autoCloseEl.checked && polyDraft.points.length >= 3 && distance(raw, polyDraft.points[0]) <= 14) {
+                        objects.push({ type: "polyline", points: polyDraft.points.slice(), segments: polyDraft.points.map(() => true), closed: true, color: polyDraft.color, width: polyDraft.width, brush: polyDraft.brush, lineStyle: polyDraft.lineStyle, fillEnabled: polyDraft.fillEnabled, fillColor: polyDraft.fillColor });
+                        selectedIndex = objects.length - 1; polyDraft = null; hoverPoint = null;
+                        setStatus("Path automatically closed.");
+                    } else { polyDraft.points.push(p); setStatus(`${polyDraft.points.length} points. Right-click to finish the line.`); }
+                    render(); return;
+                }
                 if (["rect", "square", "circle"].includes(tool)) { selectedIndex = -1; shapeDraft = { type: tool, start: p, current: p, ...currentStyle() }; setStatus(`Drawing ${tool}. Drag and release to place it.`); canvas.setPointerCapture(evt.pointerId); render(); return; }
                 if (tool === "bezier") { selectedIndex = -1; if (!bezierDraft) { bezierDraft = { p0: p, ...currentStyle() }; setStatus("Bézier start point placed. Click the end point."); } else { const p0 = bezierDraft.p0, p1 = p, dx = p1.x - p0.x, dy = p1.y - p0.y; objects.push({ type: "bezier", p0, p1, c1: { x: p0.x + dx / 3, y: p0.y + dy / 3 }, c2: { x: p0.x + dx * 2 / 3, y: p0.y + dy * 2 / 3 }, segments: [true], color: bezierDraft.color, width: bezierDraft.width, brush: bezierDraft.brush, lineStyle: bezierDraft.lineStyle }); selectedIndex = objects.length - 1; bezierDraft = null; setStatus("Bézier curve created. Use Select / move points to alter the handles."); } render(); return; }
                 if (tool === "deleteSegment") { const hit = hitSegment(raw); if (!hit) { setStatus("No line segment found there."); return; } const obj = objects[hit.objIndex]; if (obj.type === "circle") { setStatus("Circles do not have separate line segments to delete."); return; } if (obj.segments && hit.segmentIndex !== null) { obj.segments[hit.segmentIndex] = false; selectedIndex = hit.objIndex; setStatus("Line segment deleted."); render(); } return; }
@@ -738,7 +801,15 @@
                 if (shapeDraft) { shapeDraft.current = p; const obj = makeShapeFromDraft(shapeDraft.start, shapeDraft.current, shapeDraft.type, shapeDraft); if (obj) { objects.push(obj); selectedIndex = objects.length - 1; setStatus(`${shapeDraft.type[0].toUpperCase() + shapeDraft.type.slice(1)} added.`); } else setStatus("Shape was too small to add."); shapeDraft = null; render(); return; }
                 if (dragMode) { dragMode = null; lastPointer = null; render(); }
             });
-            canvas.addEventListener("contextmenu", evt => { evt.preventDefault(); if (toolEl.value === "polyline" && polyDraft) { if (polyDraft.points.length >= 2) { objects.push({ type: "polyline", points: polyDraft.points.slice(), segments: polyDraft.points.slice(1).map(() => true), color: polyDraft.color, width: polyDraft.width, brush: polyDraft.brush, lineStyle: polyDraft.lineStyle }); selectedIndex = objects.length - 1; setStatus("Click-point line finished."); } else setStatus("Line cancelled because it had fewer than two points."); polyDraft = null; render(); } });
+            canvas.addEventListener("contextmenu", evt => {
+                evt.preventDefault();
+                if (toolEl.value === "polyline" && polyDraft) {
+                    if (polyDraft.points.length >= 2) { objects.push({ type: "polyline", points: polyDraft.points.slice(), segments: polyDraft.points.slice(1).map(() => true), closed: false, color: polyDraft.color, width: polyDraft.width, brush: polyDraft.brush, lineStyle: polyDraft.lineStyle, fillEnabled: polyDraft.fillEnabled, fillColor: polyDraft.fillColor }); selectedIndex = objects.length - 1; setStatus("Click-point line finished."); }
+                    else setStatus("Line cancelled because it had fewer than two points.");
+                    polyDraft = null; render(); return;
+                }
+                showSplitPointMenu(evt, canvasPoint(evt));
+            });
 
             document.getElementById("openCanvasSize").addEventListener("click", openCanvasSizeDialog);
             document.getElementById("saveDashpadSketch").addEventListener("click", saveDashpadSketchFile);
@@ -753,11 +824,14 @@
             document.getElementById("applyCanvasSize").addEventListener("click", () => { applyCanvasSize(Number(canvasWidthEl.value), Number(canvasHeightEl.value), scaleDrawingEl.checked); canvasDialog.close(); });
             document.getElementById("clearAll").addEventListener("click", () => { closeMenus(); if (!confirm("Clear the whole drawing?")) return; objects.length = 0; selectedIndex = -1; cancelCurrentAction(); setStatus("Drawing cleared."); });
             document.getElementById("copyCanvasClipboard").addEventListener("click", copyCanvasToClipboard);
+            splitPointEl.addEventListener("click", splitClosedPoint);
 
             document.getElementById("savePng").addEventListener("click", savePngFile);
             for (const el of [showGridEl, snapGridEl, gridSizeEl, exportGridEl]) { el.addEventListener("input", render); el.addEventListener("change", render); }
+            fillEnabledEl.addEventListener("change", () => { const obj = objects[selectedIndex]; if (obj && obj.type === "polyline" && obj.closed) { obj.fillEnabled = fillEnabledEl.checked; obj.fillColor = fillColorEl.value; render(); setStatus("Selected path fill updated."); } });
+            fillColorEl.addEventListener("input", () => { const obj = objects[selectedIndex]; if (obj && obj.type === "polyline" && obj.closed) { obj.fillColor = fillColorEl.value; render(); } });
             toolEl.addEventListener("change", () => { cancelCurrentAction(); const tool = toolEl.value; if (tool === "polyline") setStatus("Click points to draw connected lines. Right-click to finish."); else if (tool === "bezier") setStatus("Click a start point, then click an end point."); else if (tool === "deleteSegment") setStatus("Click a line segment between two points to delete it."); else setStatus("Ready."); });
-            document.addEventListener("click", evt => { if (!evt.target.closest(".menu")) closeMenus(); });
+            document.addEventListener("click", evt => { if (!evt.target.closest(".menu")) closeMenus(); if (!evt.target.closest("#pointMenu")) hidePointMenu(); });
             window.addEventListener("keydown", evt => { if (evt.key === "Escape") { cancelCurrentAction(); closeMenus(); } if (evt.key === "Delete" || evt.key === "Backspace") { if (document.activeElement && ["INPUT", "SELECT"].includes(document.activeElement.tagName)) return; evt.preventDefault(); removeSelectedObject(); } if (evt.ctrlKey && evt.key === "]") { evt.preventDefault(); moveSelectedLayer("forward"); } if (evt.ctrlKey && evt.key === "[") { evt.preventDefault(); moveSelectedLayer("backward"); } });
             function initialRender() {
                 updateCanvasSizeReadout();
