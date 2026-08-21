@@ -2619,7 +2619,7 @@ function restartRace(){
   prepareRace();audio.enable();
 }
 function openTrackMenu(){
-  started=false;racePhase='menu';recovery=null;dustParticles=[];opponent=null;clearControls();
+  started=false;racePhase='menu';recovery=null;dustParticles=[];opponent=null;clearTouchPointers();clearControls();
   document.body.classList.remove('race-active');
   audio.stopEngine();audio.stopEffects();
   document.getElementById('menu').style.display='flex';
@@ -2644,11 +2644,44 @@ document.getElementById('aboutButton').addEventListener('click',openAbout);
 document.getElementById('aboutClose').addEventListener('click',closeAbout);
 function refreshTouchMirror(){document.getElementById('touchMirror').classList.toggle('enabled',mirrorEnabled)}
 function toggleMirror(){mirrorEnabled=!mirrorEnabled;refreshTouchMirror()}
+const touchPointers=new Map(),touchControlCounts=new Map();
+function setTouchPointerButton(state,next){
+  const old=state.button;if(old===next)return;
+  if(old){
+    const code=old.dataset.control,count=(touchControlCounts.get(code)||1)-1;
+    if(count<=0){touchControlCounts.delete(code);setControl(code,false);old.classList.remove('active')}
+    else touchControlCounts.set(code,count);
+  }
+  state.button=next;
+  if(next){
+    const code=next.dataset.control,count=(touchControlCounts.get(code)||0)+1;
+    touchControlCounts.set(code,count);setControl(code,true);next.classList.add('active');
+  }
+}
+function touchButtonAt(state,x,y){
+  const sideRect=state.side.getBoundingClientRect();
+  if(x<sideRect.left||x>sideRect.right||y<sideRect.top||y>sideRect.bottom)return null;
+  for(const btn of state.side.querySelectorAll('.touchControl[data-control]')){
+    const r=btn.getBoundingClientRect();if(x>=r.left&&x<=r.right&&y>=r.top&&y<=r.bottom)return btn;
+  }
+  return state.button; // retain the current input while crossing the small gap
+}
+function endTouchPointer(id){
+  const state=touchPointers.get(id);if(!state)return;
+  touchPointers.delete(id);setTouchPointerButton(state,null);
+  if(state.capture.hasPointerCapture&&state.capture.hasPointerCapture(id))state.capture.releasePointerCapture(id);
+}
+function clearTouchPointers(){for(const id of [...touchPointers.keys()])endTouchPointer(id)}
 document.querySelectorAll('.touchControl[data-control]').forEach(btn=>{
-  const release=e=>{if(btn.hasPointerCapture&&btn.hasPointerCapture(e.pointerId))btn.releasePointerCapture(e.pointerId);setControl(btn.dataset.control,false);btn.classList.remove('active')};
-  btn.addEventListener('pointerdown',e=>{if(!started)return;e.preventDefault();audio.enable();btn.setPointerCapture(e.pointerId);setControl(btn.dataset.control,true);btn.classList.add('active')});
-  btn.addEventListener('pointerup',release);btn.addEventListener('pointercancel',release);btn.addEventListener('lostpointercapture',()=>{setControl(btn.dataset.control,false);btn.classList.remove('active')});
+  btn.addEventListener('pointerdown',e=>{
+    if(!started)return;e.preventDefault();audio.enable();
+    const state={side:btn.closest('.mobileSide'),button:null,capture:btn};touchPointers.set(e.pointerId,state);
+    btn.setPointerCapture(e.pointerId);setTouchPointerButton(state,btn);
+  });
 });
+window.addEventListener('pointermove',e=>{const state=touchPointers.get(e.pointerId);if(!state)return;e.preventDefault();setTouchPointerButton(state,touchButtonAt(state,e.clientX,e.clientY))},{passive:false});
+window.addEventListener('pointerup',e=>endTouchPointer(e.pointerId));
+window.addEventListener('pointercancel',e=>endTouchPointer(e.pointerId));
 document.getElementById('touchMirror').addEventListener('click',()=>{if(started)toggleMirror()});
 document.getElementById('mobileControls').addEventListener('contextmenu',e=>e.preventDefault());
 refreshTouchMirror();
@@ -2687,7 +2720,7 @@ window.addEventListener('keydown',e=>{
   else setControl(e.code,true);
 });
 window.addEventListener('keyup',e=>setControl(e.code,false));
-window.addEventListener('blur',clearControls);
+window.addEventListener('blur',()=>{clearTouchPointers();clearControls()});
 // Modern scheduler: 120 Hz fixed-step car simulation. The source engine-rev controller
 // remains at its original 15 Hz cadence, while sample playback/rev accumulation remains 50 Hz.
 let simLast=performance.now(),simAccum=0;
