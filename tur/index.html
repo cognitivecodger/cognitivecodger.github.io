@@ -21,6 +21,7 @@
   <script defer src="js/editor.js"></script>
   <script defer src="js/vehicle.js"></script>
   <script defer src="js/controller.js"></script>
+  <script defer src="js/touch-controls.js"></script>
   <script defer src="js/ai.js"></script>
   <script defer src="js/audio.js"></script>
   <script defer src="js/skids.js"></script>
@@ -195,7 +196,7 @@
       </section>
       <p class="menu-navigation-help">Arrow keys or D-pad: move &bull; Left / right: change track &bull; Enter / A: select &bull; Esc / B: back</p>
       <p id="menuControllerStatus" class="menu-controller-status" role="status" aria-live="polite"></p>
-      <footer class="menu-footer">TUR <span>&bull;</span> EARLY ACCESS BUILD <span>&bull;</span> v0.111.9</footer>
+      <footer class="menu-footer">TUR <span>&bull;</span> EARLY ACCESS BUILD <span>&bull;</span> v0.111.10</footer>
     </div>
   </main>
   <button id="backToMenu" class="back-to-menu" type="button">&larr; Main menu</button>
@@ -491,6 +492,18 @@
       <p class="help">Racing starts behind the line, two cars across and up to four rows deep. Rows have more space where the approach allows. Reverse uses the same circuit line, or swaps sprint start/finish, and reverses checkpoint order. Left/right follow the driver's view. Place each start on a wide straight with enough approach road.</p>
       <p class="help">Drive with W/A/S/D or arrows. Select a road section with room for all four wheels. Try the driving examples on the left for a wide loop or jump.</p>
 </section></aside>
+  <section id="touchDriveControls" class="touch-drive-controls" hidden aria-label="Touch driving controls">
+    <div id="touchSteering" class="touch-steering" role="slider" tabindex="0" aria-label="Steering, left to right" aria-valuemin="-100" aria-valuemax="100" aria-valuenow="0">
+      <span class="touch-steer-label">STEER</span><span class="touch-steer-arrow touch-steer-left" aria-hidden="true">&#9664;</span><span class="touch-steer-arrow touch-steer-right" aria-hidden="true">&#9654;</span><span id="touchSteeringKnob" class="touch-steering-knob" aria-hidden="true"></span>
+    </div>
+    <div class="touch-actions" aria-label="Pedals and camera zoom">
+      <button id="touchZoomOut" class="touch-zoom" type="button" aria-label="Zoom camera out"><strong>−</strong><small>ZOOM</small></button>
+      <button id="touchZoomIn" class="touch-zoom" type="button" aria-label="Zoom camera in"><strong>+</strong><small>ZOOM</small></button>
+      <button id="touchBrake" class="touch-brake" type="button" aria-label="Brake and reverse"><strong>LT</strong><small>BRAKE / REV</small></button>
+      <button id="touchAccelerate" class="touch-accelerate" type="button" aria-label="Accelerate"><strong>RT</strong><small>ACCELERATE</small></button>
+    </div>
+    <button id="touchPauseTest" class="touch-pause-test" type="button" aria-label="Pause test drive">Ⅱ <span>PAUSE</span></button>
+  </section>
   <section id="quickRaceHud" hidden aria-label="Race display">
     <div class="quick-track" aria-label="Current track"><span>TRACK</span><strong id="quickTrackName"></strong></div>
     <div id="quickStandingsPanel" class="quick-standings">
