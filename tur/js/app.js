@@ -799,7 +799,7 @@
   }
   const raceSelectIds=['menuRacePack','menuRaceTrack','menuRaceDirection','menuRaceLighting','menuRaceEnvironment','menuOpponentCount','menuRivalDifficulty','menuRaceLaps'];
   const championshipSelectIds=['menuChampPack','menuChampOpponents','menuChampDifficulty','menuChampLaps','menuChampDirection','menuChampLighting','menuChampEnvironment'];
-  let raceChoice=null,pendingOfficialRefresh=false;
+  let raceChoice=null,pendingOfficialRefresh=false,quickRaceChoiceChanged=false;
   function raceInputMethod(method){for(const prefix of ['race','champ']){$(prefix+'HelpKeyboard').hidden=method==='controller';$(prefix+'HelpController').hidden=method!=='controller';}}
   function closeRaceChoice(restoreFocus=true){
     if(!raceChoice)return;const select=raceChoice.select;raceChoice=null;$('raceChoiceList').hidden=true;select.setAttribute('aria-expanded','false');if(restoreFocus)select.focus?.();
@@ -1090,9 +1090,9 @@
   $('menuLibrary').addEventListener('click',()=>showMenu('tracks'));
   $('menuEditPacks').addEventListener('click',()=>showMenu('packs'));$('menuPacksBack').addEventListener('click',()=>showMenu('tracks'));
   $('menuRaceBack').addEventListener('click',()=>showMenu());$('menuTracksBack').addEventListener('click',()=>showMenu());$('menuAIBack').addEventListener('click',()=>showMenu());
-  $('menuRacePack').addEventListener('change',()=>{refreshRaceChoices();showTrackPreview($('menuRaceTrack').value,'menuRaceStatus');});
+  $('menuRacePack').addEventListener('change',()=>{quickRaceChoiceChanged=true;refreshRaceChoices();showTrackPreview($('menuRaceTrack').value,'menuRaceStatus');});
   $('menuAIPack').addEventListener('change',()=>{refreshRaceChoices('menuAITrack');showTrackPreview($('menuAITrack').value,'menuAIStatus');});
-  $('menuRaceTrack').addEventListener('change',()=>showTrackPreview($('menuRaceTrack').value,'menuRaceStatus'));
+  $('menuRaceTrack').addEventListener('change',()=>{quickRaceChoiceChanged=true;showTrackPreview($('menuRaceTrack').value,'menuRaceStatus');});
   $('menuRaceDirection').addEventListener('change',()=>showTrackPreview($('menuRaceTrack').value,'menuRaceStatus'));
   $('menuRaceLighting').addEventListener('change',()=>showTrackPreview($('menuRaceTrack').value,'menuRaceStatus'));
   $('menuRaceEnvironment').addEventListener('change',()=>showTrackPreview($('menuRaceTrack').value,'menuRaceStatus'));
@@ -1153,10 +1153,18 @@
   $('menuPackCopyId').addEventListener('click',()=>{try{const source=packStore.read($('menuPackManage').value);if(!source)throw Error('Choose a pack first.');const name=(source.name.slice(0,64)+' copy').slice(0,80),copy=packStore.copy(source,name);refreshPackManager(copy.id);previewPackTrackOrAvailable();$('menuPackStatus').textContent=`Created “${copy.name}” with a new UUID. Export it to keep a portable copy.`;}catch(error){$('menuPackStatus').textContent='Could not copy pack: '+error.message;}});
   $('menuPackDelete').addEventListener('click',()=>{const id=$('menuPackManage').value;if(!id)return;if(pendingPackDelete!==id){const pack=localPacks().find(item=>item.id===id);pendingPackDelete=id;$('menuPackDelete').textContent='Confirm delete pack';$('menuPackStatus').textContent=`Press Confirm delete pack to remove “${pack?.name??'this pack'}” and its ${pack?.tracks.length??0} packed tracks from this browser. My tracks and championship snapshots stay. Export the pack first if needed.`;return;}
     try{packStore.remove(id);refreshPackManager();previewPackTrackOrAvailable();$('menuPackStatus').textContent='Pack deleted from this browser. My tracks and championship snapshots were kept.';}catch(error){$('menuPackStatus').textContent='Could not delete pack: '+error.message;}});
+  function importPackText(text,statusId='menuPackStatus'){
+    if(defaultPacksLoading)throw Error('Please wait for the built-in pack list to finish loading before importing.');
+    if(!text.trim())throw Error('Paste a complete pack JSON first.');
+    const pack=packStore.importText(text);refreshPackManager(pack.id);previewPackTrackOrAvailable();
+    $(statusId).textContent=`Imported ${pack.name} with ${pack.tracks.length} tracks.`;return pack;
+  }
+  $('menuPackPaste').addEventListener('input',()=>{$('menuPackPasteStatus').textContent='';});
+  $('menuPackPasteImport').addEventListener('click',()=>{try{importPackText($('menuPackPaste').value,'menuPackPasteStatus');}catch(error){$('menuPackPasteStatus').textContent='Could not import pack: '+error.message;}});
   $('menuPackImport').addEventListener('change',event=>{const file=event.target.files?.[0];if(!file)return;
     if(defaultPacksLoading){$('menuPackStatus').textContent='Please wait for the built-in pack list to finish loading before importing.';event.target.value='';return;}
     if(file.size>8000000){$('menuPackStatus').textContent='Pack file is too large (maximum 8 MB).';event.target.value='';return;}
-    const reader=new FileReader();reader.onload=()=>{try{const pack=packStore.importText(String(reader.result));refreshPackManager(pack.id);previewPackTrackOrAvailable();$('menuPackStatus').textContent=`Imported ${pack.name} with ${pack.tracks.length} tracks.`;}catch(error){$('menuPackStatus').textContent='Could not import pack: '+error.message;}};
+    const reader=new FileReader();reader.onload=()=>{try{importPackText(String(reader.result));}catch(error){$('menuPackStatus').textContent='Could not import pack: '+error.message;}};
     reader.onerror=()=>{$('menuPackStatus').textContent='Could not read that pack file.';};reader.readAsText(file);event.target.value='';});
   $('menuExportTrack').addEventListener('click',()=>{
     try{const track=trackDocument(libraryChoice());
@@ -1185,9 +1193,38 @@
     fileHint:()=>{$($('menuPacks').hidden?'menuLibraryStatus':'menuPackStatus').textContent='Use the mouse or keyboard to open the file picker; browsers require a direct click or key press.';},
     back:()=>{if(!$('menuHome').hidden)return;showMenu(!$('menuPacks').hidden?'tracks':'home');}
   });
+  function syncFullscreen(){
+    const active=!!(document.fullscreenElement || document.webkitFullscreenElement);
+    for(const id of ['menuFullscreen','quickFullscreen'])$(id).textContent=active?'Exit fullscreen':'Enter fullscreen';
+  }
+  async function toggleFullscreen(){
+    const active=!!(document.fullscreenElement || document.webkitFullscreenElement),target=document.documentElement;
+    const method=active?(document.exitFullscreen || document.webkitExitFullscreen):(target?.requestFullscreen || target?.webkitRequestFullscreen);
+    const status=['menuFullscreenStatus','quickFullscreenStatus'];
+    try{
+      if(!method)throw Error('Fullscreen is unavailable in this browser. Try your browser menu or add the game to your home screen.');
+      await method.call(active?document:target);for(const id of status)$(id).textContent='';syncFullscreen();
+    }catch(error){for(const id of status)$(id).textContent=error.message || 'Fullscreen could not be opened. Try the browser menu.';}
+  }
+  for(const id of ['menuFullscreen','quickFullscreen'])$(id).addEventListener('click',toggleFullscreen);
+  document.addEventListener?.('fullscreenchange',syncFullscreen);document.addEventListener?.('webkitfullscreenchange',syncFullscreen);syncFullscreen();
+  function selectDefaultQuickRaceTrack(){
+    if(quickRaceChoiceChanged)return;
+    const pack=officialPacks().find(item=>item.tracks.length);
+    if(!pack){
+      refreshPackChoices('menuRacePack');refreshRaceChoices();
+      if(document.body.classList.contains('menu-mode') && (!$('menuHome').hidden || !$('menuRace').hidden))showTrackPreview($('menuRaceTrack').value,'menuRaceStatus');
+      return;
+    }
+    refreshPackChoices('menuRacePack');$('menuRacePack').value='official:'+pack.id;
+    refreshRaceChoices();$('menuRaceTrack').value=`pack:official:${pack.id}:0`;
+    if(document.body.classList.contains('menu-mode') && (!$('menuHome').hidden || !$('menuRace').hidden))showTrackPreview($('menuRaceTrack').value,'menuRaceStatus');
+  }
   showMenu();
+  selectDefaultQuickRaceTrack();
   function refreshOfficialPackViews(){
     if(raceChoice){pendingOfficialRefresh=true;return;}
+    selectDefaultQuickRaceTrack();
     if(drive.active)return; // The active race has its own track snapshot.
     if(!document.body.classList.contains('menu-mode')){builderPacks.refresh();return;}
     if(!$('menuRace').hidden){refreshPackChoices('menuRacePack');refreshRaceChoices();if($('menuRaceTrack').value.startsWith('pack:official:'))showTrackPreview($('menuRaceTrack').value,'menuRaceStatus');}
