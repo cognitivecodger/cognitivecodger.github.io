@@ -100,8 +100,8 @@
     const quickPauseItems=['quickResume','quickSettings','quickTouchControls','quickFullscreen','quickStatsFps','quickStatsTriangles','quickStatsRoute','quickRestart','quickExit'];
     let projectionKind=null,fixedHeading=0,lastResets=0,carScale=.5,zoomPercent=100,tuning=defaultTuning();
     const touch=TrackTouchControls.create({root:$('touchDriveControls'),steering:$('touchSteering'),knob:$('touchSteeringKnob'),
-      actions:{accelerate:$('touchAccelerate'),brake:$('touchBrake'),zoomIn:$('touchZoomIn'),zoomOut:$('touchZoomOut')},
-      onZoom:direction=>changeZoom(zoomPercent*Math.exp(direction*.13))});
+      actions:{accelerate:$('touchAccelerate'),brake:$('touchBrake'),zoomIn:$('touchZoomIn'),zoomOut:$('touchZoomOut'),recover:$('touchRecover')},
+      onZoom:direction=>changeZoom(zoomPercent*Math.exp(direction*.13)),onRecover:()=>{if(!raceOver())recover();}});
     let touchMode='auto';
     try{const saved=window.localStorage.getItem('tur.touchControls.v1');if(['auto','on','off'].includes(saved))touchMode=saved;}catch(error){}
     const touchDetected=()=>!!window.matchMedia?.('(any-pointer: coarse)')?.matches || (Number(navigator.maxTouchPoints)||0)>0;
