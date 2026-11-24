@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/editor-theme.css">
   <link rel="stylesheet" href="css/garage.css">
-  <link rel="stylesheet" href="css/race-hud.css">
+  <link rel="stylesheet" href="css/race-hud.css?v=touch3">
   <script defer src="assets/vendor/three-r152/three.min.js"></script>
   <script defer src="js/track-code.js"></script>
   <script defer src="data/track-packs.js"></script>
@@ -21,11 +21,11 @@
   <script defer src="js/editor.js"></script>
   <script defer src="js/vehicle.js"></script>
   <script defer src="js/controller.js"></script>
-  <script defer src="js/touch-controls.js"></script>
+  <script defer src="js/touch-controls.js?v=touch3"></script>
   <script defer src="js/ai.js"></script>
   <script defer src="js/audio.js"></script>
   <script defer src="js/skids.js"></script>
-  <script defer src="js/driving.js"></script>
+  <script defer src="js/driving.js?v=touch3"></script>
   <script defer src="js/library.js"></script>
   <script defer src="js/packs.js"></script>
   <script defer src="js/builder-packs.js"></script>
@@ -500,6 +500,7 @@
       <span class="touch-steer-label">STEER</span><span class="touch-steer-arrow touch-steer-left" aria-hidden="true">&#9664;</span><span class="touch-steer-arrow touch-steer-right" aria-hidden="true">&#9654;</span><span id="touchSteeringKnob" class="touch-steering-knob" aria-hidden="true"></span>
     </div>
     <div class="touch-actions" aria-label="Pedals and camera zoom">
+      <button id="touchRecover" class="touch-recover" type="button" aria-label="Recover car to the track"><strong>↻</strong><small>RECOVER</small></button>
       <button id="touchZoomOut" class="touch-zoom" type="button" aria-label="Zoom camera out"><strong>−</strong><small>ZOOM</small></button>
       <button id="touchZoomIn" class="touch-zoom" type="button" aria-label="Zoom camera in"><strong>+</strong><small>ZOOM</small></button>
       <button id="touchBrake" class="touch-brake" type="button" aria-label="Brake and reverse"><strong>LT</strong><small>BRAKE / REV</small></button>
