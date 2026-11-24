@@ -64,10 +64,10 @@ body.driving:not(.quick-race) .race-performance{right:360px}body.ai-workshop .ra
 
 .race-route-diagnostics{border-top:1px solid #64d7e655;margin-top:5px;padding-top:5px;max-width:290px}.race-route-diagnostics>div{display:flex;justify-content:space-between;align-items:baseline;gap:12px}.race-route-diagnostics strong{font-size:12px;text-align:right;line-height:1.4}.race-route-diagnostics span{white-space:nowrap}
 
-/* Touch controls are shown for touch-primary devices during player driving. */
+/* Visibility follows the automatic or user-selected on-screen control setting. */
 .touch-drive-controls{display:none;position:fixed;inset:0;z-index:24;pointer-events:none;color:#effcff;user-select:none;-webkit-user-select:none}
-@media (pointer:coarse){
-  .touch-drive-controls:not([hidden]){display:block}
+@media all{
+  body.touch-controls-visible .touch-drive-controls:not([hidden]){display:block}
   .touch-steering,.touch-actions button,.touch-pause-test{pointer-events:auto;touch-action:none;-webkit-tap-highlight-color:transparent;box-shadow:0 5px 18px #00142680}
   .touch-steering{position:absolute;left:max(12px,env(safe-area-inset-left));bottom:max(18px,env(safe-area-inset-bottom));width:clamp(135px,31vw,210px);height:66px;border:2px solid #7de7f0a8;border-radius:40px;background:#102941d9;outline-offset:3px}
   .touch-steering:focus-visible,.touch-actions button:focus-visible,.touch-pause-test:focus-visible{outline:3px solid #abfaff}
@@ -80,8 +80,8 @@ body.driving:not(.quick-race) .race-performance{right:360px}body.ai-workshop .ra
   .touch-actions .touch-brake{background:#74393be8;border-color:#ef9c90}.touch-actions .touch-accelerate{background:#117a78ed;border-color:#7bf3d7}
   .touch-actions button.touch-active{filter:brightness(1.55);transform:scale(.95)}
   .touch-pause-test{display:none;position:absolute;right:max(12px,env(safe-area-inset-right));top:max(12px,env(safe-area-inset-top));min-height:48px;border-radius:10px;font-size:16px}
-  body.driving:not(.quick-race):not(.ai-workshop) .touch-pause-test{display:flex;gap:6px}body.driving:not(.quick-race):not(.ai-workshop):not(.touch-drive-paused) #driveHud{display:none!important}
+  body.touch-controls-visible.driving:not(.quick-race):not(.ai-workshop) .touch-pause-test{display:flex;gap:6px}body.touch-controls-visible.driving:not(.quick-race):not(.ai-workshop):not(.touch-drive-paused) #driveHud{display:none!important}
   body.touch-drive-paused:not(.quick-race) #driveHud{z-index:35}
-  .quick-timing{bottom:calc(150px + env(safe-area-inset-bottom));max-height:25vh;overflow:hidden}
-  @media (max-height:500px){.quick-timing{left:50%;bottom:8px;transform:translateX(-50%);width:150px;max-height:95px;padding:6px;overflow:auto;pointer-events:auto}.quick-timing-best,.quick-timing-total{font-size:9px}.quick-standings{max-height:35vh;overflow:hidden}}
+  body.touch-controls-visible .quick-timing{bottom:calc(150px + env(safe-area-inset-bottom));max-height:25vh;overflow:hidden}
+  @media (max-height:500px){body.touch-controls-visible .quick-timing{left:50%;bottom:8px;transform:translateX(-50%);width:150px;max-height:95px;padding:6px;overflow:auto;pointer-events:auto}body.touch-controls-visible .quick-timing-best,body.touch-controls-visible .quick-timing-total{font-size:9px}body.touch-controls-visible .quick-standings{max-height:35vh;overflow:hidden}}
 }
