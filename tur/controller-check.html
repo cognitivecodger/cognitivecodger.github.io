@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>TUR — Controller connection check</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/branding/TUR_favicon_32x32.png">
+  <link rel="shortcut icon" href="assets/branding/favicon.ico">
+  <script defer src="js/controller.js"></script>
+  <script defer src="js/controller-check.js"></script>
+  <style>
+    :root{color-scheme:dark;font:16px/1.55 system-ui;color:#dcebee;background:#10212a}body{max-width:780px;margin:36px auto;padding:0 22px}h1{font-size:26px;line-height:1.2}h2{font-size:17px}p{color:#b6cdd2}a{color:#f0c58e}button,select{font:inherit;background:#203d48;color:#e8f0f2;border:1px solid #557582;border-radius:7px;padding:9px 13px}button{cursor:pointer}button:disabled{opacity:.45;cursor:default}.actions{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0}.card{padding:18px;border:1px solid #49636c;border-radius:10px;background:#152d37}#checkStatus{color:#f2c183;font-weight:650}pre,textarea{font:13px/1.6 ui-monospace,Consolas,monospace;white-space:pre-wrap;overflow-wrap:anywhere}textarea{box-sizing:border-box;width:100%;min-height:190px;border:1px solid #49636c;border-radius:7px;background:#091c25;color:#d7e7ee;padding:12px}.note{font-size:14px}label{display:block;margin:16px 0}#checkCopyStatus{min-height:1.5em}
+  </style>
+</head>
+<body>
+  <p><a href="index.html">← TUR editor</a></p>
+  <h1>Controller connection check</h1>
+  <p>This page reads controller input without loading the 3D game. Close other game/controller-test tabs first, then press Start monitoring and move a stick or press a button.</p>
+  <p class="note">Nothing is read until you start. Monitoring stops when this page loses focus or becomes hidden. The check uses no vibration or power commands. It can record what the browser reports; it cannot tell why the controller's light went off.</p>
+  <label for="checkRate">Input sampling</label>
+  <select id="checkRate"><option value="60">Standard · 60 reads/second</option><option value="30">Compatibility · 30 reads/second</option></select>
+  <div class="actions"><button id="checkStart" type="button">Start monitoring</button><button id="checkStop" type="button" disabled>Stop monitoring</button></div>
+  <section class="card" aria-label="Controller reading">
+    <div id="checkStatus" role="status">Stopped · no controller reads</div>
+    <pre id="checkReading">No sample taken.</pre>
+    <p id="checkCounts" class="note">Reads: 0</p>
+  </section>
+  <h2>Connection report</h2>
+  <p class="note">If the controller powers off, note what the Xbox button light did, then stop monitoring. The report stays on this page until you copy or save it; nothing is uploaded.</p>
+  <label for="checkLog">Browser observations</label>
+  <textarea id="checkLog" readonly spellcheck="false">No controller reads or connection listeners have been started.</textarea>
+  <div class="actions"><button id="checkCopy" type="button">Copy report</button><button id="checkSave" type="button">Save report .txt</button></div>
+  <p id="checkCopyStatus" class="note" role="status"></p>
+</body>
+</html>
