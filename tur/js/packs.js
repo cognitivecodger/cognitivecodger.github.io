@@ -1,7 +1,7 @@
-﻿/* Versioned, self-contained track collections; imported data is never executed. */
+/* Versioned, self-contained track collections; imported data is never executed. */
 (function(){
   'use strict';
-  const PREFIX='trackshift.pack.v1.',MAX_TEXT=2000000,MAX_TRACKS=100,MAX_CODE=100000;
+  const PREFIX='trackshift.pack.v1.',FORMAT='TUR Pack',LEGACY_FORMAT='TrackShift Pack',MAX_TEXT=2000000,MAX_TRACKS=100,MAX_CODE=100000;
   const id=()=>window.crypto?.randomUUID?.()??`${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
   const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
   function newUUID(){
@@ -13,7 +13,7 @@
   }
   function title(value,label){if(typeof value!=='string'||!value.trim()||value.trim().length>80)throw Error(`${label} must be 1-80 characters.`);return value.trim();}
   function validate(value,allowEmpty=false){
-    if(!value||value.format!=='TrackShift Pack'||value.version!==1)throw Error('Unsupported track pack format or version.');
+    if(!value||![FORMAT,LEGACY_FORMAT].includes(value.format)||value.version!==1)throw Error('Unsupported track pack format or version.');
     if(typeof value.id!=='string'||!/^[a-zA-Z0-9_-]{1,100}$/.test(value.id))throw Error('Invalid pack identifier.');
     const name=title(value.name,'Pack name');
     if(!Array.isArray(value.tracks)||value.tracks.length>MAX_TRACKS||(!allowEmpty&&!value.tracks.length))throw Error(`A pack must contain 1-${MAX_TRACKS} tracks.`);
@@ -27,7 +27,7 @@
       if(typeof entry.trackId==='string' && /^[a-zA-Z0-9_-]{1,100}$/.test(entry.trackId))track.trackId=entry.trackId;
       return track;
     });
-    return {format:'TrackShift Pack',version:1,id:value.id,name,tracks};
+    return {format:FORMAT,version:1,id:value.id,name,tracks};
   }
   function parse(text){
     if(typeof text!=='string'||text.length>MAX_TEXT)throw Error('Pack file is too large (maximum 2 MB of text).');
@@ -42,7 +42,7 @@
     function hasId(id){const s=get(),needle=id.toLowerCase();for(let i=0;i<s.length;i++){const key=s.key(i);if(key?.startsWith(PREFIX) && key.slice(PREFIX.length).toLowerCase()===needle)return true;}
       return (window.TRACKSHIFT_OFFICIAL_PACKS??[]).some(pack=>typeof pack.id==='string' && pack.id.toLowerCase()===needle);}
     function freshId(){for(let i=0;i<10;i++){const next=newUUID();if(!hasId(next))return next;}throw Error('Could not generate a unique pack UUID.');}
-    function create(name){return put({format:'TrackShift Pack',version:1,id:freshId(),name,tracks:[]});}
+    function create(name){return put({format:FORMAT,version:1,id:freshId(),name,tracks:[]});}
     function copy(pack,name){const original=validate(pack,true);return put({...original,id:freshId(),name:name??original.name});}
     function importText(text){const value=parse(text);if(hasId(value.id))throw Error('This pack ID is already in the game. The existing pack was not changed.');return put(value);}
     function remove(key){get().removeItem(PREFIX+key);}
