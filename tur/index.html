@@ -181,13 +181,21 @@
           <div class="menu-pack-row"><button id="menuPackExport" type="button">Export pack</button><button id="menuPackDelete" type="button">Delete selected pack...</button></div>
           <button id="menuPackCopyId" type="button">Copy pack with new ID</button>
           <label class="menu-import">Import a TUR pack <span>&uarr;</span><input id="menuPackImport" type="file" accept=".txt,.json,.tsp,application/json,text/plain"></label>
+          <details class="menu-set" id="menuPackPastePanel">
+            <summary>Paste pack JSON</summary>
+            <label class="menu-field" for="menuPackPaste">Pack JSON</label>
+            <textarea id="menuPackPaste" spellcheck="false" aria-describedby="menuPackPasteHint" placeholder="Paste the complete TUR pack JSON here"></textarea>
+            <p id="menuPackPasteHint" class="menu-hint">Paste a complete TUR or older TrackShift pack. Checking imports it into My packs.</p>
+            <button id="menuPackPasteImport" type="button">Check &amp; import pack</button>
+            <p id="menuPackPasteStatus" class="menu-status" role="status" aria-live="polite"></p>
+          </details>
           <p class="menu-hint">Packs include complete track codes. Re-importing an existing pack ID is blocked. To remove a duplicate, select it in My packs and delete it; check its tracks or export it first. Copy pack with new ID creates an independent pack, including for older packs without a UUID.</p>
           <p id="menuPackStatus" class="menu-status" role="status" aria-live="polite"></p>
         </div>
       </section>
       <p class="menu-navigation-help">Arrow keys or D-pad: move &bull; Left / right: change track &bull; Enter / A: select &bull; Esc / B: back</p>
       <p id="menuControllerStatus" class="menu-controller-status" role="status" aria-live="polite"></p>
-      <footer class="menu-footer">TUR <span>&bull;</span> EARLY ACCESS BUILD <span>&bull;</span> v0.111.8</footer>
+      <footer class="menu-footer">TUR <span>&bull;</span> EARLY ACCESS BUILD <span>&bull;</span> v0.111.9</footer>
     </div>
   </main>
   <button id="backToMenu" class="back-to-menu" type="button">&larr; Main menu</button>
