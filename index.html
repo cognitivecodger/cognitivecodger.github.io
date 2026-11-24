@@ -1,322 +1,729 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cognitive Codger</title>
-    <style>
-        * {
-            box-sizing: border-box;
-        }
-
-        :root {
-            --bg: #0b0f0b;
-            --bg2: #121712;
-            --panel: #141a14;
-            --panel-border: #243224;
-            --text: #e8eee8;
-            --muted: #aeb8ae;
-            --accent: #57ff93;
-            --accent-soft: rgba(87, 255, 147, 0.18);
-            --shadow: rgba(0, 0, 0, 0.35);
-        }
-
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background: linear-gradient(to bottom, var(--bg), var(--bg2));
-            color: var(--text);
-            text-align: center;
-        }
-
-        .container {
-            max-width: 1040px;
-            margin: 0 auto;
-            padding: 36px 20px 60px;
-        }
-
-        .hero {
-            margin-bottom: 42px;
-        }
-
-        .logo-wrap {
-            display: block;
-            width: 320px;
-            max-width: 82%;
-            margin: 0 auto 18px;
-            position: relative;
-            border-radius: 10px;
-            will-change: transform, filter;
-        }
-
-        .logo {
-            display: block;
-            width: 100%;
-            height: auto;
-            position: relative;
-            z-index: 1;
-            filter: drop-shadow(0 0 6px rgba(87, 255, 147, 0.4)) drop-shadow(0 0 16px rgba(87, 255, 147, 0.25)) drop-shadow(0 0 32px rgba(87, 255, 147, 0.12));
-            transition: transform 180ms ease, filter 180ms ease;
-            border-radius: inherit;
-        }
-
-        .logo-wrap::after {
-            content: "";
-            position: absolute;
-            inset: 0;
-            pointer-events: none;
-            z-index: 2;
-            background: repeating-linear-gradient( to bottom, rgba(87, 255, 147, 0.10) 0px, rgba(87, 255, 147, 0.10) 1px, transparent 1px, transparent 4px );
-            mix-blend-mode: screen;
-            opacity: 0.65;
-            border-radius: inherit;
-        }
-
-        .logo-wrap:hover .logo,
-        .logo-wrap:focus-within .logo {
-            transform: translateY(-3px) scale(1.02);
-            filter: drop-shadow(0 8px 36px rgba(87, 255, 147, 0.28)) drop-shadow(0 0 18px rgba(87, 255, 147, 0.20));
-        }
-
-        .tagline {
-            font-size: 1.2rem;
-            color: var(--text);
-            margin: 0 0 10px;
-            font-weight: bold;
-        }
-
-        .intro {
-            max-width: 720px;
-            margin: 0 auto;
-            color: var(--muted);
-            font-size: 1rem;
-            line-height: 1.7;
-        }
-
-        h2 {
-            margin-top: 0;
-            margin-bottom: 22px;
-            color: var(--accent);
-            font-size: 1.75rem;
-            letter-spacing: 0.02em;
-        }
-
-        .section {
-            margin-top: 36px;
-        }
-
-        .games-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
-        }
-
-        .game-card {
-            display: block;
-            background: var(--panel);
-            border: 1px solid var(--panel-border);
-            border-radius: 14px;
-            padding: 24px 20px;
-            text-decoration: none;
-            color: var(--text);
-            transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
-            box-shadow: 0 4px 16px var(--shadow);
-        }
-
-            .game-card:hover,
-            .game-card:focus {
-                transform: translateY(-3px);
-                border-color: var(--accent);
-                box-shadow: 0 8px 24px var(--accent-soft);
-                outline: none;
-            }
-
-        .game-icon {
-            font-size: 2rem;
-            margin-bottom: 12px;
-            display: block;
-        }
-
-        .game-title {
-            font-size: 1.25rem;
-            color: var(--accent);
-            margin-bottom: 8px;
-            font-weight: bold;
-        }
-
-        .game-desc {
-            font-size: 0.95rem;
-            color: var(--muted);
-            line-height: 1.55;
-        }
-
-        .support {
-            margin-top: 34px;
-        }
-
-        .support-text {
-            color: var(--muted);
-            margin-bottom: 14px;
-            line-height: 1.6;
-        }
-
-        .support a {
-            display: inline-block;
-            padding: 12px 20px;
-            border: 1px solid var(--accent);
-            border-radius: 10px;
-            color: var(--accent);
-            text-decoration: none;
-            font-weight: bold;
-            transition: background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
-        }
-
-            .support a:hover,
-            .support a:focus {
-                background: var(--accent);
-                color: #0c120d;
-                box-shadow: 0 0 18px var(--accent-soft);
-                outline: none;
-            }
-
-        .footer-note {
-            margin-top: 46px;
-            color: #7f8b7f;
-            font-size: 0.95rem;
-        }
-
-        @media (max-width: 600px) {
-            .container {
-                padding: 28px 16px 46px;
-            }
-
-            .logo-wrap {
-                width: 260px;
-            }
-
-            .tagline {
-                font-size: 1.08rem;
-            }
-
-            .intro {
-                font-size: 0.96rem;
-            }
-
-            h2 {
-                font-size: 1.45rem;
-            }
-        }
-
-        .support a:hover {
-            background: var(--accent);
-            color: #0c120d;
-            box-shadow: 0 0 16px rgba(87, 255, 147, 0.25);
-        }
-
-        .hero {
-            margin-bottom: 50px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="dark">
+  <title>TUR — Totally Unrealistic Racing</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/branding/TUR_favicon_32x32.png">
+  <link rel="shortcut icon" href="assets/branding/favicon.ico">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/editor-theme.css">
+  <link rel="stylesheet" href="css/garage.css">
+  <link rel="stylesheet" href="css/race-hud.css?v=touch2">
+  <script defer src="assets/vendor/three-r152/three.min.js"></script>
+  <script defer src="js/track-code.js"></script>
+  <script defer src="data/track-packs.js"></script>
+  <script defer src="js/race.js"></script>
+  <script defer src="js/geometry.js"></script>
+  <script defer src="js/terrain.js"></script>
+  <script defer src="js/scenery.js"></script>
+  <script defer src="js/editor.js"></script>
+  <script defer src="js/vehicle.js"></script>
+  <script defer src="js/controller.js"></script>
+  <script defer src="js/touch-controls.js?v=touch2"></script>
+  <script defer src="js/ai.js"></script>
+  <script defer src="js/audio.js"></script>
+  <script defer src="js/skids.js"></script>
+  <script defer src="js/driving.js?v=touch2"></script>
+  <script defer src="js/library.js"></script>
+  <script defer src="js/packs.js"></script>
+  <script defer src="js/builder-packs.js"></script>
+  <script defer src="js/championship.js"></script>
+  <script defer src="js/menu-controls.js"></script>
+  <script defer src="js/garage.js"></script>
+  <script defer src="js/app.js"></script>
+  <script defer src="js/editor-ui.js"></script>
 </head>
-<body>
-    <div class="container">
-
-        <div class="hero">
-            <div class="logo-wrap" aria-hidden="false">
-                <img src="./assets/CogCodLogo.svg" alt="Cognitive Codger logo" class="logo">
-            </div>
-            <p class="tagline">Simple things, built for curiosity.</p>
-            <p class="intro">
-                Free browser games, experiments, and odd little projects. No logins, no registrations, no fuss — just click and play.
-            </p>
+<body class="menu-mode">
+  <main id="mainMenu" class="main-menu" aria-label="TUR main menu">
+    <div class="menu-backdrop"></div>
+    <div class="menu-layout">
+      <div id="raceChoiceList" class="race-choice-list" role="listbox" aria-label="Choose an option" hidden></div>
+      <header class="menu-brand"><img class="menu-logo" src="assets/branding/TUR_main_logo.png" alt="TUR — Totally Unrealistic Racing"></header>
+      <section id="menuHome" class="menu-card">
+        <p class="menu-eyebrow">RACE &bull; CREATE &bull; SHARE</p><h1>Your track.<br><em>Your rules.</em></h1>
+        <p class="menu-intro">Build your own circuits, take them for a spin and share them with friends.</p>
+        <div class="menu-actions"><button id="menuContinueChampionship" class="menu-primary" type="button" hidden><span>00</span> Continue championship <b>&rarr;</b></button><button id="menuChampionshipButton" type="button"><span>01</span> Championships <b>&rarr;</b></button><button id="menuQuick" class="menu-primary" type="button"><span>02</span> Quick race <b>&rarr;</b></button><button id="menuGarageButton" type="button"><span>03</span> Garage &amp; tuning <b>&rarr;</b></button><button id="menuWorkshop" type="button"><span>04</span> AI workshop <b>&rarr;</b></button><button id="menuLibrary" type="button"><span>05</span> My tracks &amp; backups <b>&rarr;</b></button><button id="menuOptionsButton" type="button"><span>06</span> Options <b>&rarr;</b></button></div>
+        <p class="menu-future">COMING LATER <strong>Goals &amp; achievements</strong></p>
+        <div class="menu-actions menu-compact"><button id="menuFullscreen" type="button">Enter fullscreen</button></div><p id="menuFullscreenStatus" class="menu-hint" aria-live="polite"></p>
+      </section>
+      <section id="menuOptions" class="menu-card menu-subpage" hidden>
+        <button id="menuOptionsBack" class="menu-back" type="button">&larr; Main menu</button><p class="menu-eyebrow">MAKE IT YOURS</p><h1>Options<em>.</em></h1>
+        <p class="menu-intro">Choose your controls and race sounds. Settings are saved in this browser.</p>
+        <label class="menu-field">On-screen driving controls <select id="optionsTouchControls"><option value="auto">Automatic (touchscreen)</option><option value="on">Always on</option><option value="off">Off</option></select></label>
+        <p class="menu-hint">Controls appear while driving. You can also switch them on or off in the race pause menu.</p>
+        <label class="menu-field">Checkpoint sound <select id="optionsCheckpointSound" aria-label="Choose checkpoint sound"><option value="speech">Voice announcement</option><option value="beep">Beep</option></select></label>
+        <p class="menu-hint">Only the checkpoint changes; countdown, lap and finish announcements stay the same.</p>
+        <div class="menu-sound-settings">
+          <label class="menu-check"><input id="optionsEngineSound" type="checkbox" checked> Enable driving sound</label>
+          <label class="menu-field"><span>Master volume <output id="optionsEngineVolumeValue">35%</output></span><input id="optionsEngineVolume" type="range" min="0" max="100" value="35" step="1" data-menu-step="5" aria-label="Master volume"></label>
+          <label class="menu-check"><input id="optionsTyreSound" type="checkbox" checked> Tyre and surface sounds</label>
+          <label class="menu-field"><span>Tyre and surface volume <output id="optionsTyreVolumeValue">65%</output></span><input id="optionsTyreVolume" type="range" min="0" max="100" value="65" step="1" data-menu-step="5" aria-label="Tyre and surface volume"></label>
+          <label class="menu-check"><input id="optionsRivalSound" type="checkbox" checked> Nearby AI car sounds</label>
         </div>
-
-        <div class="section">
-            <h2>Play Online</h2>
-
-            <div class="games-grid">
-                <a class="game-card" href="./sudoku/">
-                    <span class="game-icon">🧩</span>
-                    <div class="game-title">Sudoku</div>
-                    <div class="game-desc">A clean browser-based Sudoku puzzle you can play instantly.</div>
-                </a>
-
-                <a class="game-card" href="./ballpopper/">
-                    <span class="game-icon">🎈</span>
-                    <div class="game-title">Ball Popper</div>
-                    <div class="game-desc">Pop, react, and chase the fun in this quick arcade-style experiment.</div>
-                </a>
-
-                <a class="game-card" href="./snake/">
-                    <span class="game-icon">🐍</span>
-                    <div class="game-title">Snake</div>
-                    <div class="game-desc">A classic Snake game, rebuilt for the browser with instant play.</div>
-                </a>
-
-                <a class="game-card" href="./tanktrek/">
-                    <span class="game-icon">🛡️</span>
-                    <div class="game-title">Tank Trek</div>
-                    <div class="game-desc">Cross a hidden minefield, read the danger, plant flags, and reach the safe zone at the top.</div>
-                </a>
-
-                <a class="game-card" href="./diceroller/">
-                    <span class="game-icon">🎲</span>
-                    <div class="game-title">Dice Roller</div>
-                    <div class="game-desc">Roll dice with style, modifiers, and history tracking for tabletop play.</div>
-                </a>
-
-                <a class="game-card" href="./digyrinth/">
-                    <span class="game-icon">🕳️</span>
-                    <div class="game-title">Digyrinth</div>
-                    <div class="game-desc">A procedural dungeon generator inspired by classic maze-digging logic and retro dungeon crawlers.</div>
-                </a>
-
-                <a class="game-card" href="./snackamander/">
-                    <span class="game-icon">🦎</span>
-                    <div class="game-title">Snackamander</div>
-                    <div class="game-desc">A swampy Snake-style snack chase with smooth movement, puddles, and a sticky tongue strike.</div>
-                </a>
-
-                <a class="game-card" href="./inversanity/">
-                    <span class="game-icon">🔄</span>
-                    <div class="game-title">Inversanity</div>
-                    <div class="game-desc">A colourful grid puzzle where every move shifts the surrounding squares. Plan carefully and restore the pattern.</div>
-                </a>
-
-                <a class="game-card" href="tcged/index.html">
-                    <div class="card-icon">🃏</div>
-                    <h2>TCG Editor</h2>
-                    <p>Create, edit, style and export custom trading-card layouts.</p>
-                    <span class="card-link">Open Editor →</span>
-                </a>
-
-                <a class="game-card" href="dashpad/index.html">
-                    <span class="game-icon">✏️</span>
-                    <div class="game-title">Dashpad</div>
-                    <div class="game-desc">A simple browser sketchpad with drawing tools, colours, brush sizes, grid support, and quick creative scribbling.</div>
-                </a>
-
-                <a class="game-card" href="./zoneperfection/">
-                    <span class="game-icon">🎯</span>
-                    <div class="game-title">Zone Perfection</div>
-                    <div class="game-desc">A quick timing skill-check game where you hit the zone, chase greats, and build your best streak.</div>
-                </a>
-                
-            </div>
+        <p class="menu-hint">These controls are shared with the track builder and driving settings.</p>
+      </section>
+      <section id="menuGarage" class="garage" aria-label="Vehicle garage and tuning" hidden>
+        <header class="garage-heading"><div><p class="garage-kicker">TUR / GARAGE</p><h1>Vehicle <em>tuning</em></h1></div><span class="garage-badge">YOUR BUILD &bull; YOUR RULES</span></header>
+        <div class="garage-layout">
+          <aside class="garage-panel garage-vehicles"><h2><span aria-hidden="true">◆</span> My vehicle</h2>
+            <div class="garage-car-card"><span class="garage-car-icon" aria-hidden="true">▰</span><span><strong id="garageBodyCard">Basic car</strong><small>Choose a body style below</small></span></div>
+            <label class="garage-label" for="garageBody">Body style</label><select id="garageBody" aria-label="Vehicle body style"><option value="basic">Basic car</option><option value="wedge">Wedge GT</option><option value="compact">Compact hatch</option></select>
+            <label class="garage-label" for="garagePreset">Starting setup</label><select id="garagePreset" aria-label="Starting vehicle setup"></select>
+            <p class="garage-copy">Choose a preset or mix your own components. Each setup uses the current car.</p><button id="garageReset" type="button" class="garage-reset">↺ Reset preview</button>
+            <div class="garage-colours"><span class="garage-label">Body colour</span><div role="group" aria-label="Car body colour">
+              <button id="garageColourOrange" class="garage-swatch orange" type="button" aria-label="Orange car" title="Orange"></button><button id="garageColourBlue" class="garage-swatch blue" type="button" aria-label="Blue car" title="Blue"></button><button id="garageColourRed" class="garage-swatch red" type="button" aria-label="Red car" title="Red"></button><button id="garageColourGreen" class="garage-swatch green" type="button" aria-label="Green car" title="Green"></button><button id="garageColourPurple" class="garage-swatch purple" type="button" aria-label="Purple car" title="Purple"></button><button id="garageColourWhite" class="garage-swatch white" type="button" aria-label="White car" title="White"></button>
+            </div></div>
+            <label class="garage-label" for="garageSaved">Saved setups</label><select id="garageSaved" aria-label="Saved vehicle setups"></select>
+            <div class="garage-actions-small"><button id="garageLoad" type="button">Load</button><button id="garageDelete" type="button">Delete</button></div>
+            <label class="garage-label" for="garageName">Name this setup</label><input id="garageName" maxlength="48" type="text" placeholder="My setup" autocomplete="off"><button id="garageSave" class="garage-save" type="button">Save setup</button><p class="garage-copy">Setups are saved in this browser, separately from track backups.</p>
+          </aside>
+          <section class="garage-centre" aria-label="Current vehicle preview"><div class="garage-stage"><div class="garage-stage-title"><span>YOUR VEHICLE</span><strong id="garageBodyTitle">Basic car</strong><small id="garagePreviewLabel">Balanced setup</small></div>
+            <canvas id="garageCarPreview" class="garage-car-preview" role="img" aria-label="3D preview of the selected car"></canvas>
+            <span id="garagePreviewMessage" class="garage-stage-note">Current in-game car</span></div>
+            <div class="garage-performance"><h2>Build overview</h2><div class="garage-metrics"><div><small>TOP SPEED</small><strong id="garageTopSpeed">—</strong></div><div><small>ENGINE PULL</small><strong id="garageAcceleration">—</strong></div><div><small>DRIVE</small><strong id="garageDriveMetric">—</strong></div><div><small>STEERING</small><strong id="garageSteeringMetric">—</strong></div></div><p>Actual handling also depends on the surface, slope and your driving.</p></div>
+          </section>
+          <section class="garage-panel garage-tuning"><h2><span aria-hidden="true">⚒</span> Upgrades &amp; tuning</h2>
+            <div class="garage-part pink"><div class="garage-part-title">Engine &amp; power</div><div class="garage-adjust"><span>Engine</span><button id="garageEnginePrev" type="button" aria-label="Previous engine">−</button><strong id="garageEngineValue">—</strong><button id="garageEngineNext" type="button" aria-label="Next engine">+</button></div><p id="garageEngineHelp"></p></div>
+            <div class="garage-part cyan"><div class="garage-part-title">Tyres &amp; traction</div><div class="garage-adjust"><span>Tyres</span><button id="garageTyresPrev" type="button" aria-label="Previous tyres">−</button><strong id="garageTyresValue">—</strong><button id="garageTyresNext" type="button" aria-label="Next tyres">+</button></div><p id="garageTyresHelp"></p></div>
+            <div class="garage-part amber"><div class="garage-part-title">Drive &amp; suspension</div><div class="garage-adjust"><span>Drivetrain</span><button id="garageDrivetrainPrev" type="button" aria-label="Previous drivetrain">−</button><strong id="garageDrivetrainValue">—</strong><button id="garageDrivetrainNext" type="button" aria-label="Next drivetrain">+</button></div><p id="garageDrivetrainHelp"></p><div class="garage-adjust"><span>Suspension</span><button id="garageSuspensionPrev" type="button" aria-label="Previous suspension">−</button><strong id="garageSuspensionValue">—</strong><button id="garageSuspensionNext" type="button" aria-label="Next suspension">+</button></div><p id="garageSuspensionHelp"></p></div>
+            <div class="garage-part lime"><div class="garage-part-title">Steering &amp; handling</div><div class="garage-adjust"><span>Steering</span><button id="garageSteeringPrev" type="button" aria-label="Previous steering">−</button><strong id="garageSteeringValue">—</strong><button id="garageSteeringNext" type="button" aria-label="Next steering">+</button></div><p id="garageSteeringHelp"></p><div class="garage-adjust"><span>Assist</span><button id="garageAssistPrev" type="button" aria-label="Previous steering assist">−</button><strong id="garageAssistValue">—</strong><button id="garageAssistNext" type="button" aria-label="Next steering assist">+</button></div><p id="garageAssistHelp"></p></div>
+          </section>
+        </div><footer class="garage-footer"><button id="garageBack" type="button">← Back</button><p id="garageStatus" role="status" aria-live="polite">Changes are a preview until you apply the setup.</p><button id="garageTest" class="garage-test" type="button">Choose track &amp; drive →</button><button id="garageApply" class="garage-apply" type="button">✓ Apply setup</button></footer>
+      </section>
+      <section id="menuRace" class="menu-card menu-subpage race-setup-card" aria-label="Quick Race setup" hidden>
+        <div class="race-setup-top"><button id="menuRaceBack" class="menu-back" type="button">&larr; Back to main menu</button><span>QUICK RACE</span></div>
+        <div class="race-config" aria-label="Race settings">
+          <div class="race-row"><label for="menuRacePack" class="race-row-label"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18v13H3zM3 9h18M7 4v4m10-4v4"/></svg><span>Track pack</span></label><div class="race-choice"><button id="menuRacePackPrev" class="race-step" type="button" tabindex="-1" aria-label="Previous track pack">&#8249;</button><select id="menuRacePack" aria-label="Choose a track pack for Quick Race"></select><button id="menuRacePackNext" class="race-step" type="button" tabindex="-1" aria-label="Next track pack">&#8250;</button></div></div>
+          <div class="race-row"><label for="menuRaceTrack" class="race-row-label"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 15c0-3 2-4 5-4s3-3 6-3c3 0 5 1 5 4s-2 4-5 4h-2c-2 0-2 3-5 3-2 0-4-1-4-4z"/></svg><span>Track</span></label><div class="race-choice"><button id="menuRaceTrackPrev" class="race-step" type="button" tabindex="-1" aria-label="Previous track">&#8249;</button><select id="menuRaceTrack" aria-label="Choose a track for Quick Race" title="Saved tracks use their last generated version; the editor draft remains open."></select><button id="menuRaceTrackNext" class="race-step" type="button" tabindex="-1" aria-label="Next track">&#8250;</button></div></div>
+          <div class="race-row"><label for="menuRaceDirection" class="race-row-label"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h15m-4-4 4 4-4 4M20 16H5m4-4-4 4 4 4"/></svg><span>Track direction</span></label><div class="race-choice"><button id="menuRaceDirectionPrev" class="race-step" type="button" tabindex="-1" aria-label="Previous track direction">&#8249;</button><select id="menuRaceDirection" aria-label="Choose the Quick Race track direction"><option value="normal">Normal</option><option value="reverse">Reverse</option></select><button id="menuRaceDirectionNext" class="race-step" type="button" tabindex="-1" aria-label="Next track direction">&#8250;</button></div></div>
+          <div class="race-row"><label for="menuRaceLighting" class="race-row-label"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M19 5l-1.5 1.5m-11 11L5 19"/></svg><span>Time of day</span></label><div class="race-choice"><button id="menuRaceLightingPrev" class="race-step" type="button" tabindex="-1" aria-label="Previous time of day">&#8249;</button><select id="menuRaceLighting" aria-label="Choose the Quick Race time of day"><option value="day">Day</option><option value="night">Night</option></select><button id="menuRaceLightingNext" class="race-step" type="button" tabindex="-1" aria-label="Next time of day">&#8250;</button></div></div>
+          <div class="race-row"><label for="menuRaceEnvironment" class="race-row-label"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 5 14h4l-3 4h12l-3-4h4L12 3zm0 15v3"/></svg><span>Environment</span></label><div class="race-choice"><button id="menuRaceEnvironmentPrev" class="race-step" type="button" tabindex="-1" aria-label="Previous environment">&#8249;</button><select id="menuRaceEnvironment" aria-label="Choose the Quick Race environment"><option value="default">Track default</option><option value="grasslands">Grasslands</option><option value="desert">Desert Canyon</option><option value="snow">Snowy</option><option value="autumn">Autumn Woodland</option><option value="volcanic">Volcanic</option><option value="city">City</option></select><button id="menuRaceEnvironmentNext" class="race-step" type="button" tabindex="-1" aria-label="Next environment">&#8250;</button></div></div>
+          <div class="race-row"><label for="menuOpponentCount" class="race-row-label"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="7" r="3"/><path d="M5 20v-2a7 7 0 0 1 14 0v2M4 8a2 2 0 0 0 0 4m16-4a2 2 0 0 1 0 4"/></svg><span>AI opponents</span></label><div class="race-choice"><button id="menuOpponentCountPrev" class="race-step" type="button" tabindex="-1" aria-label="Previous ai opponents">&#8249;</button><select id="menuOpponentCount" aria-label="Choose the number of AI opponents"><option value="1" selected>1 opponent</option><option value="2">2 opponents</option><option value="3">3 opponents</option><option value="4">4 opponents</option><option value="5">5 opponents</option><option value="6">6 opponents</option><option value="7">7 opponents</option></select><button id="menuOpponentCountNext" class="race-step" type="button" tabindex="-1" aria-label="Next ai opponents">&#8250;</button></div></div>
+          <div class="race-row"><label for="menuRivalDifficulty" class="race-row-label"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20v-5h3v5zm6 0V9h3v11zm6 0V4h3v16z"/></svg><span>Rival difficulty</span></label><div class="race-choice"><button id="menuRivalDifficultyPrev" class="race-step" type="button" tabindex="-1" aria-label="Previous rival difficulty">&#8249;</button><select id="menuRivalDifficulty" aria-label="Choose AI difficulty"><option value="easy">Easy</option><option value="normal" selected>Normal</option><option value="hard">Hard</option></select><button id="menuRivalDifficultyNext" class="race-step" type="button" tabindex="-1" aria-label="Next rival difficulty">&#8250;</button></div></div>
+          <div class="race-row"><label for="menuRaceLaps" class="race-row-label"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 21V4m0 0c4-3 7 3 14 0v10c-7 3-10-3-14 0m0-5c4-3 7 3 14 0"/></svg><span>Laps per circuit</span></label><div class="race-choice"><button id="menuRaceLapsPrev" class="race-step" type="button" tabindex="-1" aria-label="Previous laps per circuit">&#8249;</button><select id="menuRaceLaps" aria-label="Choose the number of laps"><option value="1">1 lap</option><option value="3" selected>3 laps</option><option value="5">5 laps</option></select><button id="menuRaceLapsNext" class="race-step" type="button" tabindex="-1" aria-label="Next laps per circuit">&#8250;</button></div></div>
         </div>
-
-        <div class="support">
-            <p class="support-text">
-                If you enjoy what I’m making and fancy supporting future projects :
-            </p>
-            <a href="https://buymeacoffee.com/cognitivecodger" target="_blank" rel="noopener noreferrer">
-                ☕ Support the ol' Codger
-            </a>
+        <div class="menu-actions race-setup-actions"><button id="menuRival" class="menu-primary" type="button" title="Race the selected number of AI opponents; you start at the back of the grid.">Race AI opponents <b>&rarr;</b></button><button id="menuTimed" type="button" title="Drive a timed run without AI opponents.">Start timed run <b>&rarr;</b></button><button id="menuFreeDrive" type="button" title="Drive without a timed race.">Free drive <b>&rarr;</b></button></div>
+        <p id="menuRaceStatus" class="menu-status" role="status" aria-live="polite"></p>
+        <p class="race-setup-note" title="Unmarked tracks receive temporary race markers. You start behind the field. Normal and Hard rivals use sport engines with an acceleration advantage; Easy uses the standard setup. Sprints finish once; lap races use the selected lap count.">Temporary race markers are added when needed.</p>
+        <div class="race-navigation" aria-label="Navigation instructions"><div id="raceHelpKeyboard"><span><kbd>&uarr;&darr;</kbd> Navigate</span><span><kbd>&larr;&rarr;</kbd> Change</span><span><kbd>Enter</kbd> Select</span><span><kbd>Esc</kbd> Back</span></div><div id="raceHelpController" hidden><span><kbd>D-pad / Left Stick</kbd> Navigate</span><span><kbd>&larr;&rarr;</kbd> Change</span><span><kbd>A</kbd> Select</span><span><kbd>B</kbd> Back</span></div></div>
+      </section>
+      <section id="menuChampionship" class="menu-card menu-subpage race-setup-card championship-card" aria-label="Championship" hidden>
+        <div class="race-setup-top"><button id="menuChampBack" class="menu-back" type="button">&larr; Back to main menu</button><span>CHAMPIONSHIP</span></div>
+        <div id="menuChampSetup">
+          <div class="race-config" aria-label="Championship settings">
+            <div class="race-row"><label for="menuChampPack" class="race-row-label"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18v13H3zM3 9h18M7 4v4m10-4v4"/></svg><span>Track pack</span></label><div class="race-choice"><button id="menuChampPackPrev" class="race-step" type="button" tabindex="-1" aria-label="Previous track pack">&#8249;</button><select id="menuChampPack" aria-label="Choose a championship pack"></select><button id="menuChampPackNext" class="race-step" type="button" tabindex="-1" aria-label="Next track pack">&#8250;</button></div></div>
+            <div class="race-row"><label for="menuChampOpponents" class="race-row-label"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="7" r="3"/><path d="M5 20v-2a7 7 0 0 1 14 0v2M4 8a2 2 0 0 0 0 4m16-4a2 2 0 0 1 0 4"/></svg><span>AI opponents</span></label><div class="race-choice"><button id="menuChampOpponentsPrev" class="race-step" type="button" tabindex="-1" aria-label="Previous ai opponents">&#8249;</button><select id="menuChampOpponents" aria-label="Choose the number of AI opponents"><option value="1">1 opponent</option><option value="2">2 opponents</option><option value="3">3 opponents</option><option value="4">4 opponents</option><option value="5">5 opponents</option><option value="6">6 opponents</option><option value="7" selected>7 opponents</option></select><button id="menuChampOpponentsNext" class="race-step" type="button" tabindex="-1" aria-label="Next ai opponents">&#8250;</button></div></div>
+            <div class="race-row"><label for="menuChampDifficulty" class="race-row-label"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20v-5h3v5zm6 0V9h3v11zm6 0V4h3v16z"/></svg><span>Rival difficulty</span></label><div class="race-choice"><button id="menuChampDifficultyPrev" class="race-step" type="button" tabindex="-1" aria-label="Previous rival difficulty">&#8249;</button><select id="menuChampDifficulty" aria-label="Choose AI difficulty"><option value="easy">Easy</option><option value="normal" selected>Normal</option><option value="hard">Hard</option></select><button id="menuChampDifficultyNext" class="race-step" type="button" tabindex="-1" aria-label="Next rival difficulty">&#8250;</button></div></div>
+            <div class="race-row"><label for="menuChampLaps" class="race-row-label"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 21V4m0 0c4-3 7 3 14 0v10c-7 3-10-3-14 0m0-5c4-3 7 3 14 0"/></svg><span>Laps per circuit</span></label><div class="race-choice"><button id="menuChampLapsPrev" class="race-step" type="button" tabindex="-1" aria-label="Previous laps per circuit">&#8249;</button><select id="menuChampLaps" aria-label="Choose the number of laps"><option value="1">1 lap</option><option value="3" selected>3 laps</option><option value="5">5 laps</option></select><button id="menuChampLapsNext" class="race-step" type="button" tabindex="-1" aria-label="Next laps per circuit">&#8250;</button></div></div>
+            <div class="race-row"><label for="menuChampDirection" class="race-row-label"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h15m-4-4 4 4-4 4M20 16H5m4-4-4 4 4 4"/></svg><span>Race direction</span></label><div class="race-choice"><button id="menuChampDirectionPrev" class="race-step" type="button" tabindex="-1" aria-label="Previous race direction">&#8249;</button><select id="menuChampDirection" aria-label="Choose the championship direction"><option value="normal">Normal</option><option value="reverse">Reverse</option><option value="random">Random per race</option></select><button id="menuChampDirectionNext" class="race-step" type="button" tabindex="-1" aria-label="Next race direction">&#8250;</button></div></div>
+            <div class="race-row"><label for="menuChampLighting" class="race-row-label"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M19 5l-1.5 1.5m-11 11L5 19"/></svg><span>Time of day</span></label><div class="race-choice"><button id="menuChampLightingPrev" class="race-step" type="button" tabindex="-1" aria-label="Previous time of day">&#8249;</button><select id="menuChampLighting" aria-label="Choose the championship time of day"><option value="default">Default (day)</option><option value="day">Day</option><option value="night">Night</option><option value="random">Random per race (75% day)</option></select><button id="menuChampLightingNext" class="race-step" type="button" tabindex="-1" aria-label="Next time of day">&#8250;</button></div></div>
+            <div class="race-row"><label for="menuChampEnvironment" class="race-row-label"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 5 14h4l-3 4h12l-3-4h4L12 3zm0 15v3"/></svg><span>Environment</span></label><div class="race-choice"><button id="menuChampEnvironmentPrev" class="race-step" type="button" tabindex="-1" aria-label="Previous environment">&#8249;</button><select id="menuChampEnvironment" aria-label="Choose the championship environment"><option value="default">Track default</option><option value="grasslands">Grasslands</option><option value="desert">Desert Canyon</option><option value="snow">Snowy</option><option value="autumn">Autumn Woodland</option><option value="volcanic">Volcanic</option><option value="city">City</option><option value="random">Random per race</option></select><button id="menuChampEnvironmentNext" class="race-step" type="button" tabindex="-1" aria-label="Next environment">&#8250;</button></div></div>
+          </div>
+          <p id="menuChampPackInfo" class="champ-pack-info"></p>
+          <div class="menu-actions race-setup-actions"><button id="menuChampStart" class="menu-primary" type="button" title="Race the selected track pack and earn championship points.">Start championship <b>&rarr;</b></button><button id="menuChampCancelNew" type="button" hidden>Back to final standings</button></div>
+          <p class="race-setup-note" title="Points: 10, 8, 6, 5, 4, 3, 2, 1. Ties share points; wins then total time break championship ties. You start last each race. Sprint tracks run once. Random choices are saved per race. Progress and bests are stored in this browser.">Race the pack, earn points and save your best times.</p>
+          <details class="menu-set champ-bests"><summary>Personal bests for this pack</summary><p class="menu-hint">Race time starts at Go; lap time starts at the line. Records use the actual direction and lap count; vehicle setups, environments and lighting share records.</p><ol id="menuChampSetupBests" class="championship-list"></ol></details>
         </div>
-
-        <p class="footer-note">More projects coming soon...</p>
-         <img src="https://visitor-badge.laobi.icu/badge?page_id=cognitivecodger.github.io" alt="visitor count">
+        <div id="menuChampProgress" class="champ-progress" hidden>
+          <h2 id="menuChampTitle"></h2><p id="menuChampProgressText" class="champ-progress-text"></p>
+          <h3>Championship standings</h3><ol id="menuChampStandings" class="championship-list"></ol>
+          <div class="menu-actions race-setup-actions"><button id="menuChampContinue" class="menu-primary" type="button">Continue to next race <b>&rarr;</b></button><button id="menuChampNew" class="menu-primary" type="button" hidden>New championship <b>&rarr;</b></button><button id="menuChampDiscard" type="button">Discard championship...</button></div>
+          <details class="menu-set champ-bests"><summary>Track personal bests</summary><p class="menu-hint">Race time starts at Go; lap time starts at the line. Times are saved in this browser by track, direction and lap count. Different vehicle setups, difficulties, environments and lighting share records.</p><ol id="menuChampBests" class="championship-list"></ol></details>
+        </div>
+        <p id="menuChampStatus" class="menu-status" role="status" aria-live="polite"></p>
+        <div class="race-navigation" aria-label="Navigation instructions"><div id="champHelpKeyboard"><span><kbd>&uarr;&darr;</kbd> Navigate</span><span><kbd>&larr;&rarr;</kbd> Change</span><span><kbd>Enter</kbd> Select</span><span><kbd>Esc</kbd> Back</span></div><div id="champHelpController" hidden><span><kbd>D-pad / Left Stick</kbd> Navigate</span><span><kbd>&larr;&rarr;</kbd> Change</span><span><kbd>A</kbd> Select</span><span><kbd>B</kbd> Back</span></div></div>
+      </section>
+      <section id="menuAI" class="menu-card menu-subpage" hidden>
+        <button id="menuAIBack" class="menu-back" type="button">&larr; Main menu</button><p class="menu-eyebrow">WATCH &bull; TUNE &bull; EXPERIMENT</p><h1>AI <em>workshop.</em></h1>
+        <p class="menu-intro">Run a race without a player car and tune individual drivers as you watch.</p>
+        <label class="menu-field">Track pack <select id="menuAIPack" aria-label="Choose a track pack for the workshop"></select></label>
+        <label class="menu-field">Track <select id="menuAITrack" aria-label="Choose a workshop track"></select></label>
+        <label class="menu-field">AI cars <select id="menuAICount"><option value="1">1 car</option><option value="2" selected>2 cars</option><option value="3">3 cars</option><option value="4">4 cars</option><option value="5">5 cars</option><option value="6">6 cars</option><option value="7">7 cars</option><option value="8">8 cars</option></select></label>
+        <label class="menu-field">Starting difficulty <select id="menuAIDifficulty"><option value="easy">Easy</option><option value="normal" selected>Normal</option><option value="hard">Hard</option></select></label>
+        <label class="menu-field">Race direction <select id="menuAIDirection"><option value="normal">Normal</option><option value="reverse">Reverse</option></select></label>
+        <label class="menu-field">Laps <select id="menuAILaps"><option value="1" selected>1 lap</option><option value="3">3 laps</option><option value="5">5 laps</option></select></label>
+        <div class="menu-actions"><button id="menuAIStart" class="menu-primary" type="button">Start workshop <b>&rarr;</b></button></div>
+        <p class="menu-hint">Unmarked circuits receive temporary race markers. Your saved track and editor draft stay unchanged.</p><p id="menuAIStatus" class="menu-status" role="status"></p>
+      </section>
+      <section id="menuTracks" class="menu-card menu-subpage" hidden>
+        <button id="menuTracksBack" class="menu-back" type="button">&larr; Main menu</button><p class="menu-eyebrow">YOUR LOCAL LIBRARY</p><h1>My <em>tracks.</em></h1>
+        <p class="menu-intro">Choose a track pack and open a track in the builder, or keep a text backup to share and restore later.</p>
+        <label class="menu-field">Track pack <select id="menuLibraryPack" aria-label="Choose a track pack to edit"></select></label>
+        <label class="menu-field">Track <select id="menuSavedTrack" aria-label="Choose a track to edit"></select></label>
+        <p id="menuLibraryPackHint" class="menu-hint"></p>
+        <p id="officialPacksStatus" class="menu-status" role="status" aria-live="polite"></p>
+        <div class="menu-actions menu-compact"><button id="menuOpenTrack" class="menu-primary" type="button">Open in track builder <b>&rarr;</b></button><button id="menuNewTrack" type="button">Create new track <b>&rarr;</b></button><button id="menuBuilder" type="button">Continue editing current track <b>&rarr;</b></button><button id="menuExportTrack" type="button">Export selected track <b>&darr;</b></button><button id="menuExportAll" type="button">Export all tracks &amp; drafts <b>&darr;</b></button></div>
+        <div class="menu-actions menu-compact menu-delete-track"><button id="menuDeleteTrack" class="editor-danger" type="button" aria-controls="menuDeleteTrackPrompt" aria-expanded="false">Delete selected track…</button></div>
+        <div id="menuDeleteTrackPrompt" class="editor-delete-confirm" role="group" aria-label="Confirm track deletion" hidden>
+          <p id="menuDeleteTrackText"></p>
+          <div class="actions"><button id="menuCancelDeleteTrack" type="button" aria-describedby="menuDeleteTrackText">Cancel</button><button id="menuConfirmDeleteTrack" class="editor-danger" type="button" aria-describedby="menuDeleteTrackText">Delete this track</button></div>
+        </div>
+        <details class="menu-set"><summary id="menuSetToggle">Export a selection of tracks</summary>
+          <label class="menu-field">Choose one or more saved tracks <select id="menuSavedSet" multiple size="4" aria-label="Choose tracks to export as a set"></select></label>
+          <p class="menu-hint">Use Ctrl-click (Command-click on Mac), or left / right and A or Space, to select several tracks.</p><p id="menuSetHint" class="menu-hint" aria-live="polite"></p>
+          <button id="menuExportSet" type="button">Export selected set</button>
+        </details>
+        <div class="menu-actions menu-compact"><button id="menuEditPacks" type="button">Edit TUR packs <b>&rarr;</b></button></div>
+        <label class="menu-import">Import a track or backup <span>&uarr;</span><input id="menuImport" type="file" accept=".txt,.ts2,text/plain"></label>
+        <p class="menu-hint">Imports from a combined backup are added as copies. Single TS2 files open in the builder. Your tracks remain stored in this browser.</p><p id="menuLibraryStatus" class="menu-status" role="status" aria-live="polite"></p>
+      </section>
+      <section id="menuPacks" class="menu-card menu-subpage" hidden>
+        <button id="menuPacksBack" class="menu-back" type="button">&larr; My tracks &amp; backups</button><p class="menu-eyebrow">CREATE &bull; EDIT &bull; SHARE</p><h1>TUR <em>packs.</em></h1>
+        <div id="packManager" class="menu-pack-editor">
+          <p class="menu-hint">Create an ordered collection of track copies. Opening a pack track in the builder links its edits to that pack.</p>
+          <label class="menu-field">Pack name <input id="menuPackName" type="text" maxlength="80" placeholder="My track pack" autocomplete="off"></label>
+          <button id="menuPackNew" type="button">New track pack</button>
+          <label class="menu-field">My packs <select id="menuPackManage" aria-label="Choose a pack to edit or delete"></select></label>
+          <button id="menuPackRename" type="button">Save pack name</button>
+          <label class="menu-field">Add a track <select id="menuPackAvailable" aria-label="Choose a track to add to the pack"></select></label>
+          <button id="menuPackAdd" type="button">Add track to pack</button>
+          <label class="menu-field">Tracks in this pack <select id="menuPackTracks" size="5" aria-label="Tracks in selected pack"></select></label>
+          <p id="menuPackPreviewStatus" class="menu-status" role="status" aria-live="polite"></p>
+          <div class="menu-pack-row"><button id="menuPackUp" type="button">Move up</button><button id="menuPackDown" type="button">Move down</button><button id="menuPackRemove" type="button">Remove track</button></div>
+          <div class="menu-pack-row"><button id="menuPackExport" type="button">Export pack</button><button id="menuPackDelete" type="button">Delete selected pack...</button></div>
+          <button id="menuPackCopyId" type="button">Copy pack with new ID</button>
+          <label class="menu-import">Import a TUR pack <span>&uarr;</span><input id="menuPackImport" type="file" accept=".txt,.json,.tsp,application/json,text/plain"></label>
+          <details class="menu-set" id="menuPackPastePanel">
+            <summary>Paste pack JSON</summary>
+            <label class="menu-field" for="menuPackPaste">Pack JSON</label>
+            <textarea id="menuPackPaste" spellcheck="false" aria-describedby="menuPackPasteHint" placeholder="Paste the complete TUR pack JSON here"></textarea>
+            <p id="menuPackPasteHint" class="menu-hint">Paste a complete TUR or older TrackShift pack. Checking imports it into My packs.</p>
+            <button id="menuPackPasteImport" type="button">Check &amp; import pack</button>
+            <p id="menuPackPasteStatus" class="menu-status" role="status" aria-live="polite"></p>
+          </details>
+          <p class="menu-hint">Packs include complete track codes. Re-importing an existing pack ID is blocked. To remove a duplicate, select it in My packs and delete it; check its tracks or export it first. Copy pack with new ID creates an independent pack, including for older packs without a UUID.</p>
+          <p id="menuPackStatus" class="menu-status" role="status" aria-live="polite"></p>
+        </div>
+      </section>
+      <p class="menu-navigation-help">Arrow keys or D-pad: move &bull; Left / right: change track &bull; Enter / A: select &bull; Esc / B: back</p>
+      <p id="menuControllerStatus" class="menu-controller-status" role="status" aria-live="polite"></p>
+      <footer class="menu-footer">TUR <span>&bull;</span> EARLY ACCESS BUILD <span>&bull;</span> v0.111.10</footer>
     </div>
+  </main>
+  <button id="backToMenu" class="back-to-menu" type="button">&larr; Main menu</button>
+  <div id="viewport" aria-label="Interactive 3D track preview"></div>
+  <div id="trackStartMarker" class="editor-start-marker" hidden role="img" aria-label="Track start">
+    <span id="trackStartArrow" class="editor-start-arrow" aria-hidden="true">▲</span><span class="editor-start-label">Track start</span>
+  </div>
+  <div id="sectionStartMarker" class="editor-start-marker section-start-marker" hidden role="img" aria-label="Selected section start">
+    <span id="sectionStartArrow" class="editor-start-arrow" aria-hidden="true">▲</span><span id="sectionStartLabel" class="editor-start-label">Section start</span>
+  </div>
+  <div id="editorCompass" class="editor-compass" hidden>
+    <button id="editorNorthUp" type="button" title="Align the editor view with north up" aria-label="Align the editor view with north up">
+      <svg viewBox="0 0 100 100" aria-hidden="true">
+        <circle cx="50" cy="50" r="45" class="editor-compass-rim"/>
+        <line id="editorCompassEastAxis" class="editor-compass-axis"/>
+        <line id="editorCompassSouthAxis" class="editor-compass-axis"/>
+        <line id="editorCompassNorthAxis" class="editor-compass-north"/>
+        <polygon id="editorCompassNorthTip" class="editor-compass-tip"/>
+        <circle cx="50" cy="50" r="3" class="editor-compass-hub"/>
+        <text id="editorCompassN" class="editor-compass-letter editor-compass-letter-n">N</text>
+        <text id="editorCompassE" class="editor-compass-letter">E</text>
+        <text id="editorCompassS" class="editor-compass-letter">S</text>
+        <text id="editorCompassW" class="editor-compass-letter">W</text>
+      </svg>
+      <span>North up</span>
+    </button>
+    <button id="editorFindStart" type="button" disabled title="Centre on the selected section's start">Find start</button>
+  </div>
+<header class="editor-topbar" id="editorTopbar"><div class="topbar-brand"><img class="topbar-icon" src="assets/branding/TUR_icon.png" alt=""><span><strong>TUR</strong><small>TRACK EDITOR</small></span></div><nav class="workspace-tabs" aria-label="Editor workspace"><button id="workspaceEditTab" type="button" data-workspace="workspaceEdit" aria-controls="workspaceEdit" aria-pressed="true">Edit track</button><button id="workspaceSettingsTab" type="button" data-workspace="workspaceSettings" aria-controls="workspaceSettings" aria-pressed="false">Track settings</button><button id="workspaceViewTab" type="button" data-workspace="workspaceView" aria-controls="workspaceView" aria-pressed="false">View &amp; debug</button><button id="workspaceDriveTab" type="button" data-workspace="workspaceDrive" aria-controls="workspaceDrive" aria-pressed="false">Test drive</button></nav><button id="toggleRail" class="topbar-rail" type="button" aria-controls="panel" aria-expanded="true">Tracks</button><span class="topbar-current" id="topbarTrackName">Track editor</span></header><aside id="panel" aria-label="Track library and section navigation">    <section class="block library-block" aria-label="Local track library">
+      <details id="libraryPanel" open>
+        <summary>My tracks <span class="small">Local library</span></summary>
+        <label class="field">Track source / pack <select id="builderPack" aria-label="Choose a track pack in the builder"></select></label>
+        <label id="builderLibraryLabel" class="field">Open track <select id="savedTracks" aria-label="Open a saved track"></select></label>
+        <label id="builderPackTrackLabel" class="field" hidden>Track in pack <select id="builderPackTrack" aria-label="Choose a track from the selected pack"></select></label>
+        <button id="builderCopyOfficial" class="editor-apply" type="button" hidden>Make editable pack copy</button>
+        <button id="builderReloadPack" class="editor-apply" type="button" hidden>Open latest pack version</button>
+        <p id="builderPackStatus" class="help" role="status" aria-live="polite"></p>
+        <p class="help">Pack-linked edits update their local pack. Unfinished drafts stay in My tracks. Existing championships keep their original tracks.</p>
+        <label class="field">Track name <input id="trackName" type="text" maxlength="80" autocomplete="off" placeholder="Untitled track"></label>
+        <div class="actions"><button id="newTrack" type="button">New</button><button id="copyTrack" type="button">Save a copy</button><button id="saveTrack" class="primary" type="button">Save now</button></div>
+        <p id="saveStatus" class="help save-status" role="status" aria-live="polite"></p>
+        <div class="actions minor"><button id="exportAllTracks" type="button" title="Save all local tracks and recovery drafts in one text file">Save all tracks (.txt)</button></div>
+        <p class="help">The combined backup includes all saved tracks and drafts. Restore a backup from My tracks &amp; backups in the main menu.</p>
+        <div class="actions minor library-secondary"><button id="exportDraft" type="button" title="Download the exact text, including unfinished edits">Export draft</button><button id="deleteTrack" class="editor-danger" type="button">Delete track…</button></div>
+        <div id="deleteTrackPrompt" class="editor-delete-confirm" hidden>
+          <p id="deleteTrackText"></p>
+          <div class="actions"><button id="cancelDeleteTrack" type="button">Cancel</button><button id="confirmDeleteTrack" class="editor-danger" type="button">Delete this track</button></div>
+        </div>
+        <details id="recoveryPanel" class="library-recovery" hidden>
+          <summary>Recovery drafts</summary>
+          <label class="field">Unfinished work <select id="recoveryTracks" aria-label="Recovery drafts"></select></label>
+          <button id="recoverTrack" type="button" class="editor-apply">Recover a copy</button>
+          <p class="help">Kept separately when a save could not replace a track. Recovering keeps the saved original.</p>
+        </details>
+        <p class="help">Autosaved in this browser on this address. Keep .txt exports as backups; moving the project or clearing browser data can hide or remove local tracks.</p>
+      </details>
+    </section>
+<details class="block code-drawer"><summary>Track code &amp; examples</summary>    <section class="block">
+      <h2>Track code <span class="small">Share circuits as text</span></h2>
+      <textarea id="code" spellcheck="false" aria-label="TS2 track code"></textarea>
+      <div class="actions"><button id="generate" class="primary">↻ Generate track</button><button id="sample">Reset sample</button></div>
+      <div class="actions minor"><button id="copy">Copy code</button><button id="download">Save .txt</button><label class="upload">Load .txt <input id="upload" type="file" accept=".txt,.ts2,text/plain"></label></div>
+      <label class="field">Examples <select id="examples">
+        <option value="original" selected>Default sample track</option>
+        <option value="linearSlopes">Two joined linear slopes</option>
+        <option value="easedSlopes">Joined slopes · rounded outer ends</option>
+        <option value="bankedCurve">Banked curve · raised left edge</option>
+        <option value="twist">Twist · opposite edge heights</option>
+        <option value="bowl">Curved cross-section · both edges raised</option>
+        <option value="surfaceDetail">Surface detail · mixed section settings</option>
+        <option value="driveLoop">Driving test · wide loop</option>
+        <option value="jumpTest">Driving test · ramp and jump</option>
+        <option value="lapTrial">Time trial · circuit laps</option>
+        <option value="sprintTrial">Time trial · start to finish</option>
+        <option value="terrainTest">Terrain test · grass, cutting and bridge</option>
+        <option value="materialTest">Surface materials · six-material circuit</option>
+        <option value="mudHill">Muddy hill · low-speed climb</option>
+        <option value="skidPractice">Handbrake practice · wide pads</option>
+        <option value="fenceDemo">Fences · post-and-rail circuit</option>
+        <option value="stoneDemo">Stone edges · notched crowns</option>
+        <option value="outerCorners">Outside corners · round to square</option>
+        <option value="levelCrossing">Level crossroads · circuit</option>
+      </select></label>
+    </section>
+</details></aside><button id="toggleEditor" class="editor-toggle" type="button">Hide editor</button><aside id="editorPanel" aria-label="Track editor workspace"><section id="workspaceEdit" class="workspace-page block">
+      <details class="inspector-group amber rail-sections" open><summary><span class="group-icon" aria-hidden="true">▤</span>Track sections</summary><div class="group-body">
+      <div class="actions editor-history"><button id="undo" type="button" disabled>↶ Undo</button><button id="redo" type="button" disabled>↷ Redo</button></div>
+      <label class="field section-native-label">Track sections <select id="sectionList" size="5" aria-label="Track sections"></select></label>
+      <div id="sectionButtons" class="section-buttons" role="listbox" aria-label="Track sections"></div>
+      <p class="help">Click a road section or a turquoise gap marker to select it.</p>
+      <div class="actions minor"><button id="previousSection" type="button">← Previous</button><button id="nextSection" type="button">Next →</button></div>
+      <div class="actions minor editor-section-actions" role="group" aria-label="Insert, duplicate or split sections">
+        <button id="insertBeforeSection" type="button">Add before</button>
+        <button id="duplicateSection" class="editor-copy" type="button" title="Duplicate selected section" aria-label="Duplicate selected section"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="8" y="8" width="12" height="13" rx="2"></rect><path d="M5 16H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2"></path></svg></button>
+        <button id="splitSection" class="editor-split" type="button" title="Split selected section in half" aria-label="Split selected section in half">Split</button>
+        <button id="insertSection" type="button">Add after</button>
+      </div>
+      <div class="actions minor editor-delete-actions"><button id="deleteSection" class="editor-danger" type="button" aria-controls="deleteConfirm" aria-expanded="false">Delete section</button></div>
+      <div id="deleteConfirm" class="editor-delete-confirm" role="group" aria-label="Confirm section deletion" hidden><p id="deleteConfirmText"></p><div class="actions minor"><button id="confirmDeleteSection" class="editor-danger" type="button" aria-describedby="deleteConfirmText">Confirm delete</button><button id="cancelDeleteSection" type="button" aria-describedby="deleteConfirmText">Cancel</button></div></div>
+      <label class="field"><input id="autoClose" type="checkbox"> Auto-close track</label>
+      </div></details>
+      <h2 id="sectionTitle">Selected section</h2>
+      <p id="sectionSummary" class="help"></p>
+      <p id="sectionHelp" class="help"></p>
+      <details class="inspector-group purple" id="multiTrackPanel"><summary><span class="group-icon" aria-hidden="true">▦</span>Multi Track</summary><div class="group-body">
+        <label class="field"><input id="multiSelectMode" type="checkbox"> Select multiple sections</label>
+        <p class="help">Click sections in the list or on the track to add or remove them. Select at least two, then change the settings below; changes are staged until applied.</p>
+        <p id="multiTrackStatus" class="help" role="status">Select multiple sections to begin.</p>
+        <fieldset id="multiTrackActions" disabled><button id="multiApply" type="button" class="editor-apply">Apply to these pieces</button><button id="multiDiscard" type="button" class="editor-wide">Discard staged changes</button><button id="multiCombine" type="button" class="editor-wide" aria-controls="combineConfirm" aria-expanded="false">Combine consecutive pieces</button></fieldset>
+        <div id="combineConfirm" class="editor-delete-confirm" role="group" aria-label="Confirm section combination" hidden><p id="combineConfirmText"></p><div class="actions"><button id="cancelCombine" type="button" aria-describedby="combineConfirmText">Cancel</button><button id="confirmCombine" class="editor-danger" type="button" aria-describedby="combineConfirmText">Combine pieces</button></div></div>
+        <p class="help">Combine adds lengths, turns and height changes and uses the first piece's settings. It may reshape the route. Auto-close is calculated separately.</p>
+        <details class="multi-templates"><summary>Section templates</summary>
+          <label class="field">Template name <input id="templateName" type="text" maxlength="48" placeholder="Name this selection" aria-label="Template name"></label>
+          <button id="templateSave" type="button" class="editor-wide">Save selected pieces as template</button>
+          <label class="field">Saved templates <select id="templateList" aria-label="Saved section templates"></select></label>
+          <div class="actions minor"><button id="templateBefore" type="button">Add template before</button><button id="templateAfter" type="button">Add template after</button></div>
+          <button id="templateDelete" type="button" class="editor-wide editor-danger">Delete template</button>
+          <p class="help">Templates are stored in this browser, separately from track backups. Race markers are not copied.</p><p id="templateStatus" class="help" role="status"></p>
+        </details>
+      </div></details>
+<fieldset id="sectionFields"><fieldset id="sectionShapeFields"><fieldset id="sectionDetailFields"><details class="inspector-group blue" open><summary><span class="group-icon" aria-hidden="true">◈</span>Shape & layout</summary><div class="group-body"><div class="editor-grid"><label class="field">Section type <select id="editKind"><option value="road">Road</option><option value="gap">Gap / jump opening</option></select></label>
+<label class="field">Length (track units) <input id="editLength" type="number" min="0" step="any" aria-label="Section length"></label>
+<label class="field editor-wide">Turn angle (° · positive turns left) <input id="editAngle" type="number" step="any" aria-label="Turn angle"></label>
+</div><details class="shape-advanced"><summary>Width &amp; outside corner</summary><div class="editor-grid">
+<label class="field editor-wide">Outer-corner squareness (0–1) <input id="editOuterCorner" type="number" min="0" max="1" step="any" placeholder="Use track default" aria-label="Section outer-corner squareness"></label>
+<label class="field">Width mode <select id="editWidthMode"><option value="inherit">Continue previous</option><option value="absolute">End at width (m)</option><option value="relative">Change width (m)</option></select></label>
+<label class="field">Width (metres) <input id="editWidth" type="number" step="any" aria-label="Section width"></label><label class="field editor-wide">Width change side <select id="editWidthSide"><option value="B">Both sides equally</option><option value="L">Left side only</option><option value="R">Right side only</option></select></label></div><p class="help">Left and right follow the track direction. Width is the total road width; changing one side moves the centre of the road.</p></details><p class="help">Positive turn angles go left; negative angles go right.</p></div></details><details class="inspector-group green"><summary><span class="group-icon" aria-hidden="true">↟</span>Elevation & slopes</summary><div class="group-body"><div class="editor-grid"><label class="field">Elevation mode <select id="editHeightMode"><option value="relative">Change by levels</option><option value="absolute">End at level</option></select></label>
+<label class="field">Elevation (levels) <input id="editHeight" type="number" step="any" aria-label="Elevation levels"></label>
+<label class="field">Slope entry <select id="editSlopeStart"><option value="">Use global default</option><option value="1">Eased / curved</option><option value="0">Linear / sharp</option></select></label>
+<label class="field">Slope exit <select id="editSlopeEnd"><option value="">Use global default</option><option value="1">Eased / curved</option><option value="0">Linear / sharp</option></select></label>
+<label class="field">Slope curvature (0–1) <input id="editSlope" type="number" min="0" max="1" step="any" aria-label="Slope curvature"></label>
+<label class="field">Entry curvature override (−1 to 1) <input id="editSlopeEntryCurve" type="number" min="-1" max="1" step="any" placeholder="Use entry setting" aria-label="Slope entry curvature override"></label>
+<label class="field">Exit curvature override (−1 to 1) <input id="editSlopeExitCurve" type="number" min="-1" max="1" step="any" placeholder="Use exit setting" aria-label="Slope exit curvature override"></label></div><p class="help">Entry and exit overrides take priority: −1 steepens, 0 is straight, 1 flattens. Negative exit on an uphill slope forms a jump lip.</p></div></details><details class="inspector-group purple"><summary><span class="group-icon" aria-hidden="true">◒</span>Banking & road profile</summary><div class="group-body"><div class="editor-grid"><label class="field">Left bank end (m) <input id="editLeft" type="number" step="any" aria-label="Left bank height"></label>
+<label class="field">Right bank end (m) <input id="editRight" type="number" step="any" aria-label="Right bank height"></label>
+<label class="field editor-wide">Flat centre at end (0–0.9 of width) <input id="editFlatCentre" type="number" min="0" max="0.9" step="any" aria-label="Flat centre fraction"></label>
+<label class="field">Bank cross curve (0–1) <input id="editCrossCurve" type="number" min="0" max="1" step="any" aria-label="Bank cross-width curve"></label>
+<label class="field editor-wide">Bank transition easing (0–1) <input id="editBankEase" type="number" min="0" max="1" step="any" aria-label="Bank transition easing"></label></div><p id="sectionBankHelp" class="help">Banking uses the driver's left/right. Positive raises an edge; negative lowers it. Bank heights and flat centre continue until changed. Flat centre 0 keeps the original banking; 0.5 makes the middle half level and curves into straight outer banks. Bank cross curve adjusts the curved shoulders.</p></div></details></fieldset></fieldset><details class="inspector-group pink"><summary><span class="group-icon" aria-hidden="true">▥</span>Edges & material</summary><div class="group-body"><div class="editor-grid"><label class="field editor-wide"><span id="sectionEdgeLabel">Edge style from this section</span> <select id="editEdge"></select></label>
+<label class="field editor-wide"><input id="editWallToGround" type="checkbox"> Extend sides to ground</label></div>          <button id="editWallToGroundDefault" type="button" class="editor-wide">Use track default for ground supports</button><div class="editor-grid"><label class="field editor-wide"><span id="sectionMaterialLabel">Material from this section</span> <select id="editSurface"></select></label></div><p id="sectionEdgeStatus" class="help override-note"></p><p id="sectionGroundSupportStatus" class="help">Ground supports follow the track default unless changed here. Openings are cut for roads underneath; raised ends beside a jump form a solid landing face.</p><p id="sectionMaterialStatus" class="help override-note"></p><p id="sectionAppearanceHelp" class="help">Material choices continue into following sections until changed. Colours and handling change together.</p><p class="help">The support setting can be switched on or off here, or reset to the track default.</p></div></details><details class="inspector-group green" id="sectionGrassCoverPanel"><summary><span class="group-icon" aria-hidden="true">&#9645;</span>Grass cover</summary><div class="group-body"><label class="field"><input id="editGrassCover" type="checkbox"> Cover this section with grass</label><p id="sectionGrassCoverStatus" class="help" role="status"></p><p class="help">For straight underground roads with enough headroom. An overlapping track prevents the cover. Connected covers form one grass surface; a kerb marks an open end.</p></div></details><details class="inspector-group pink" id="sectionTyreBarrierPanel"><summary><span class="group-icon" aria-hidden="true">&#9673;</span>Tyre barriers</summary><div class="group-body"><label class="field">Left side (0-1) <span id="editTyresLeftValue" class="sliderValue">Track default</span><input id="editTyresLeft" type="range" min="0" max="1" step="0.01" value="0" aria-label="Left tyre barrier coverage for this section"></label><button id="editTyresLeftDefault" type="button">Use track default for left</button><label class="field">Right side (0-1) <span id="editTyresRightValue" class="sliderValue">Track default</span><input id="editTyresRight" type="range" min="0" max="1" step="0.01" value="0" aria-label="Right tyre barrier coverage for this section"></label><button id="editTyresRightDefault" type="button">Use track default for right</button><p class="help">Overrides only this section. 0 removes barriers; 0.1 starts with two stacks in the middle; 1 fills the available length. Stacks need a ground-level kerb and clear grass.</p></div></details><details class="inspector-group green" id="sectionSceneryPanel"><summary><span class="group-icon" aria-hidden="true">&#8962;</span>Trackside scenery</summary><div class="group-body"><label class="field">Building on the left <select id="editSceneryLeft"><option value="">Automatic (track density)</option><option value="none">None</option><option value="stand">Bleachers</option><option value="tower">Observation tower</option><option value="footbridge">Footbridge across track</option><option value="tyre">Tyre bridge across track</option></select></label><label class="field">Building on the right <select id="editSceneryRight"><option value="">Automatic (track density)</option><option value="none">None</option><option value="stand">Bleachers</option><option value="tower">Observation tower</option><option value="footbridge">Footbridge across track</option><option value="tyre">Tyre bridge across track</option></select></label><p id="sectionSceneryStatus" class="help" role="status"></p><p class="help">Left and right follow the track direction. Your choices take priority over automatic buildings and work even when building density is zero. Structures need a suitable straight and clear grass; bridges span both sides. Unavailable choices remain saved and reappear when space permits.</p></div></details><details class="inspector-group amber"><summary><span class="group-icon" aria-hidden="true">◌</span>Surface & grip</summary><div class="group-body"><div class="editor-grid"><label class="field editor-wide">Surface roughness (0–1) <span id="editRoughnessValue" class="sliderValue">0.00</span><input id="editRoughness" type="range" min="0" max="1" value="0" step="0.01" aria-label="Surface roughness for this section"></label>
+<label class="field editor-wide">Bump frequency (0–1) <span id="editFrequencyValue" class="sliderValue">1.00</span><input id="editFrequency" type="range" min="0" max="1" value="1" step="0.01" aria-label="Bump frequency for this section"></label></div><p class="help">Roughness sets bump height; frequency controls how often bumps occur. Materials affect appearance and handling.</p></div></details><fieldset id="sectionGeometryFields"><details class="inspector-group cyan"><summary><span class="group-icon" aria-hidden="true">▦</span>Geometry detail</summary><div class="group-body"><div class="editor-grid"><label class="field">Length subdivisions <input id="editLengthDetail" type="number" min="1" max="128" step="1" aria-label="Length subdivisions"></label>
+<label class="field">Width subdivisions <input id="editWidthDetail" type="number" min="2" max="32" step="2" aria-label="Width subdivisions"></label>
+<label class="field editor-wide">Road shading <select id="editShading"><option value="">Use global default</option><option value="1">Smooth</option><option value="0">Faceted</option></select></label></div><p class="help">Higher subdivision counts add mesh triangles and may cost performance. Blank values use track defaults.</p></div></details></fieldset>        <details class="inspector-group red" id="sectionRacePanel">
+          <summary><span class="group-icon" aria-hidden="true">⚑</span>Race marker</summary><div class="group-body"><fieldset id="sectionRaceFields">
+          <label class="field">Marker on this section <select id="editRaceKind"><option value="">None</option><option value="SF">Start / finish (laps)</option><option value="RS">Start (sprint)</option><option value="RF">Finish (sprint)</option><option value="CP">Checkpoint</option></select></label>
+          <div class="editor-grid">
+            <label class="field">Checkpoint number <input id="editCheckpoint" type="number" min="1" max="999" step="1" value="1" aria-label="Checkpoint number"></label>
+            <label class="field">Position along section (%) <input id="editRacePosition" type="number" min="0" max="100" step="any" value="50" aria-label="Race marker position"></label>
+          </div>
+          <button id="applyRaceMarker" type="button" class="editor-apply">Apply marker</button>
+          <p class="help">SF is a shared start/finish; RS and RF are separate sprint lines. Cross CP 1, CP 2, etc. in order, following the track direction. Markers stay on this section and are included in copied/exported track code. No marker is inherited.</p>
+</fieldset><p id="gapRaceNote" class="help" hidden>Race markers need a road section; gaps cannot contain markers.</p>      <p id="raceSetupSummary" class="help"></p>
+      <div class="actions minor"><button id="setupLapRace" type="button">Set up lap timing</button><button id="clearRace" type="button">Clear markers</button></div><p class="help">Automatic setup places the start/finish on the selected road section and adds two checkpoints around the lap.</p>
+</div></details>
+<button id="applySection" class="editor-apply quiet-apply" type="button">Apply section changes</button></fieldset><p class="help">Changes apply when you leave a field. Undo: Ctrl+Z · Redo: Ctrl+Shift+Z.</p></section><div id="workspaceSettings" class="workspace-page" hidden><section class="block global-block"><details id="trackSettingsPanel" open><summary>Track settings <span class="small">Global defaults</span></summary><p class="help">Changes affect the whole track unless a section overrides them.</p><fieldset id="globalFields"><details class="inspector-group blue" open><summary><span class="group-icon" aria-hidden="true">◈</span>Dimensions & shape</summary><div class="group-body"><div class="editor-grid"><label class="field">TL · Length per unit (m) <input id="globalLength" type="number" min="0.01" step="any" aria-label="Length per track unit"></label>
+<label class="field">TW · Track width (m) <input id="globalWidth" type="number" min="0.01" step="any" aria-label="Default track width"></label>
+<label class="field">TD · Road thickness (m) <input id="globalDepth" type="number" min="0.01" step="any" aria-label="Road slab thickness"></label>
+<label class="field">LH · Height per level (m) <input id="globalLevelHeight" type="number" min="0.01" step="any" aria-label="Height per level"></label>
+<label class="field editor-wide">OC · Outer-corner squareness (0–1) <input id="globalOuterCorner" type="number" min="0" max="1" step="any" aria-label="Default outer-corner squareness"></label></div></div></details><details class="inspector-group cyan"><summary><span class="group-icon" aria-hidden="true">&#10148;</span>Starting direction</summary><div class="group-body">
+<label class="field">Compass direction <span id="globalStartBearingValue" class="sliderValue">180&#176; &middot; S</span><input id="globalStartBearing" type="range" min="0" max="360" step="any" value="180" aria-label="Starting compass direction in degrees"></label>
+<div class="start-direction-buttons" role="group" aria-label="Starting compass direction presets">
+<button id="startDirectionN" type="button" aria-label="North, 0 degrees">N</button><button id="startDirectionNE" type="button" aria-label="North-east, 45 degrees">NE</button><button id="startDirectionE" type="button" aria-label="East, 90 degrees">E</button><button id="startDirectionSE" type="button" aria-label="South-east, 135 degrees">SE</button><button id="startDirectionS" type="button" aria-label="South, 180 degrees">S</button><button id="startDirectionSW" type="button" aria-label="South-west, 225 degrees">SW</button><button id="startDirectionW" type="button" aria-label="West, 270 degrees">W</button><button id="startDirectionNW" type="button" aria-label="North-west, 315 degrees">NW</button>
+</div><p class="help">0&#176; points north; 90&#176; points east. The compass matches North up in the editor.</p>
+<label class="field">Track-code heading (AA&#176;) <input id="globalHeading" type="number" step="any" aria-label="Starting heading"></label><p class="help">AA uses the original track-code angle convention; the compass converts it automatically.</p>
+</div></details><details class="inspector-group pink"><summary><span class="group-icon" aria-hidden="true">&#9637;</span>Starting position &amp; appearance</summary><div class="group-body"><div class="editor-grid"><label class="field">Start level <input id="globalStartLevel" type="number" step="any" aria-label="Starting elevation level"></label>
+<label class="field editor-wide">Default edge style <select id="globalEdge"></select></label>
+<label class="field editor-wide"><input id="globalWallToGround" type="checkbox"> Extend raised sides to ground by default</label>
+<label class="field editor-wide">Starting material <select id="globalStartSurface"></select></label></div></div></details><details id="startingOverrides" class="inspector-group purple"><summary><span class="group-icon" aria-hidden="true">◒</span>Starting overrides</summary><div class="group-body"><div class="editor-grid"><label class="field editor-wide">Starting edge override <select id="globalStartEdge"></select></label>
+<label class="field editor-wide">Starting width override (m) <input id="globalStartWidth" type="number" min="0.01" step="any" aria-label="Starting width override"></label>
+<label class="field">Start left bank (m) <input id="globalStartLeft" type="number" step="any" placeholder="Level (0)" aria-label="Starting left bank"></label>
+<label class="field">Start right bank (m) <input id="globalStartRight" type="number" step="any" placeholder="Level (0)" aria-label="Starting right bank"></label>
+<label class="field editor-wide">Starting bank curve override (0–1) <input id="globalStartCurve" type="number" min="0" max="1" step="any" aria-label="Starting bank curve override"></label>
+<label class="field editor-wide">Starting flat centre (0–0.9) <input id="globalStartFlat" type="number" min="0" max="0.9" step="any" placeholder="No flat centre (0)" aria-label="Starting flat centre fraction"></label></div><p class="help">Starting overrides continue until changed. Blank width and curve follow the track defaults; blank bank heights and flat centre start at zero.</p></div></details><button id="applyGlobals" class="primary editor-apply" type="button">Apply track settings</button></fieldset><details id="terrainSettingsPanel" class="inspector-group green"><summary><span class="group-icon" aria-hidden="true">↟</span>Terrain & grass</summary><div class="group-body"><div class="editor-grid"><label class="field">Terrain height (m) <input id="globalGroundHeight" type="number" step="any" aria-label="Terrain height"></label>
+<label class="field">Grass grip (0.1–1) <input id="globalGrassGrip" type="number" min="0.1" max="1" step="any" aria-label="Grass grip"></label>
+<label class="field editor-wide">Extra grass drag (m/s²) <input id="globalGrassDrag" type="number" min="0" max="20" step="any" aria-label="Extra grass drag"></label>
+<label class="field editor-wide"><input id="globalGroundCutouts" type="checkbox" checked> Automatic open cuttings around the track</label></div><p class="help">Terrain height, cuttings, grass grip and drag are saved with the track.</p></div></details><details class="inspector-group pink" id="globalTyreBarrierPanel"><summary><span class="group-icon" aria-hidden="true">&#9673;</span>Tyre barriers</summary><div class="group-body"><label class="field">Inside bends (0-1) <span id="globalTyresInsideValue" class="sliderValue">0.00</span><input id="globalTyresInside" type="range" min="0" max="1" step="0.01" value="0" aria-label="Inside bend tyre barrier density"></label><label class="field">Outside bends (0-1) <span id="globalTyresOutsideValue" class="sliderValue">0.00</span><input id="globalTyresOutside" type="range" min="0" max="1" step="0.01" value="0" aria-label="Outside bend tyre barrier density"></label><p id="tyreBarrierStatus" class="help">No tyre stacks placed.</p><p class="help">0 turns barriers off. Lower values target tighter bends; 1 covers all bends where ground-level kerbs and clear grass allow. Individual sections can override either side.</p></div></details><details class="inspector-group amber" id="scenerySettingsPanel"><summary><span class="group-icon" aria-hidden="true">⌂</span>Trackside scenery</summary><div class="group-body"><label class="field">Default track environment <select id="globalEnvironment" aria-label="Choose the default track environment"><option value="grasslands">Grasslands</option><option value="desert">Desert Canyon</option><option value="snow">Snowy</option><option value="autumn">Autumn Woodland</option><option value="volcanic">Volcanic</option><option value="city">City</option></select></label><p class="help">Saved in the track and used by default when racing.</p><label class="field">Buildings density (0–1) <span id="globalSceneryDensityValue" class="sliderValue">0.00</span><input id="globalSceneryDensity" type="range" min="0" max="1" step="0.01" value="0" aria-label="Trackside facilities density"></label><p id="sceneryStatus" class="help">Buildings are off.</p><p class="help">Includes stands, bridges and the car park.</p><label class="field"><span id="globalPondQuantityLabel">Pond quantity (0-1)</span> <span id="globalPondQuantityValue" class="sliderValue">0.00</span><input id="globalPondQuantity" type="range" min="0" max="1" step="0.01" value="0" aria-label="Pond quantity"></label><label class="field"><span id="globalPondSizeLabel">Maximum pond size (0-1)</span> <span id="globalPondSizeValue" class="sliderValue">0.35</span><input id="globalPondSize" type="range" min="0" max="1" step="0.01" value="0.35" aria-label="Maximum pond size"></label><label class="field">Trees density (0-1) <span id="globalTreeDensityValue" class="sliderValue">0.00</span><input id="globalTreeDensity" type="range" min="0" max="1" step="0.01" value="0" aria-label="Trees density"></label><label class="field"><input id="showTreeAreas" type="checkbox"> Show tree placement areas</label><p class="help" id="treeAreaHelp">Purple outlines show sampling areas. Trees only appear where there is suitable, clear ground within them.</p><label class="field">Rock density (0-1) <span id="globalRockDensityValue" class="sliderValue">0.00</span><input id="globalRockDensity" type="range" min="0" max="1" step="0.01" value="0" aria-label="Rock density"></label><label class="field">Bush density (0-1) <span id="globalBushDensityValue" class="sliderValue">0.00</span><input id="globalBushDensity" type="range" min="0" max="1" step="0.01" value="0" aria-label="Bush density"></label><p id="natureStatus" class="help">Ponds and trees are off.</p><p class="help" id="treeDensityHelp">Trees form varied forest clusters near the track, with up to 700 trees. In the Volcanic environment, this density controls pillars per basalt formation.</p><p class="help" id="pondDensityHelp">Pond quantity 0.1 requests one; 1 requests up to 100. Sizes start at 2 m; maximum size limits the largest diameter.</p><p class="help" id="sceneryOrderHelp">Buildings and tyre barriers are placed first, then ponds, trees, rocks and bushes. Objects need clear grass and may be omitted if there is not enough space. Ponds currently use grass driving behaviour.</p></div></details><details class="inspector-group purple"><summary><span class="group-icon" aria-hidden="true">◒</span>Default slopes & banking</summary><div class="group-body"><label class="field">Default slope transition <select id="slopeMode">
+        <option value="both" selected>Ease in and out (smooth at both ends)</option>
+        <option value="start">Ease entry only (sharp exit / jump)</option>
+        <option value="end">Sharp entry, ease exit</option>
+        <option value="none">Linear slope (sharp at both ends)</option>
+      </select></label>
+<label class="field">Default slope curvature <span id="slopeStrengthValue" class="sliderValue">100%</span><input id="slopeStrength" type="range" min="0" max="1" value="1" step="any"></label>
+<label class="field">Default bank cross-width curve <span id="bankCurveValue" class="sliderValue">0%</span><input id="bankCurve" type="range" min="0" max="1" value="0" step="any"></label>
+<label class="field">Default bank transition easing <span id="bankTransitionValue" class="sliderValue">100%</span><input id="bankTransition" type="range" min="0" max="1" value="1" step="any"></label><p class="help">Sections can override these defaults. Left and right bank heights are measured in metres.</p></div></details><details class="inspector-group cyan"><summary><span class="group-icon" aria-hidden="true">▦</span>Default road detail</summary><div class="group-body"><label class="field"><input id="smoothRoad" type="checkbox" checked> Default smooth road shading</label>
+<label class="field">Default length subdivisions <input id="samples" type="number" min="1" max="128" step="1" value="12"></label>
+<label class="field">Default width subdivisions <select id="bankSamples"><option value="2">2</option><option value="4">4</option><option value="6">6</option><option value="8" selected>8</option><option value="10">10</option><option value="12">12</option><option value="14">14</option><option value="16">16</option><option value="18">18</option><option value="20">20</option><option value="22">22</option><option value="24">24</option><option value="26">26</option><option value="28">28</option><option value="30">30</option><option value="32">32</option></select></label>
+<label class="field">Sloping curve width subdivisions <select id="curveWidthSamples"><option value="2">2</option><option value="4">4</option><option value="6">6</option><option value="8">8</option><option value="10">10</option><option value="12" selected>12</option><option value="14">14</option><option value="16">16</option><option value="18">18</option><option value="20">20</option><option value="22">22</option><option value="24">24</option><option value="26">26</option><option value="28">28</option><option value="30">30</option><option value="32">32</option></select></label><p class="help">Length, width and sloping-curve subdivisions affect mesh detail. Sections can override length, width and shading.</p></div></details></details><p id="globalSummary" class="help"></p><p id="globalOverrides" class="help override-note"></p></section></div><div id="workspaceView" class="workspace-page" hidden>    <section class="block">
+      <h2>View</h2>
+      <label class="field">Camera <select id="cameraMode">
+        <option value="iso-ortho" selected>Isometric · orthographic</option>
+        <option value="iso-persp">Isometric · perspective</option>
+        <option value="top-ortho">Overhead · orthographic</option>
+        <option value="top-persp">Overhead · perspective</option>
+        <option value="low-persp">Low angle · perspective</option>
+      </select></label>
+      <div class="actions"><button id="fit">◎ Frame entire track</button></div>
+      <label class="field"><input id="showEditorStarts" type="checkbox" checked> Show track / section start markers</label>
+      <p class="help">The compass follows your view; click North up to align it. Find start centres the selected section. Track start marks the first point in the code, separate from race start/finish lines.</p>
+      <p class="help">Click a road section to select · Drag to orbit · Right-drag to pan · Mouse wheel to zoom</p>
+    </section>
+    <section class="block" id="sceneLightingPanel">
+      <h2>Scene lighting <span class="small">Across tracks</span></h2>
+      <div class="sun-controls">
+        <div id="sunCompass" class="sun-compass" role="slider" tabindex="0" aria-label="Direction the sun comes from" aria-valuemin="0" aria-valuemax="359" aria-valuenow="211" aria-valuetext="211 degrees, SW">
+          <svg viewBox="0 0 128 128" aria-hidden="true">
+            <circle class="sun-compass-rim" cx="64" cy="64" r="45"/>
+            <path class="sun-compass-grid" d="M64 25V103M25 64H103M36 36L92 92M36 92L92 36"/>
+            <text x="64" y="12">N</text><text x="119" y="68">E</text><text x="64" y="124">S</text><text x="9" y="68">W</text>
+            <g id="sunBearingNeedle" class="sun-compass-needle">
+              <path d="M64 29V57M59 51L64 57L69 51"/>
+              <circle cx="64" cy="20" r="7"/>
+            </g>
+            <circle class="sun-compass-centre" cx="64" cy="64" r="3"/>
+          </svg>
+        </div>
+        <div class="sun-values">
+          <label class="field">Sun comes from <input id="sunAzimuth" type="number" min="0" max="359" value="211" step="1" aria-label="Sun direction in degrees"></label>
+          <p id="sunBearingValue" class="sun-bearing" aria-live="polite">211° · SW</p>
+          <button id="resetSun" type="button">Reset sun</button>
+        </div>
+      </div>
+      <label class="field">Sun elevation <span id="sunElevationValue" class="sliderValue">25°</span><input id="sunElevation" type="range" min="0" max="90" value="25" step="1" aria-label="Sun elevation in degrees"></label>
+      <p class="help">0° is the horizon · 90° is directly overhead. Drag the compass or use its arrow keys; hold Shift for 15° steps. North is up in the overhead view. Sun settings stay in this browser and apply to every track.</p>
+      <label class="field">Brightness <span id="brightnessValue" class="sliderValue">0.88</span><input id="brightness" type="range" min="0.55" max="1.30" value="0.88" step="0.01" aria-label="Scene brightness"></label>
+      <label class="field">Slope contrast <span id="slopeContrastValue" class="sliderValue">65%</span><input id="slopeContrast" type="range" min="0" max="1" value="0.65" step="0.05" aria-label="Directional slope lighting contrast"></label>
+    </section>
+    <section class="block">
+      <h2>Preview layers <span class="small">Display tools</span></h2>
+      <label class="field">Preview environment <select id="editorEnvironment" aria-label="Choose the track editor preview environment"><option value="default">Track default</option><option value="grasslands">Grasslands</option><option value="desert">Desert Canyon</option><option value="snow">Snowy</option><option value="autumn">Autumn Woodland</option><option value="volcanic">Volcanic</option><option value="city">City</option></select></label>
+      <p class="help">Preview only; choose Track default to use the environment saved in Track settings. Editor test drives use the preview.</p>
+      <div class="checks">
+        <label><input id="showRoad" type="checkbox" checked><span>Road slabs</span></label>
+        <label><input id="showKerbs" type="checkbox" checked><span>Kerbs</span></label>
+        <label><input id="showWalls" type="checkbox" checked><span>Walls &amp; ground supports</span></label>
+        <label><input id="showFences" type="checkbox" checked><span>Fences</span></label>
+        <label><input id="showWireframe" type="checkbox"><span>Track wireframe</span></label>
+        <label><input id="showGround" type="checkbox" checked><span>Terrain</span></label>
+        <label><input id="showCheckpoints" type="checkbox" checked><span>Checkpoints</span></label>
+        <label><input id="showStartFinish" type="checkbox" checked><span>Start / finish</span></label>
+        <label><input id="showDebug" type="checkbox"><span>Debug guides</span></label>
+        <label><input id="showSkids" type="checkbox" checked><span>Tyre marks</span></label>
+      </div>
+      <p class="help">Race marking visibility also applies in Test Drive. Hidden lines and arrows still detect crossings and time your run.</p>
+      <label class="field">Automatic-edge preview <select id="sideMode"><option value="auto">Follow saved track styles</option><option value="kerbs">Preview automatic edges as kerbs</option><option value="walls">Preview automatic edges as walls</option></select></label>
+      <p class="help">Preview choices are temporary; explicit styles still take priority. Save edge choices under Track settings or on a section.</p>
+      <label class="field">Terrain inspection view <select id="groundLevel"><option value="zero" selected>At saved terrain height</option><option value="lowered">Lowered below roads · editor inspection</option></select></label>
+      <label class="field">Wall rise/fall distance <span id="wallRampValue" class="sliderValue">6.0 m</span><input id="wallRamp" type="range" min="0.5" max="15" value="6" step="0.5"></label>
+      <label class="field"><input type="checkbox" id="flattenUnderpass"> Lower walls into deep underpasses</label>
+      <label class="field">Flatten by depth <span id="flattenValue" class="sliderValue">75%</span><input id="flattenBy" type="range" min="0.5" max="1.1" value="0.75" step="0.05"></label>
+      <button id="clearSkids" type="button">Clear tyre marks</button>
+      <p class="help">Tyre marks fade while driving and clear when the track is rebuilt. Hiding/lowering terrain here is visual only. Test Drive shows and collides with terrain at its saved height, including the same open cuttings.</p>
+    </section>
+    <section class="block stats">
+      <h2>Track information</h2>
+      <div class="statgrid"><div><small>SECTIONS</small><strong id="pieceCount">—</strong></div><div><small>CENTRE POSES</small><strong id="poseCount">—</strong></div><div><small>TOTAL LENGTH</small><strong id="trackLength">—</strong></div><div><small>ELEVATION RANGE</small><strong id="levels">—</strong></div></div>
+      <p id="closure" class="help"></p><p id="geomStats" class="help"></p><p class="help">Level crossroads are created automatically where separate flat, unbanked road sections overlap. Keep the crossing surfaces smooth; wood planks, rough sections and slopes need a different layout.</p>
+    </section>
+</div><section id="workspaceDrive" class="workspace-page block" hidden><h2>Test drive setup</h2><p class="help">Choose a section or start a timed run using the existing driving controls.</p>      <label class="field">Test car size <span id="carScaleValue" class="sliderValue">50%</span><input id="carScale" type="range" min="50" max="150" value="50" step="5"></label>
+      <p id="carDimensions" class="help"></p>
+      <div class="actions minor"><button id="defaultCar" type="button">Default 50%</button><button id="smallCar" type="button">Try 75%</button><button id="originalCar" type="button">Original 100%</button></div>
+      <label class="field">Vehicle setup <select id="vehiclePreset"></select></label>
+      <p id="vehicleSummary" class="help override-note"></p>
+      <details class="editor-advanced" id="vehicleSettingsPanel"><summary>Engine, tyres, drive, suspension &amp; steering</summary>
+        <label class="field">Engine <select id="vehicleEngine"></select></label>
+        <label class="field">Tyres <select id="vehicleTyres"></select></label>
+        <label class="field">Drivetrain <select id="vehicleDrivetrain"></select></label>
+        <label class="field">Suspension <select id="vehicleSuspension"></select></label>
+        <label class="field">Steering upgrade <select id="vehicleSteering"></select></label>
+        <label class="field">Steering assist <select id="vehicleAssist"></select></label>
+        <p class="help">Better steering gives quicker turn-in and more cornering ability. Assist helps hold grip and catch slides; it eases back for handbrake turns and power donuts.</p>
+        <p id="vehiclePartsSummary" class="help"></p>
+        <p class="help">Engine pull compares acceleration with Balanced. Surfaces and hills affect actual speed. Mix parts freely; vehicle setup is separate from the shared track code.</p>
+        <p class="help">Normal braking uses all four tyres; the handbrake locks the rears. For RWD power donuts, use full throttle and tight steering without the handbrake.</p>
+      </details>
+      <details class="editor-advanced" id="controllerSettingsPanel">
+        <summary>Controller settings &amp; connection check</summary>
+        <label class="field"><input id="editorController" type="checkbox" checked> Enable Xbox-style controller input</label>
+        <label class="field">Input sampling <select id="editorControllerRate"><option value="60">Standard · 60 reads/second</option><option value="30">Compatibility · 30 reads/second</option></select></label>
+        <p class="help">Turn input off here before driving to compare keyboard-only play. This choice is kept in this browser. Input is read only during a focused, visible Test Drive.</p>
+        <p class="help"><a class="controller-link" href="controller-check.html" target="_blank" rel="noopener">Open lightweight controller check ↗</a></p>
+      </details>
+      <details class="editor-advanced"><summary>Driving sound</summary>
+        <label class="field"><input id="editorEngineSound" type="checkbox" checked> Enable driving sound</label>
+        <label class="field">Master volume <span id="editorEngineVolumeValue" class="sliderValue">35%</span><input id="editorEngineVolume" type="range" min="0" max="100" value="35" step="1"></label>
+        <label class="field"><input id="editorTyreSound" type="checkbox" checked> Tyre &amp; surface sounds</label>
+        <label class="field"><input id="editorRivalSound" type="checkbox" checked> Nearby AI car sounds</label>
+        <label class="field">Tyre level <span id="editorTyreVolumeValue" class="sliderValue">65%</span><input id="editorTyreVolume" type="range" min="0" max="100" value="65" step="1"></label>
+        <p class="help">Master volume also controls countdown, checkpoint and lap announcements.</p>
+        <p id="editorEngineSoundStatus" class="help" role="status"></p>
+      </details>
+      <button id="startDrive" class="primary editor-apply" type="button">▶ Test drive selected section</button>
+      <label class="field">Race direction <select id="raceDirection"><option value="normal">Normal · track order</option><option value="reverse">Reverse · opposite direction</option></select></label>
+      <label class="field">Starting grid position <select id="gridPosition"><option value="1">1 · Front row · left</option><option value="2">2 · Front row · right</option><option value="3">3 · Row 2 · left</option><option value="4">4 · Row 2 · right</option><option value="5">5 · Row 3 · left</option><option value="6">6 · Row 3 · right</option><option value="7">7 · Row 4 · left</option><option value="8">8 · Row 4 · right</option></select></label>
+      <button id="startTimedRun" class="editor-apply" type="button">▶ Start timed run</button>
+      <p class="help">Racing starts behind the line, two cars across and up to four rows deep. Rows have more space where the approach allows. Reverse uses the same circuit line, or swaps sprint start/finish, and reverses checkpoint order. Left/right follow the driver's view. Place each start on a wide straight with enough approach road.</p>
+      <p class="help">Drive with W/A/S/D or arrows. Select a road section with room for all four wheels. Try the driving examples on the left for a wide loop or jump.</p>
+</section></aside>
+  <section id="touchDriveControls" class="touch-drive-controls" hidden aria-label="Touch driving controls">
+    <div id="touchSteering" class="touch-steering" role="slider" tabindex="0" aria-label="Steering, left to right" aria-valuemin="-100" aria-valuemax="100" aria-valuenow="0">
+      <span class="touch-steer-label">STEER</span><span class="touch-steer-arrow touch-steer-left" aria-hidden="true">&#9664;</span><span class="touch-steer-arrow touch-steer-right" aria-hidden="true">&#9654;</span><span id="touchSteeringKnob" class="touch-steering-knob" aria-hidden="true"></span>
+    </div>
+    <div class="touch-actions" aria-label="Pedals and camera zoom">
+      <button id="touchZoomOut" class="touch-zoom" type="button" aria-label="Zoom camera out"><strong>−</strong><small>ZOOM</small></button>
+      <button id="touchZoomIn" class="touch-zoom" type="button" aria-label="Zoom camera in"><strong>+</strong><small>ZOOM</small></button>
+      <button id="touchBrake" class="touch-brake" type="button" aria-label="Brake and reverse"><strong>LT</strong><small>BRAKE / REV</small></button>
+      <button id="touchAccelerate" class="touch-accelerate" type="button" aria-label="Accelerate"><strong>RT</strong><small>ACCELERATE</small></button>
+    </div>
+    <button id="touchPauseTest" class="touch-pause-test" type="button" aria-label="Pause test drive">Ⅱ <span>PAUSE</span></button>
+  </section>
+  <section id="quickRaceHud" hidden aria-label="Race display">
+    <div class="quick-track" aria-label="Current track"><span>TRACK</span><strong id="quickTrackName"></strong></div>
+    <div id="quickStandingsPanel" class="quick-standings">
+      <div class="quick-hud-label">RACE ORDER</div>
+      <ol id="quickStandings" aria-label="Race standings"></ol>
+    </div>
+    <section id="quickTimingPanel" class="quick-timing" hidden aria-label="Lap and race times">
+      <div id="quickTimingTitle" class="quick-hud-label">LAP TIMES</div>
+      <ol id="quickLapTimes" aria-label="Lap times"></ol>
+      <div id="quickLapTotalRow" class="quick-timing-total"><span>LAPS TOTAL</span><strong id="quickLapTotal">0:00.000</strong></div>
+      <div class="quick-timing-total quick-race-total"><span>RACE · FROM GO</span><strong id="quickRaceTotal">0:00.000</strong></div>
+      <div class="quick-timing-best"><span id="quickBestLapLabel">BEST LAP · SESSION</span><strong id="quickBestLap">—</strong></div>
+      <div id="quickBestRaceRow" class="quick-timing-best"><span>BEST RACE · SESSION</span><strong id="quickBestRace">—</strong></div>
+    </section>
+    <div class="quick-race-stats">
+      <div id="quickPositionPanel" class="quick-stat"><span>POSITION</span><strong id="quickPosition">1 / 1</strong></div>
+      <div id="quickLapPanel" class="quick-stat"><span>LAP</span><strong id="quickLap">1</strong></div>
+      <div class="quick-stat quick-speed"><span>SPEED</span><strong><span id="quickSpeed">0</span> <small>km/h</small></strong></div>
+      <button id="quickPauseButton" type="button" aria-label="Pause race">Ⅱ <span>PAUSE</span></button>
+    </div>
+    <div id="quickCountdown" hidden aria-live="assertive"></div>
+    <section id="quickFinished" class="quick-results" hidden aria-label="Race results">
+      <div class="quick-results-kicker">RACE RESULTS</div>
+      <h1>FINISHED</h1>
+      <p id="quickResultsTrack" class="quick-track-detail"></p>
+      <p id="quickResultsStatus"></p>
+      <ol id="quickResultsList" aria-label="Finishing order and race times"></ol>
+      <div id="quickChampionshipSummary" class="quick-championship" hidden><strong>CHAMPIONSHIP STANDINGS</strong><ol id="quickChampionshipStandings"></ol><p id="quickChampionshipStatus"></p></div>
+      <div id="quickResultsActions" class="quick-results-actions" hidden>
+        <button id="quickResultsNext" type="button" hidden>Next race <span>&middot; A / Enter</span></button>
+        <button id="quickResultsReplay" type="button">Race again <span>· X / Enter</span></button>
+        <button id="quickResultsExit" type="button">Back to menu <span>· B / Esc</span></button>
+      </div>
+    </section>
+    <div id="quickPauseOverlay" hidden>
+      <div class="quick-pause-card" role="dialog" aria-label="Race paused">
+        <div class="quick-pause-kicker">TUR</div>
+        <h1>PAUSED</h1>
+        <p id="quickPauseTrack" class="quick-track-detail"></p>
+        <p>Take a breath. The race is waiting.</p>
+        <button id="quickResume" class="quick-primary" type="button">Resume race</button>
+        <button id="quickSettings" type="button">Camera &amp; race settings</button>
+        <button id="quickTouchControls" type="button" aria-pressed="false">On-screen controls: Off</button>
+        <button id="quickFullscreen" type="button">Enter fullscreen</button>
+        <p id="quickFullscreenStatus" class="quick-performance-help" aria-live="polite"></p>
+        <button id="quickStatsFps" type="button" aria-pressed="false">FPS: Off</button>
+        <button id="quickStatsTriangles" type="button" aria-pressed="false">Track triangles: Off</button>
+        <button id="quickStatsRoute" type="button" aria-pressed="false">Route diagnostics: Off</button>
+        <button id="quickRestart" type="button">Restart race</button>
+        <button id="quickExit" type="button">Back to menu</button>
+        <p class="quick-performance-help">Track triangles include terrain, scenery and markings; cars and tyre marks are excluded.</p>
+        <small>D-pad / arrows to choose · A / Enter to select<br>Menu / Start or P to resume · Y or Esc to leave</small>
+      </div>
+    </div>
+  </section>
+  <aside id="racePerformanceHud" class="race-performance" hidden aria-label="Performance statistics">
+    <div id="racePerformanceFpsRow" hidden><span>FPS</span><strong id="racePerformanceFps">—</strong></div>
+    <div id="racePerformanceTrianglesRow" hidden><span>TRACK TRIANGLES</span><strong id="racePerformanceTriangles">—</strong></div>
+    <section id="raceRouteDiagnostics" class="race-route-diagnostics" hidden aria-label="Route diagnostics">
+      <div><span>CAR ON</span><strong id="raceRouteContact">&mdash;</strong></div>
+      <div><span>ROUTE SECTION</span><strong id="raceRouteCursor">&mdash;</strong></div>
+      <div><span>RECOVERY SECTION</span><strong id="raceRouteRecovery">&mdash;</strong></div>
+      <div><span>LAST REJOIN</span><strong id="raceRouteRejoin">None</strong></div>
+      <div><span>CHECKPOINTS</span><strong id="raceRouteCheckpoint">&mdash;</strong></div>
+      <div><span>NEXT LINE</span><strong id="raceRouteNext">&mdash;</strong></div>
+      <div><span>LAST LAP ISSUE</span><strong id="raceRouteIssue">None</strong></div>
+    </section>
+  </aside>
+  <aside id="driveHud" hidden aria-label="Test drive controls">
+    <h2>TEST DRIVE <button id="exitDrive" type="button">Back to editor · Y / Esc</button></h2>
+    <div class="drive-speed"><strong id="driveSpeed">0</strong><span>km/h</span><span id="driveState">Ready</span></div>
+    <section class="race-hud" aria-label="Race timing">
+      <div class="race-heading"><strong id="raceMode">Free drive</strong><span id="raceProgress"></span></div>
+      <div id="raceTime" class="race-time">0:00.000</div>
+      <div class="race-times"><span>Last <strong id="raceLast">—</strong></span><span>Session best <strong id="raceBest">—</strong></span></div>
+      <p id="raceStatus" class="help" role="status"></p><p id="raceRival" class="help" role="status" hidden></p><p id="raceStandings" class="help race-standings" hidden></p>
+      <details class="drive-details" id="aiDiagnostics" hidden>
+        <summary>AI car diagnostics</summary>
+        <label class="field">Inspect car <select id="aiDiagnosticCar" aria-label="AI car to inspect"></select></label>
+        <label class="field">Assign personality <select id="aiDiagnosticPersonality" aria-label="Personality for the selected AI car"></select></label>
+        <p id="aiDiagnosticPersonalityStatus" class="help"></p>
+        <label class="field"><input id="aiDiagnosticWatch" type="checkbox"> Follow selected AI with camera</label>
+        <label class="field"><input id="aiDiagnosticGuide" type="checkbox"> Show steering target on track</label>
+        <p class="help">The cyan marker and line show where this car is steering. Your controls still drive your car. Section numbers match the editor; recovery history records recent automatic resets.</p>
+        <textarea id="aiDiagnosticReadout" class="ai-diagnostic-readout" rows="12" readonly aria-label="AI diagnostic report"></textarea>
+        <button id="aiDiagnosticCopy" type="button">Copy diagnostic report</button>
+        <p id="aiDiagnosticStatus" class="help" role="status"></p>
+        <p class="help">Pause to inspect a moment. The copied report includes the track code and recent driving samples.</p>
+      </details>
+      <label class="field">Race direction <select id="driveRaceDirection"><option value="normal">Normal · track order</option><option value="reverse">Reverse · opposite direction</option></select></label>
+      <label class="field">Starting grid position <select id="driveGridPosition"><option value="1">1 · Front row · left</option><option value="2">2 · Front row · right</option><option value="3">3 · Row 2 · left</option><option value="4">4 · Row 2 · right</option><option value="5">5 · Row 3 · left</option><option value="6">6 · Row 3 · right</option><option value="7">7 · Row 4 · left</option><option value="8">8 · Row 4 · right</option></select></label>
+      <button id="restartTimedRun" class="editor-apply" type="button">Restart at grid</button>
+      <p class="help">In AI races you start behind the whole field. In solo timed runs, changing grid position restarts the attempt. Changing direction starts a new timing session.</p>
+      <label class="field"><input id="driveShowCheckpoints" type="checkbox" checked> Show checkpoint markings</label>
+      <label class="field"><input id="driveShowStartFinish" type="checkbox" checked> Show start / finish markings</label>
+    </section>
+    <div class="drive-contacts" aria-label="Suspension contacts"><span id="contactFL">FL</span><span id="contactFR">FR</span><span id="contactRL">RL</span><span id="contactRR">RR</span></div>
+    <p id="driveAngles" class="help"></p><p id="driveImpacts" class="help"></p>
+    <p id="driveSurface" class="help"></p>
+    <p id="driveRoute" class="help">Track section · —</p>
+    <details class="drive-details"><summary>Performance display</summary>
+      <label class="field"><input id="driveStatsFps" type="checkbox"> Show FPS</label>
+      <label class="field"><input id="driveStatsTriangles" type="checkbox"> Show track triangles</label>
+      <label class="field"><input id="driveStatsRoute" type="checkbox"> Show route diagnostics</label>
+      <p class="help">Track triangles include the road, terrain, scenery and race markings, but exclude cars and tyre marks.</p>
+    </details>
+    <label class="field"><input id="driveWireframe" type="checkbox"> Track wireframe</label>
+    <details class="drive-details"><summary>Tyre marks</summary>
+      <label class="field"><input id="driveShowSkids" type="checkbox" checked> Show tyre marks</label>
+      <button id="driveClearSkids" type="button">Clear tyre marks</button>
+      <p class="help">Sliding, wheelspin and hard braking leave fading marks. Loose ground leaves darker tracks; ice leaves faint scratches. Marks pause with the game.</p>
+    </details>
+    <button id="recoverCar" class="editor-apply" type="button">Recover to track · Q / Select</button>
+    <div class="actions"><button id="resetCar" type="button">Reset to spawn · R</button><button id="pauseCar" type="button">Pause</button></div>
+    <label class="field">Vehicle setup <select id="driveVehiclePreset"></select></label>
+    <p id="driveVehicleSummary" class="help override-note"></p>
+    <details class="drive-details" id="driveVehicleSettingsPanel"><summary>Engine, tyres, drive, suspension &amp; steering</summary>
+      <label class="field">Engine <select id="driveVehicleEngine"></select></label>
+      <label class="field">Tyres <select id="driveVehicleTyres"></select></label>
+      <label class="field">Drivetrain <select id="driveVehicleDrivetrain"></select></label>
+      <label class="field">Suspension <select id="driveVehicleSuspension"></select></label>
+      <label class="field">Steering upgrade <select id="driveVehicleSteering"></select></label>
+      <label class="field">Steering assist <select id="driveVehicleAssist"></select></label>
+      <p class="help">Steering upgrades sharpen turn-in and improve cornering. Assist helps hold grip and catch slides, while allowing deliberate handbrake turns and power donuts.</p>
+      <p id="driveVehiclePartsSummary" class="help"></p>
+      <p class="help">Changing setup restarts at the current starting position and clears session times. Engine pull compares acceleration with Balanced; surfaces and hills affect actual speed.</p>
+      <p class="help">Normal brake: all four tyres. Handbrake: rears. RWD power donut: full throttle + tight steering, without the handbrake.</p>
+    </details>
+    <label class="field">Car size <span id="driveScaleValue" class="sliderValue">50%</span><input id="driveScale" type="range" min="50" max="150" value="50" step="5"></label>
+    <p id="driveDimensions" class="help"></p>
+    <p class="help">Select/View or Q recovers stationary on the correct road, facing along the track. After a missed jump, recovery looks for a safe run-up before the gap; race time keeps running. If there is too little safe approach, it uses the last safe position. Landing on an unrelated road does not replace it. Reset to spawn cancels the attempt. Changing size clears session times.</p>
+    <div class="drive-camera-grid">
+      <label class="field">Camera view <select id="driveCamera"><option value="overview">Angled overview</option><option value="chase">Chase · behind car</option><option value="top">Top-down</option><option value="topChase">Top-down chase</option></select></label>
+      <label class="field">Projection <select id="driveProjection"><option value="perspective">Perspective</option><option value="orthographic">Orthographic</option></select></label>
+    </div>
+    <label class="field">Camera behaviour <select id="driveTracking"><option value="follow">Follow · fixed direction</option><option value="turn">Follow · turn with car</option><option value="fixed">Trackside · fixed position</option></select></label>
+    <label class="field">Camera zoom <span id="driveZoomValue" class="sliderValue">100%</span><input id="driveZoom" type="range" min="20" max="250" step="1" value="100"></label>
+    <p class="help">Lower zoom shows more track. Use the mouse wheel too.</p>
+    <div class="drive-camera-grid">
+      <label class="field">Camera preset <select id="drivePreset"><option value="view">Current view defaults</option><option value="custom" disabled>Custom experiment</option><option value="arcade">Arcade overhead</option><option value="wide">Wide circuit</option><option value="low">Low chase</option><option id="savedCameraOption" value="saved" disabled>My saved camera</option></select></label>
+      <button id="saveCamera" type="button">Save camera</button>
+    </div>
+    <p id="cameraSaveStatus" class="help" role="status"></p>
+    <details class="drive-details"><summary>Camera tuning</summary>
+      <label class="field">Viewing angle <span id="driveTiltValue" class="sliderValue"></span><input id="driveTilt" type="range" min="15" max="85" step="0.1" value="46"></label>
+      <label class="field">Camera distance <span id="driveDistanceValue" class="sliderValue"></span><input id="driveDistance" type="range" min="6" max="80" step="0.1" value="26"></label>
+      <label class="field">Orbit around car <span id="driveOrbitValue" class="sliderValue"></span><input id="driveOrbit" type="range" min="-180" max="180" step="1" value="0"></label>
+      <label class="field">Aim ahead / behind <span id="driveAheadValue" class="sliderValue"></span><input id="driveAhead" type="range" min="-12" max="20" step="0.5" value="0"></label>
+      <label class="field">Aim sideways (+ right) <span id="driveSideValue" class="sliderValue"></span><input id="driveSide" type="range" min="-12" max="12" step="0.5" value="0"></label>
+      <label class="field">Movement smoothing <span id="driveSmoothValue" class="sliderValue"></span><input id="driveSmooth" type="range" min="0" max="100" step="5" value="50"></label>
+      <label class="field"><input id="driveSpeedLook" type="checkbox"> Look farther ahead with speed (turning and trackside views)</label>
+      <label class="field"><input id="driveMarker" type="checkbox"> Show car locator</label>
+      <div class="actions"><button id="recenterCamera" type="button">Recenter orbit</button><button id="resetCamera" type="button">Reset view setup</button></div>
+      <p class="help">Top-down stays vertical. Distance moves the camera; orthographic image size is controlled by zoom. Aim follows the driver's left/right and forward direction.</p>
+    </details>
+    <p id="controllerStatus" class="help" role="status">Connect a controller and press a button.</p>
+    <details class="drive-details" id="driveEngineSoundPanel"><summary>Driving sound</summary>
+      <label class="field"><input id="driveEngineSound" type="checkbox" checked> Enable driving sound</label>
+      <label class="field">Master volume <span id="driveEngineVolumeValue" class="sliderValue">35%</span><input id="driveEngineVolume" type="range" min="0" max="100" value="35" step="1"></label>
+      <label class="field"><input id="driveTyreSound" type="checkbox" checked> Tyre &amp; surface sounds</label>
+      <label class="field"><input id="driveRivalSound" type="checkbox" checked> Nearby AI car sounds</label>
+      <label class="field">Tyre level <span id="driveTyreVolumeValue" class="sliderValue">65%</span><input id="driveTyreVolume" type="range" min="0" max="100" value="65" step="1"></label>
+      <button id="unlockEngineSound" class="editor-apply" type="button">Enable / retry sound</button>
+      <p id="driveEngineSoundStatus" class="help" role="status"></p>
+      <p class="help">Engine pitch follows speed, throttle and wheelspin. Nearby AI cars get quieter with distance. Master volume also controls countdown, checkpoint and lap announcements.</p>
+    </details>
+    <details class="drive-details"><summary>Controller &amp; controls</summary>
+      <label class="field"><input id="enableController" type="checkbox" checked> Enable Xbox-style controller</label>
+      <label class="field">Input sampling <select id="driveControllerRate"><option value="60">Standard · 60 reads/second</option><option value="30">Compatibility · 30 reads/second</option></select></label>
+      <p class="help"><a class="controller-link" href="controller-check.html" target="_blank" rel="noopener">Open lightweight controller check ↗</a></p>
+    <p class="help">RT accelerate · LT brake / reverse · left stick steer<br>Right stick orbit / tilt · D-pad move aim point<br>LB / RB zoom out / in · right-stick click recenter<br>Select / View recover to track · A handbrake<br>X reset to spawn · Y return to editor<br>Menu pause · choose views in Camera view</p>
+      <p class="help">W / ↑ accelerate · S / ↓ brake and reverse<br>A / D or ← / → steer · Space handbrake<br>Q recover · P pause · R reset to spawn · Esc editor</p>
+      <p class="help">Handbrake turn: build speed, steer and hold A / Space briefly, then release and countersteer. Donut: hold accelerator + steering + handbrake. Loose surfaces slide more easily; mud makes the turn much slower.</p>
+      <p class="help">Handbrake practice · wide pads in Examples provides room to experiment. Start timed run places the car inside the first gravel pad.</p>
+    </details>
+    <label class="field"><input id="showSuspension" type="checkbox"> Show suspension probes</label>
+  </aside>
+  <div id="carLocator" hidden aria-hidden="true"><span>▲</span></div>
+  <aside id="aiWorkshopHud" class="ai-workshop-hud" hidden aria-label="AI workshop controls">
+    <div class="ai-workshop-heading"><div><small>TUR LAB</small><h2>AI workshop</h2></div><button id="aiWorkshopExit" type="button">&larr; Main menu</button></div>
+    <div class="ai-workshop-actions"><button id="aiWorkshopPause" type="button">Pause</button><button id="aiWorkshopRestart" type="button">Restart race</button></div>
+    <details class="drive-details"><summary>Performance display</summary>
+      <label class="field"><input id="workshopStatsFps" type="checkbox"> Show FPS</label>
+      <label class="field"><input id="workshopStatsTriangles" type="checkbox"> Show track triangles</label>
+      <label class="field"><input id="workshopStatsRoute" type="checkbox"> Show route diagnostics</label>
+      <p class="help">Route diagnostics follow the selected AI car.</p>
+      <p class="help">Track triangles include the road, terrain, scenery and race markings, but exclude cars and tyre marks.</p>
+    </details>
+    <p id="aiWorkshopRace" class="help" role="status"></p>
+    <label class="field">Selected driver <select id="aiWorkshopCar"></select></label>
+    <label class="field">Personality <select id="aiPersonalityList" aria-label="Choose personality for selected driver"></select></label>
+    <p id="aiCurrentPersonality" class="help" role="status"></p>
+    <button id="aiPersonalityLoad" type="button">Apply personality to selected car</button>
+    <div class="ai-workshop-actions"><button id="aiFollow" type="button" aria-pressed="true">Follow selected</button><button id="aiFree" type="button" aria-pressed="false">Free camera</button></div>
+    <label class="field">Camera view <select id="aiWorkshopCamera"><option value="overview">Angled overview</option><option value="chase">Chase</option><option value="top">Top-down</option><option value="topChase">Top-down chase</option></select></label>
+    <label class="field">Projection <select id="aiWorkshopProjection"><option value="perspective">Perspective</option><option value="orthographic">Orthographic</option></select></label>
+    <p class="help">Drag to orbit; right-drag pans in free camera. Mouse wheel zooms. Right stick also orbits.</p>
+    <label class="field"><input id="aiWorkshopGuide" type="checkbox"> Show steering target</label>
+    <p id="aiWorkshopSummary" class="help"></p>
+    <details class="drive-details"><summary>Driver diagnostics</summary><pre id="aiWorkshopInfo" class="ai-workshop-info"></pre></details>
+    <h3>Driver personality</h3><p class="help">Changes apply to the selected car immediately. Restart keeps your edits.</p>
+    <p class="help">Line: −1 to +1 across the road. Speed and corner: 1.00 is the baseline for the selected difficulty. Higher brake lateness means braking later; handbrake 0 disables it. The car's engine and tyres still determine what it can actually do.</p>
+    <label class="field">Preferred line <output id="aiLaneValue"></output><input id="aiLane" type="range" min="-1" max="1" step=".05"></label>
+    <label class="field">Straight speed <output id="aiSpeedValue"></output><input id="aiSpeed" type="range" min=".7" max="1.2" step=".01"></label>
+    <label class="field">Corner speed <output id="aiCornerValue"></output><input id="aiCorner" type="range" min=".6" max="1.6" step=".01"></label>
+    <label class="field">Brake lateness <output id="aiBrakeValue"></output><input id="aiBrake" type="range" min=".4" max="2" step=".05"></label>
+    <label class="field">Corner look-ahead (m) <output id="aiLookValue"></output><input id="aiLook" type="range" min="8" max="25" step="1"></label>
+    <label class="field">Steering response <output id="aiSteerValue"></output><input id="aiSteer" type="range" min=".8" max="2.2" step=".05"></label>
+    <label class="field">Overtaking <output id="aiOvertakeValue"></output><input id="aiOvertake" type="range" min="0" max="1" step=".05"></label>
+    <label class="field">Handbrake use <output id="aiHandbrakeValue"></output><input id="aiHandbrake" type="range" min="0" max="1" step=".05"></label>
+    <div class="ai-workshop-actions"><button id="aiDefault" type="button">Restore driver defaults</button><button id="aiApplyAll" type="button">Apply to all cars</button></div>
+    <h3>Save and share personalities</h3>
+    <label class="field">Name <input id="aiPersonalityName" maxlength="60" type="text" placeholder="Personality name"></label>
+    <div class="ai-workshop-actions"><button id="aiPersonalitySave" type="button">Save / update</button><button id="aiPersonalityDelete" type="button">Delete selected</button></div>
+    <div class="ai-workshop-actions"><button id="aiPersonalityExport" type="button">Export all</button><button id="aiPersonalityImportButton" type="button">Import</button><input id="aiPersonalityImport" type="file" accept=".json,application/json" hidden></div>
+    <p id="aiPersonalityStatus" class="help" role="status"></p>
+  </aside>
+  <div id="message" role="status" aria-live="polite">Loading track preview…</div>
 </body>
 </html>
