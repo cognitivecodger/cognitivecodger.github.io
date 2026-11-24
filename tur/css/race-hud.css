@@ -78,10 +78,11 @@ body.driving:not(.quick-race) .race-performance{right:360px}body.ai-workshop .ra
   .touch-actions button{display:flex;flex-direction:column;gap:1px;min-height:55px;padding:4px;border:1px solid #8fe6ee99;border-radius:13px;background:#173b54e8;color:#fff}
   .touch-actions button strong{font-size:20px;line-height:1}.touch-actions button small{font-size:8px;font-weight:900;letter-spacing:.03em}
   .touch-actions .touch-brake{background:#74393be8;border-color:#ef9c90}.touch-actions .touch-accelerate{background:#117a78ed;border-color:#7bf3d7}
+  .touch-actions .touch-recover{grid-column:1/-1;min-height:40px;flex-direction:row;justify-content:center;gap:7px;background:#4b4875ed;border-color:#b8b2ed}
   .touch-actions button.touch-active{filter:brightness(1.55);transform:scale(.95)}
   .touch-pause-test{display:none;position:absolute;right:max(12px,env(safe-area-inset-right));top:max(12px,env(safe-area-inset-top));min-height:48px;border-radius:10px;font-size:16px}
   body.touch-controls-visible.driving:not(.quick-race):not(.ai-workshop) .touch-pause-test{display:flex;gap:6px}body.touch-controls-visible.driving:not(.quick-race):not(.ai-workshop):not(.touch-drive-paused) #driveHud{display:none!important}
   body.touch-drive-paused:not(.quick-race) #driveHud{z-index:35}
-  body.touch-controls-visible .quick-timing{bottom:calc(150px + env(safe-area-inset-bottom));max-height:25vh;overflow:hidden}
+  body.touch-controls-visible .quick-timing{bottom:calc(200px + env(safe-area-inset-bottom));max-height:25vh;overflow:hidden}
   @media (max-height:500px){body.touch-controls-visible .quick-timing{left:50%;bottom:8px;transform:translateX(-50%);width:150px;max-height:95px;padding:6px;overflow:auto;pointer-events:auto}body.touch-controls-visible .quick-timing-best,body.touch-controls-visible .quick-timing-total{font-size:9px}body.touch-controls-visible .quick-standings{max-height:35vh;overflow:hidden}}
 }
