@@ -1,0 +1,134 @@
+{
+  "format": "TrackShift Pack",
+  "version": 1,
+  "id": "48b46b44-63da-4a70-90da-bcb72ff098c1",
+  "name": "TUR Championship",
+  "tracks": [
+    {
+      "name": "Track 1",
+      "code": "TS2|(TL=10,TW=8,TD=0.25,LH=4,ES=auto,GC=1,GY=0,GG=0.55,GD=3,OC=0,SD=0.63,ENV=grasslands,PQ=0.63,TR=0.54,PZ=100,RD=0.66,BU=0.58,TI=0,TO=0.23)|(AA=0,AH=0)|(FL=2.6,DA=0,DH=0,SF=1,RP=0.75)|(FL=3,DA=0,DH=0)|(FL=2.6,DA=0,DH=0,ES=fence)|(FL=1.5,DA=90,DH=0.25,SE=0,WG=1,ES=default)|(FL=1.5,DA=90,DH=0.25,SE=0,SS=0,WG=1)|(FL=1.4,DA=90,DH=0.25,SS=0,WG=1)|(FL=1.6,DA=0,DH=0.0625,WG=1,SO=-1,S0=0,S1=2)|(FL=0.4,DA=0,DH=0.1875,WG=1,SO=-1,S0=0.6666666666666666,S1=1.3333333333333333)|(GL=1,DA=0,DH=-0.25)|(FL=1,DA=0,DH=-0.75,SI=-1,WG=1,ES=fence)|(FL=2.4,DA=-90,DH=0,CP=1,RP=0.5,ES=default)|(FL=2.4,DA=-90,DH=0)|(FL=2.4,DA=-90,DH=0)|(FL=3.2,DA=0,DH=0,ES=fence)|(FL=2,DA=90,DH=0,ES=default)|(FL=1.1,DA=0,DH=0)|(FL=1.65,DA=45,DH=0)|(FL=1.65,DA=45,DH=0)|(FL=1.65,DA=45,DH=0,CP=2,RP=0.5)|(FL=2,DA=0,DH=0)|(FL=3,DA=0,DH=0)|(FL=3,DA=0,DH=0)|(FL=1.5,DA=-67.5,DH=0)|(FL=1.5,DA=-67.5,DH=0)|(FL=1.2,DA=0,DH=0)|AC",
+      "options": {
+        "turnSegments": 12,
+        "longitudinalSegments": 12,
+        "slopeEaseStart": true,
+        "slopeEaseEnd": true,
+        "slopeCurveStrength": 1,
+        "bankCurve": 0,
+        "bankTransition": 1,
+        "bankWidthSegments": 8,
+        "widthSegments": 8,
+        "curvedSlopeWidthSegments": 12,
+        "smoothRoad": true
+      },
+      "trackId": "65cd6a31-f14d-4dc9-8981-10f5944bcc76"
+    },
+    {
+      "name": "Track 2",
+      "code": "TS2|(TL=10,TW=8,TD=0.25,LH=4,ES=auto,GC=1,GY=0,GG=0.55,GD=3,OC=0,SD=0.53,PZ=100,PQ=0.37,TR=0.67,RD=0.52,BU=0.5,TI=0.37,TO=0.47)|(AA=0,AH=0)|(FL=7,DA=0,DH=0)|(FL=2,DA=90,DH=0)|(FL=6,DA=0,DH=0.5,WG=1)|(FL=2,DA=90,DH=0,WG=1)|(FL=3,DA=0,DH=0,CP=1,RP=0.5,WG=1)|(FL=3,DA=0,DH=-0.5,WG=1)|(FL=2,DA=90,DH=0)|(FL=5,DA=0,DH=0)|(FL=2,DA=90,DH=0)|(FL=5,DA=0,DH=0)|(FL=2,DA=90,DH=0)|(FL=4,DA=0,DH=-0.5)|(FL=2,DA=90,DH=0)|(FL=1,DA=0,DH=0)|(FL=3,DA=0,DH=0.5)|(FL=2,DA=90,DH=0)|(FL=3,DA=0,DH=0,CP=2,RP=0.5)|(FL=2,DA=90,DH=0)|(FL=3,DA=0,DH=0)|(FL=2,DA=90,DH=0)|(FL=2,DA=0,DH=0.5,WG=1)|(FL=2,DA=90,DH=0,WG=1)|(FL=2,DA=0,DH=-0.5,WG=1)|(FL=2,DA=90,DH=0)|(FL=1,DA=0,DH=0)|(FL=2,DA=90,DH=0)|(FL=1,DA=0,DH=0)|(FL=2,DA=90,DH=0)|(FL=2,DA=0,DH=0)|(FL=3,DA=0,DH=0)|(FL=2,DA=90,DH=0)|(FL=4,DA=0,DH=0,SF=1,RP=0.5)|(FL=2,DA=90,DH=0)|(FL=8,DA=0,DH=0)|AC",
+      "options": {
+        "turnSegments": 12,
+        "longitudinalSegments": 12,
+        "slopeEaseStart": true,
+        "slopeEaseEnd": true,
+        "slopeCurveStrength": 1,
+        "bankCurve": 0,
+        "bankTransition": 1,
+        "bankWidthSegments": 8,
+        "widthSegments": 8,
+        "curvedSlopeWidthSegments": 12,
+        "smoothRoad": true
+      },
+      "trackId": "dca2761a-a3ec-409d-8161-59f8440919e7"
+    },
+    {
+      "name": "Track 3",
+      "code": "TS2|(TL=10,TW=8,TD=0.25,LH=4,TI=0,TO=0,ES=auto,GC=1,GY=0,GG=0.55,GD=3,OC=0,SD=0.5,PQ=0.48,PZ=100,TR=0.41,RD=0.55,BU=0.46)|(AA=0,AH=0)|(FL=7,DA=0,DH=0)|(FL=2,DA=135,DH=0)|(FL=3,DA=0,DH=0,CP=2,RP=0.5)|(FL=2,DA=135,DH=0)|(FL=2,DA=-180,DH=0)|(FL=1,DA=0,DH=0)|(FL=1.4,DA=0,DH=0)|(FL=0.6,DA=0,DH=0)|(FL=2,DA=90,DH=0)|(FL=2,DA=90,DH=0)|(FL=2,DA=90,DH=0)|(FL=2,DA=0,DH=0)|(FL=1.4,DA=45,DH=0)|(FL=1.4,DA=45,DH=0)|(FL=1)|(FL=2,DA=-90,DH=0)|(FL=2,DA=0,DH=0,SF=1,RP=0.5)|(FL=3,DA=-135,DH=0)|(FL=3,DA=0,DH=0)|(FL=1,DA=0,DH=0.5)|(FL=2,DA=0,DH=0)|(FL=1,DA=0,DH=-0.5)|(FL=1)|(FL=3,DA=0,DH=0)|(FL=4,DA=180,DH=0)|(FL=2,DA=0,DH=-0.5)|(FL=1)|(FL=3,DA=135,DH=0,CP=1,RP=0.5)|(FL=2.7,DA=0,DH=0)|(FL=2,DA=-60,DH=0.5)|(FL=3,DA=150,DH=0)|(FL=1,DA=45,DH=0)|AC",
+      "options": {
+        "turnSegments": 12,
+        "longitudinalSegments": 12,
+        "slopeEaseStart": true,
+        "slopeEaseEnd": true,
+        "slopeCurveStrength": 1,
+        "bankCurve": 0,
+        "bankTransition": 1,
+        "bankWidthSegments": 8,
+        "widthSegments": 8,
+        "curvedSlopeWidthSegments": 12,
+        "smoothRoad": true
+      },
+      "trackId": "b8682b91-adcd-4970-805b-36962ca8f335"
+    },
+    {
+      "name": "Track 4",
+      "code": "TS2|(TL=10,TW=8,TD=0.25,LH=4,ES=auto,GC=1,GY=0,GG=0.55,GD=3,OC=0,TI=0.2,TO=0,SD=0.43,ENV=grasslands,PQ=0.29,PZ=100,TR=0.59,RD=0.45,BU=0.59)|(AA=180,AH=0)|(FL=5,DA=0,DH=0)|(FL=1.4,DA=90,DH=0)|(FL=2,DA=0,DH=0)|(FL=1,DA=0,DH=0.5,ES=fence)|(FL=1)|(FL=1,DA=0,DH=-0.5)|(FL=1,DA=0,DH=0,ES=default)|(FL=1.4,DA=90,DH=0)|(FL=1)|(FL=1.4,DA=90,DH=0)|(FL=1)|(FL=1,DA=0,DH=0.5,ES=fence)|(FL=1)|(FL=1,DA=0,DH=-0.5,CP=1,RP=0.5)|(FL=1)|(FL=1.4,DA=-90,DH=0,ES=default)|(FL=1)|(FL=1.4,DA=-90,DH=0)|(FL=1.6,DA=0,DH=0)|(FL=1.4,DA=-90,DH=0)|(FL=5.6,DA=0,DH=0)|(FL=1.4,DA=-90,DH=0)|(FL=6,DA=0,DH=0)|(FL=3,DA=-135,DH=0,CP=2,RP=0.5)|(FL=1.1,DA=0,DH=-0.5)|(FL=1,DA=-45,DH=0)|(FL=0.65,DA=0,DH=0)|(FL=0.65,DA=0,DH=0,CG=1)|(FL=0.85,DA=0,DH=0)|(FL=0.65,WG=0,CG=1,DA=0,DH=0)|(FL=2.2,DA=0,DH=0)|(FL=0.65,DA=0,DH=0,CG=1)|(FL=0.9,DA=0,DH=0)|(FL=0.65,DA=0,DH=0,CG=1)|(FL=0.6,DA=0,DH=0)|(FL=1,DA=0,DH=0.5)|(FL=1.8,DA=0,DH=0)|(FL=3,DA=135,DH=0)|(FL=4,DA=0,DH=0)|(FL=1,DA=45,DH=0)|(FL=5,DA=0,DH=0,SF=1,RP=0.5)|AC",
+      "options": {
+        "turnSegments": 12,
+        "longitudinalSegments": 12,
+        "slopeEaseStart": true,
+        "slopeEaseEnd": true,
+        "slopeCurveStrength": 1,
+        "bankCurve": 0,
+        "bankTransition": 1,
+        "bankWidthSegments": 8,
+        "widthSegments": 8,
+        "curvedSlopeWidthSegments": 12,
+        "smoothRoad": true
+      },
+      "trackId": "d6da0e1f-77fa-43c7-bcfe-4007468d525a"
+    },
+    {
+      "name": "Track 5",
+      "code": "TS2|(TL=10,TW=8,TD=0.25,LH=4,TI=0.42,TO=0.53,ES=auto,GC=1,GY=0,GG=0.55,GD=3,OC=0,SD=0.57,PQ=0.56,PZ=100,TR=0.47,RD=0.53,BU=0.59)|(AA=0,AH=0)|(FL=2.5,DA=0,DH=0,SF=1,RP=0.5)|(FL=1,DA=90,DH=0)|(FL=2,DA=0,DH=0)|(FL=1,DA=0,DH=0.5)|(FL=1,DA=90,DH=0)|(FL=2,DA=0,DH=0)|(FL=1,DA=-90,DH=0)|(FL=3,DA=0,DH=0)|(FL=1,DA=0,DH=0.5)|(FL=1,DA=-90,DH=0)|(FL=1)|(FL=1,DA=-90,DH=0)|(FL=2,DA=0,DH=-1)|(FL=4,DA=0,DH=0)|(FL=1,DA=-90,DH=0)|(FL=1)|(FL=1,DA=0,DH=0.5,CP=1,RP=0.5)|(FL=1)|(FL=1,DA=-90,DH=0)|(FL=2,DA=0,DH=0)|(FL=1,DA=0,DH=0.5)|(FL=1,DA=-90,DH=0)|(FL=4,DA=0,DH=0)|(FL=1,DA=90,DH=0)|(FL=1,DA=0,DH=-0.5)|(FL=2,DA=0,DH=0)|(FL=1,DA=90,DH=0)|(FL=1)|(FL=1,DA=90,DH=0)|(FL=4,DA=0,DH=0)|(FL=1,DA=90,DH=0)|(FL=1)|(FL=1,DA=0,DH=-0.5)|(FL=1,DA=90,DH=0,CP=2,RP=0.5)|(FL=5,DA=0,DH=0)|(FL=1,DA=90,DH=0)|(FL=4,DA=0,DH=0)|(FL=1,DA=90,DH=0)|(FL=10,DA=0,DH=0)|AC",
+      "options": {
+        "turnSegments": 12,
+        "longitudinalSegments": 12,
+        "slopeEaseStart": true,
+        "slopeEaseEnd": true,
+        "slopeCurveStrength": 1,
+        "bankCurve": 0,
+        "bankTransition": 1,
+        "bankWidthSegments": 8,
+        "widthSegments": 8,
+        "curvedSlopeWidthSegments": 12,
+        "smoothRoad": true
+      },
+      "trackId": "5b85759c-fd01-4bef-a39f-6e0d4272c3df"
+    },
+    {
+      "name": "Track 6",
+      "code": "TS2|(TL=10,TW=8,TD=0.25,LH=4,TI=0.34,ES=auto,GC=1,GY=0,GG=0.55,GD=3,OC=0,SD=0.44,PQ=0.69,PZ=100,TR=0.74,RD=0.62,BU=0.63,TO=0.21)|(AA=0,AH=0)|(FL=3,DA=0,DH=0)|(FL=1.4,DA=0,DH=0)|(FL=1.4,DA=90,DH=0)|(FL=2,DA=0,DH=0)|(FL=1.4,DA=90,DH=0)|(FL=1.4,DA=0,DH=0)|(FL=1.4,DA=-90,DH=0)|(FL=2,DA=0,DH=0)|(FL=1.4,DA=-90,DH=0)|(FL=1.4,DA=-90,DH=0)|(FL=1.8,DA=0,DH=0.5)|(FL=1.8,DA=0,DH=0)|(FL=1.9,DA=0,DH=-0.5)|(FL=1.8,DA=0,DH=0)|(FL=1.4,DA=90,DH=0)|(FL=1)|(FL=1.4,DA=90,DH=0)|(FL=4.6,DA=0,DH=0)|(FL=1.4,DA=90,DH=0)|(FL=1.4,DA=-90,DH=0)|(FL=3.2,DA=0,DH=0)|(FL=1.4,DA=90,DH=0)|(FL=1.2,DA=-90,DH=0)|(FL=1.2,DA=-90,DH=0)|(FL=1.4,DA=90,DH=0)|(FL=1)|(FL=1.4,DA=90,DH=0)|(FL=4,DA=0,DH=0)|(FL=1.4,DA=90,DH=0)|(FL=0.1,DA=0,DH=0)|(FL=1.4,DA=90,DH=0)|(FL=0.8,DA=-45,DH=0)|(FL=1.3,DA=0,DH=0)|(FL=1,DA=-45,DH=0)|(FL=0.6,DA=0,DH=0)|(FL=1.4,DA=90,DH=0)|(FL=1.6,DA=0,DH=0.5)|(FL=1)|(FL=1,DA=0,DH=-0.5)|(FL=1.4,DA=90,DH=0)|(FL=2.2,DA=0,DH=0)|(FL=1.4,DA=90,DH=0)|(FL=1,DA=0,DH=0.5)|(FL=1)|(FL=1.7,DA=0,DH=-0.5)|(FL=1,DA=45,DH=0)|(FL=1.9,DA=0,DH=0)|(FL=1,DA=-45,DH=0)|(FL=1.4,DA=90,DH=0)|(FL=0.8,DA=0,DH=0)|(FL=1.4,DA=90,DH=0)|(FL=0.7,DA=0,DH=0)|(FL=1,DA=-90,DH=0)|(FL=0.5,DA=0,DH=0)|(FL=1,DA=-55,DH=0)|(FL=2.1,DA=0,DH=0)|(FL=2.4,DA=180,DH=0)|(FL=3.1,DA=-200,DH=0)|(FL=1.4,DA=-20,DH=0)|(FL=3,DA=185,DH=0)|AC",
+      "options": {
+        "turnSegments": 12,
+        "longitudinalSegments": 12,
+        "slopeEaseStart": true,
+        "slopeEaseEnd": true,
+        "slopeCurveStrength": 1,
+        "bankCurve": 0,
+        "bankTransition": 1,
+        "bankWidthSegments": 8,
+        "widthSegments": 8,
+        "curvedSlopeWidthSegments": 12,
+        "smoothRoad": true
+      },
+      "trackId": "fcc6232b-1008-4b50-b88e-630b44d24fff"
+    },
+    {
+      "name": "Track 7",
+      "code": "TS2|(TL=10,TW=8,TD=0.25,LH=4,TI=0.28,TO=0.17,ES=auto,GC=1,GY=0,GG=0.55,GD=3,OC=0,SD=0.4,PQ=0.6,PZ=100,TR=0.42,RD=0.27,BU=0.47,ENV=grasslands)|(AA=0,AH=0)|(FL=7.8,DA=0,DH=0)|(FL=2,DA=-90,DH=0)|(FL=1,DA=0,DH=0.5,WG=1)|(FL=1)|(FL=1,DA=0,DH=-0.5,WG=1)|(FL=2,DA=0,DH=0)|(FL=2,DA=-90,DH=0)|(FL=8,DA=0,DH=0)|(FL=2,DA=90,DH=0)|(FL=2,DA=90,DH=0)|(FL=10,DA=0,DH=0)|(FL=1,DA=0,DH=0.5,WG=1)|(FL=2,DA=90,DH=0)|(FL=1)|(FL=1,DA=0,DH=-0.5,WG=1)|(FL=2.8,DA=0,DH=0)|(FL=2,DA=90,DH=0)|(FL=5,DA=0,DH=0)|(FL=1,DA=0,DH=0.5,WG=1)|(FL=1)|(FL=1,DA=0,DH=-0.5,WG=1)|(FL=2,DA=90,DH=0)|(FL=2,DA=0,DH=0)|(FL=1,DA=0,DH=0.5,WG=1)|(FL=3.6,DA=0,DH=0)|(FL=1,DA=0,DH=-0.5,WG=1)|(FL=2,DA=90,DH=0)|(FL=1,DA=0,DH=0)|(FL=2,DA=90,DH=0)|(FL=1,DA=0,DH=0.5,WG=1)|(FL=3.6,DA=0,DH=0)|(FL=1)|(FL=2,DA=-90,DH=0)|(FL=3,DA=0,DH=0)|(FL=1,DA=-45,DH=0)|(FL=1,DA=0,DH=0)|(FL=1,DA=45,DH=0)|(FL=1)|(FL=1,DA=0,DH=-0.5,WG=1)|(FL=2,DA=-90,DH=0)|(FL=2,DA=-90,DH=0)|(FL=3.8,DA=0,DH=0)|(FL=1,DA=0,DH=0.5,WG=1)|(FL=2,DA=-90,DH=0)|(FL=1)|(FL=1.2,DA=0,DH=-0.5,WG=1)|(FL=1)|(FL=1.2,DA=0,DH=0.5,WG=1)|(FL=0.9,DA=0,DH=0)|(FL=1.8,DA=90,DH=0)|(FL=1,DA=0,DH=-0.5,WG=1)|(FL=2,DA=90,DH=0)|(FL=1.8,DA=0,DH=0)|(FL=2,DA=-90,DH=0)|(FL=1,DA=0,DH=0.5,WG=1)|(FL=1)|(FL=1,DA=0,DH=-0.5,WG=1)|(FL=2,DA=-90,DH=0)|(FL=2.8,DA=0,DH=0)|AC",
+      "options": {
+        "turnSegments": 12,
+        "longitudinalSegments": 12,
+        "slopeEaseStart": true,
+        "slopeEaseEnd": true,
+        "slopeCurveStrength": 1,
+        "bankCurve": 0,
+        "bankTransition": 1,
+        "bankWidthSegments": 8,
+        "widthSegments": 8,
+        "curvedSlopeWidthSegments": 12,
+        "smoothRoad": true
+      },
+      "trackId": "7c14a6bd-43db-43a3-8248-1dcae5829e3a"
+    }
+  ]
+}
