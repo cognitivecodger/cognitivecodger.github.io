@@ -46,10 +46,13 @@
         <p class="menu-intro">Build your own circuits, take them for a spin and share them with friends.</p>
         <div class="menu-actions"><button id="menuContinueChampionship" class="menu-primary" type="button" hidden><span>00</span> Continue championship <b>&rarr;</b></button><button id="menuChampionshipButton" type="button"><span>01</span> Championships <b>&rarr;</b></button><button id="menuQuick" class="menu-primary" type="button"><span>02</span> Quick race <b>&rarr;</b></button><button id="menuGarageButton" type="button"><span>03</span> Garage &amp; tuning <b>&rarr;</b></button><button id="menuWorkshop" type="button"><span>04</span> AI workshop <b>&rarr;</b></button><button id="menuLibrary" type="button"><span>05</span> My tracks &amp; backups <b>&rarr;</b></button><button id="menuOptionsButton" type="button"><span>06</span> Options <b>&rarr;</b></button></div>
         <p class="menu-future">COMING LATER <strong>Goals &amp; achievements</strong></p>
+        <div class="menu-actions menu-compact"><button id="menuFullscreen" type="button">Enter fullscreen</button></div><p id="menuFullscreenStatus" class="menu-hint" aria-live="polite"></p>
       </section>
       <section id="menuOptions" class="menu-card menu-subpage" hidden>
         <button id="menuOptionsBack" class="menu-back" type="button">&larr; Main menu</button><p class="menu-eyebrow">MAKE IT YOURS</p><h1>Options<em>.</em></h1>
-        <p class="menu-intro">Choose how your race sounds. Settings are saved in this browser.</p>
+        <p class="menu-intro">Choose your controls and race sounds. Settings are saved in this browser.</p>
+        <label class="menu-field">On-screen driving controls <select id="optionsTouchControls"><option value="auto">Automatic (touchscreen)</option><option value="on">Always on</option><option value="off">Off</option></select></label>
+        <p class="menu-hint">Controls appear while driving. You can also switch them on or off in the race pause menu.</p>
         <label class="menu-field">Checkpoint sound <select id="optionsCheckpointSound" aria-label="Choose checkpoint sound"><option value="speech">Voice announcement</option><option value="beep">Beep</option></select></label>
         <p class="menu-hint">Only the checkpoint changes; countdown, lap and finish announcements stay the same.</p>
         <div class="menu-sound-settings">
@@ -546,6 +549,9 @@
         <p>Take a breath. The race is waiting.</p>
         <button id="quickResume" class="quick-primary" type="button">Resume race</button>
         <button id="quickSettings" type="button">Camera &amp; race settings</button>
+        <button id="quickTouchControls" type="button" aria-pressed="false">On-screen controls: Off</button>
+        <button id="quickFullscreen" type="button">Enter fullscreen</button>
+        <p id="quickFullscreenStatus" class="quick-performance-help" aria-live="polite"></p>
         <button id="quickStatsFps" type="button" aria-pressed="false">FPS: Off</button>
         <button id="quickStatsTriangles" type="button" aria-pressed="false">Track triangles: Off</button>
         <button id="quickStatsRoute" type="button" aria-pressed="false">Route diagnostics: Off</button>
