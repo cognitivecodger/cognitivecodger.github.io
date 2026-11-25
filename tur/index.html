@@ -7,10 +7,10 @@
   <title>TUR — Totally Unrealistic Racing</title>
   <link rel="icon" type="image/png" sizes="32x32" href="assets/branding/TUR_favicon_32x32.png">
   <link rel="shortcut icon" href="assets/branding/favicon.ico">
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/style.css?v=race2">
   <link rel="stylesheet" href="css/editor-theme.css">
   <link rel="stylesheet" href="css/garage.css">
-  <link rel="stylesheet" href="css/race-hud.css?v=touch3">
+  <link rel="stylesheet" href="css/race-hud.css?v=touch4">
   <script defer src="assets/vendor/three-r152/three.min.js"></script>
   <script defer src="js/track-code.js"></script>
   <script defer src="data/track-packs.js"></script>
@@ -30,7 +30,7 @@
   <script defer src="js/packs.js"></script>
   <script defer src="js/builder-packs.js"></script>
   <script defer src="js/championship.js"></script>
-  <script defer src="js/menu-controls.js"></script>
+  <script defer src="js/menu-controls.js?v=support1"></script>
   <script defer src="js/garage.js"></script>
   <script defer src="js/app.js"></script>
   <script defer src="js/editor-ui.js"></script>
@@ -44,9 +44,16 @@
       <section id="menuHome" class="menu-card">
         <p class="menu-eyebrow">RACE &bull; CREATE &bull; SHARE</p><h1>Your track.<br><em>Your rules.</em></h1>
         <p class="menu-intro">Build your own circuits, take them for a spin and share them with friends.</p>
-        <div class="menu-actions"><button id="menuContinueChampionship" class="menu-primary" type="button" hidden><span>00</span> Continue championship <b>&rarr;</b></button><button id="menuChampionshipButton" type="button"><span>01</span> Championships <b>&rarr;</b></button><button id="menuQuick" class="menu-primary" type="button"><span>02</span> Quick race <b>&rarr;</b></button><button id="menuGarageButton" type="button"><span>03</span> Garage &amp; tuning <b>&rarr;</b></button><button id="menuWorkshop" type="button"><span>04</span> AI workshop <b>&rarr;</b></button><button id="menuLibrary" type="button"><span>05</span> My tracks &amp; backups <b>&rarr;</b></button><button id="menuOptionsButton" type="button"><span>06</span> Options <b>&rarr;</b></button></div>
+        <div class="menu-actions"><button id="menuContinueChampionship" class="menu-primary" type="button" hidden><span>00</span> Continue championship <b>&rarr;</b></button><button id="menuChampionshipButton" type="button"><span>01</span> Championships <b>&rarr;</b></button><button id="menuQuick" class="menu-primary" type="button"><span>02</span> Quick race <b>&rarr;</b></button><button id="menuOptionsButton" type="button"><span>03</span> Options <b>&rarr;</b></button><button id="menuToolsButton" type="button"><span>04</span> Workshop <b>&rarr;</b></button></div>
+        <a id="menuSupport" class="menu-support" href="https://buymeacoffee.com/cognitivecodger" target="_blank" rel="noopener noreferrer" aria-label="Support TUR development on Buy Me a Coffee (opens in a new tab)"><span aria-hidden="true">♡</span> Support TUR Development <b aria-hidden="true">↗</b></a>
+        <p class="menu-support-note">Free to play. Always optional.</p>
         <p class="menu-future">COMING LATER <strong>Goals &amp; achievements</strong></p>
         <div class="menu-actions menu-compact"><button id="menuFullscreen" type="button">Enter fullscreen</button></div><p id="menuFullscreenStatus" class="menu-hint" aria-live="polite"></p>
+      </section>
+      <section id="menuTools" class="menu-card menu-subpage" hidden>
+        <button id="menuToolsBack" class="menu-back" type="button">&larr; Main menu</button><p class="menu-eyebrow">CREATE &bull; TUNE &bull; EXPERIMENT</p><h1>Workshop<em>.</em></h1>
+        <p class="menu-intro">Tune your car, experiment with AI drivers, and build or share tracks.</p>
+        <div class="menu-actions"><button id="menuGarageButton" type="button"><span>01</span> Garage &amp; tuning <b>&rarr;</b></button><button id="menuWorkshop" type="button"><span>02</span> AI workshop <b>&rarr;</b></button><button id="menuLibrary" type="button"><span>03</span> My tracks &amp; backups <b>&rarr;</b></button></div>
       </section>
       <section id="menuOptions" class="menu-card menu-subpage" hidden>
         <button id="menuOptionsBack" class="menu-back" type="button">&larr; Main menu</button><p class="menu-eyebrow">MAKE IT YOURS</p><h1>Options<em>.</em></h1>
@@ -94,6 +101,7 @@
       </section>
       <section id="menuRace" class="menu-card menu-subpage race-setup-card" aria-label="Quick Race setup" hidden>
         <div class="race-setup-top"><button id="menuRaceBack" class="menu-back" type="button">&larr; Back to main menu</button><span>QUICK RACE</span></div>
+        <div class="menu-actions race-setup-actions race-setup-actions-first"><button id="menuRival" class="menu-primary" type="button" title="Race the selected number of AI opponents; you start at the back of the grid.">Race AI opponents <b>&rarr;</b></button><button id="menuTimed" type="button" title="Drive a timed run without AI opponents.">Start timed run <b>&rarr;</b></button><button id="menuFreeDrive" type="button" title="Drive without a timed race.">Free drive <b>&rarr;</b></button></div>
         <div class="race-config" aria-label="Race settings">
           <div class="race-row"><label for="menuRacePack" class="race-row-label"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18v13H3zM3 9h18M7 4v4m10-4v4"/></svg><span>Track pack</span></label><div class="race-choice"><button id="menuRacePackPrev" class="race-step" type="button" tabindex="-1" aria-label="Previous track pack">&#8249;</button><select id="menuRacePack" aria-label="Choose a track pack for Quick Race"></select><button id="menuRacePackNext" class="race-step" type="button" tabindex="-1" aria-label="Next track pack">&#8250;</button></div></div>
           <div class="race-row"><label for="menuRaceTrack" class="race-row-label"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 15c0-3 2-4 5-4s3-3 6-3c3 0 5 1 5 4s-2 4-5 4h-2c-2 0-2 3-5 3-2 0-4-1-4-4z"/></svg><span>Track</span></label><div class="race-choice"><button id="menuRaceTrackPrev" class="race-step" type="button" tabindex="-1" aria-label="Previous track">&#8249;</button><select id="menuRaceTrack" aria-label="Choose a track for Quick Race" title="Saved tracks use their last generated version; the editor draft remains open."></select><button id="menuRaceTrackNext" class="race-step" type="button" tabindex="-1" aria-label="Next track">&#8250;</button></div></div>
@@ -104,7 +112,6 @@
           <div class="race-row"><label for="menuRivalDifficulty" class="race-row-label"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20v-5h3v5zm6 0V9h3v11zm6 0V4h3v16z"/></svg><span>Rival difficulty</span></label><div class="race-choice"><button id="menuRivalDifficultyPrev" class="race-step" type="button" tabindex="-1" aria-label="Previous rival difficulty">&#8249;</button><select id="menuRivalDifficulty" aria-label="Choose AI difficulty"><option value="easy">Easy</option><option value="normal" selected>Normal</option><option value="hard">Hard</option></select><button id="menuRivalDifficultyNext" class="race-step" type="button" tabindex="-1" aria-label="Next rival difficulty">&#8250;</button></div></div>
           <div class="race-row"><label for="menuRaceLaps" class="race-row-label"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 21V4m0 0c4-3 7 3 14 0v10c-7 3-10-3-14 0m0-5c4-3 7 3 14 0"/></svg><span>Laps per circuit</span></label><div class="race-choice"><button id="menuRaceLapsPrev" class="race-step" type="button" tabindex="-1" aria-label="Previous laps per circuit">&#8249;</button><select id="menuRaceLaps" aria-label="Choose the number of laps"><option value="1">1 lap</option><option value="3" selected>3 laps</option><option value="5">5 laps</option></select><button id="menuRaceLapsNext" class="race-step" type="button" tabindex="-1" aria-label="Next laps per circuit">&#8250;</button></div></div>
         </div>
-        <div class="menu-actions race-setup-actions"><button id="menuRival" class="menu-primary" type="button" title="Race the selected number of AI opponents; you start at the back of the grid.">Race AI opponents <b>&rarr;</b></button><button id="menuTimed" type="button" title="Drive a timed run without AI opponents.">Start timed run <b>&rarr;</b></button><button id="menuFreeDrive" type="button" title="Drive without a timed race.">Free drive <b>&rarr;</b></button></div>
         <p id="menuRaceStatus" class="menu-status" role="status" aria-live="polite"></p>
         <p class="race-setup-note" title="Unmarked tracks receive temporary race markers. You start behind the field. Normal and Hard rivals use sport engines with an acceleration advantage; Easy uses the standard setup. Sprints finish once; lap races use the selected lap count.">Temporary race markers are added when needed.</p>
         <div class="race-navigation" aria-label="Navigation instructions"><div id="raceHelpKeyboard"><span><kbd>&uarr;&darr;</kbd> Navigate</span><span><kbd>&larr;&rarr;</kbd> Change</span><span><kbd>Enter</kbd> Select</span><span><kbd>Esc</kbd> Back</span></div><div id="raceHelpController" hidden><span><kbd>D-pad / Left Stick</kbd> Navigate</span><span><kbd>&larr;&rarr;</kbd> Change</span><span><kbd>A</kbd> Select</span><span><kbd>B</kbd> Back</span></div></div>
@@ -112,6 +119,7 @@
       <section id="menuChampionship" class="menu-card menu-subpage race-setup-card championship-card" aria-label="Championship" hidden>
         <div class="race-setup-top"><button id="menuChampBack" class="menu-back" type="button">&larr; Back to main menu</button><span>CHAMPIONSHIP</span></div>
         <div id="menuChampSetup">
+          <div class="menu-actions race-setup-actions race-setup-actions-first"><button id="menuChampStart" class="menu-primary" type="button" title="Race the selected track pack and earn championship points.">Start championship <b>&rarr;</b></button></div>
           <div class="race-config" aria-label="Championship settings">
             <div class="race-row"><label for="menuChampPack" class="race-row-label"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18v13H3zM3 9h18M7 4v4m10-4v4"/></svg><span>Track pack</span></label><div class="race-choice"><button id="menuChampPackPrev" class="race-step" type="button" tabindex="-1" aria-label="Previous track pack">&#8249;</button><select id="menuChampPack" aria-label="Choose a championship pack"></select><button id="menuChampPackNext" class="race-step" type="button" tabindex="-1" aria-label="Next track pack">&#8250;</button></div></div>
             <div class="race-row"><label for="menuChampOpponents" class="race-row-label"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="7" r="3"/><path d="M5 20v-2a7 7 0 0 1 14 0v2M4 8a2 2 0 0 0 0 4m16-4a2 2 0 0 1 0 4"/></svg><span>AI opponents</span></label><div class="race-choice"><button id="menuChampOpponentsPrev" class="race-step" type="button" tabindex="-1" aria-label="Previous ai opponents">&#8249;</button><select id="menuChampOpponents" aria-label="Choose the number of AI opponents"><option value="1">1 opponent</option><option value="2">2 opponents</option><option value="3">3 opponents</option><option value="4">4 opponents</option><option value="5">5 opponents</option><option value="6">6 opponents</option><option value="7" selected>7 opponents</option></select><button id="menuChampOpponentsNext" class="race-step" type="button" tabindex="-1" aria-label="Next ai opponents">&#8250;</button></div></div>
@@ -122,7 +130,7 @@
             <div class="race-row"><label for="menuChampEnvironment" class="race-row-label"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 5 14h4l-3 4h12l-3-4h4L12 3zm0 15v3"/></svg><span>Environment</span></label><div class="race-choice"><button id="menuChampEnvironmentPrev" class="race-step" type="button" tabindex="-1" aria-label="Previous environment">&#8249;</button><select id="menuChampEnvironment" aria-label="Choose the championship environment"><option value="default">Track default</option><option value="grasslands">Grasslands</option><option value="desert">Desert Canyon</option><option value="snow">Snowy</option><option value="autumn">Autumn Woodland</option><option value="volcanic">Volcanic</option><option value="city">City</option><option value="random">Random per race</option></select><button id="menuChampEnvironmentNext" class="race-step" type="button" tabindex="-1" aria-label="Next environment">&#8250;</button></div></div>
           </div>
           <p id="menuChampPackInfo" class="champ-pack-info"></p>
-          <div class="menu-actions race-setup-actions"><button id="menuChampStart" class="menu-primary" type="button" title="Race the selected track pack and earn championship points.">Start championship <b>&rarr;</b></button><button id="menuChampCancelNew" type="button" hidden>Back to final standings</button></div>
+          <div class="menu-actions race-setup-actions"><button id="menuChampCancelNew" type="button" hidden>Back to final standings</button></div>
           <p class="race-setup-note" title="Points: 10, 8, 6, 5, 4, 3, 2, 1. Ties share points; wins then total time break championship ties. You start last each race. Sprint tracks run once. Random choices are saved per race. Progress and bests are stored in this browser.">Race the pack, earn points and save your best times.</p>
           <details class="menu-set champ-bests"><summary>Personal bests for this pack</summary><p class="menu-hint">Race time starts at Go; lap time starts at the line. Records use the actual direction and lap count; vehicle setups, environments and lighting share records.</p><ol id="menuChampSetupBests" class="championship-list"></ol></details>
         </div>
@@ -136,7 +144,7 @@
         <div class="race-navigation" aria-label="Navigation instructions"><div id="champHelpKeyboard"><span><kbd>&uarr;&darr;</kbd> Navigate</span><span><kbd>&larr;&rarr;</kbd> Change</span><span><kbd>Enter</kbd> Select</span><span><kbd>Esc</kbd> Back</span></div><div id="champHelpController" hidden><span><kbd>D-pad / Left Stick</kbd> Navigate</span><span><kbd>&larr;&rarr;</kbd> Change</span><span><kbd>A</kbd> Select</span><span><kbd>B</kbd> Back</span></div></div>
       </section>
       <section id="menuAI" class="menu-card menu-subpage" hidden>
-        <button id="menuAIBack" class="menu-back" type="button">&larr; Main menu</button><p class="menu-eyebrow">WATCH &bull; TUNE &bull; EXPERIMENT</p><h1>AI <em>workshop.</em></h1>
+        <button id="menuAIBack" class="menu-back" type="button">&larr; Workshop</button><p class="menu-eyebrow">WATCH &bull; TUNE &bull; EXPERIMENT</p><h1>AI <em>workshop.</em></h1>
         <p class="menu-intro">Run a race without a player car and tune individual drivers as you watch.</p>
         <label class="menu-field">Track pack <select id="menuAIPack" aria-label="Choose a track pack for the workshop"></select></label>
         <label class="menu-field">Track <select id="menuAITrack" aria-label="Choose a workshop track"></select></label>
@@ -148,7 +156,7 @@
         <p class="menu-hint">Unmarked circuits receive temporary race markers. Your saved track and editor draft stay unchanged.</p><p id="menuAIStatus" class="menu-status" role="status"></p>
       </section>
       <section id="menuTracks" class="menu-card menu-subpage" hidden>
-        <button id="menuTracksBack" class="menu-back" type="button">&larr; Main menu</button><p class="menu-eyebrow">YOUR LOCAL LIBRARY</p><h1>My <em>tracks.</em></h1>
+        <button id="menuTracksBack" class="menu-back" type="button">&larr; Workshop</button><p class="menu-eyebrow">YOUR LOCAL LIBRARY</p><h1>My <em>tracks.</em></h1>
         <p class="menu-intro">Choose a track pack and open a track in the builder, or keep a text backup to share and restore later.</p>
         <label class="menu-field">Track pack <select id="menuLibraryPack" aria-label="Choose a track pack to edit"></select></label>
         <label class="menu-field">Track <select id="menuSavedTrack" aria-label="Choose a track to edit"></select></label>
@@ -167,6 +175,8 @@
         </details>
         <div class="menu-actions menu-compact"><button id="menuEditPacks" type="button">Edit TUR packs <b>&rarr;</b></button></div>
         <label class="menu-import">Import a track or backup <span>&uarr;</span><input id="menuImport" type="file" accept=".txt,.ts2,text/plain"></label>
+        <a id="menuCommunity" class="menu-support" href="https://www.reddit.com/r/T_U_R/" target="_blank" rel="noopener noreferrer" aria-label="Browse the TUR community on Reddit (opens in a new tab)"><span aria-hidden="true">#</span> Find community tracks on Reddit <b aria-hidden="true">↗</b></a>
+        <p class="menu-support-note">Find tracks to download and import, or visit Edit TUR packs to import a pack.</p>
         <p class="menu-hint">Imports from a combined backup are added as copies. Single TS2 files open in the builder. Your tracks remain stored in this browser.</p><p id="menuLibraryStatus" class="menu-status" role="status" aria-live="polite"></p>
       </section>
       <section id="menuPacks" class="menu-card menu-subpage" hidden>
