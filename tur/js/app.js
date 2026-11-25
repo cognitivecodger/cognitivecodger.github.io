@@ -645,7 +645,7 @@
     mode:active=>{performanceDisplay.setActive(active);if(active){editor.cancelPendingDeletion();library?.cancelPendingDeletion();road.visible=true;kerbs.visible=true;walls.visible=true;fences.visible=true;ground.visible=true;if(sceneryLayer)sceneryLayer.visible=true;debug.visible=false;updateGroundPreview();}else updateLayersVisibility();
       if(selection)selection.visible=!active && !$('editorPanel').hidden;updateGapVisibility();drag=null;updateEditorOrientation();
       if(!active && quickSession?.started){const page=quickSession.returnPage??'race';restoreQuickSession();showMenu(page);return 'menu';}}});
-  garage=TrackGarage.create({build:()=>drive.build,colour:()=>drive.colour,body:()=>drive.body,setBuild:value=>drive.setBuild(value),setColour:value=>drive.setColour(value),setBody:value=>drive.setBody(value),back:()=>showMenu(),testDrive:()=>showMenu('race')});
+  garage=TrackGarage.create({build:()=>drive.build,colour:()=>drive.colour,body:()=>drive.body,setBuild:value=>drive.setBuild(value),setColour:value=>drive.setColour(value),setBody:value=>drive.setBody(value),back:()=>showMenu('tools'),testDrive:()=>showMenu('race')});
   const raycaster=new THREE.Raycaster();
   function pickSection(event) {
     if(drive.active || $('editorPanel').hidden || document.body.classList.contains('menu-mode'))return;
@@ -853,7 +853,7 @@
     }
     document.body.classList.add('menu-mode');if(page==='race' || page==='championship')document.body.classList.add('race-setup');else document.body.classList.remove('race-setup');$('mainMenu').hidden=false;updateGapVisibility();
     if(page==='garage')document.body.classList.add('garage-mode');else {document.body.classList.remove('garage-mode');garage.close();}
-    $('menuHome').hidden=page!=='home';$('menuRace').hidden=page!=='race';$('menuTracks').hidden=page!=='tracks';$('menuPacks').hidden=page!=='packs';$('menuAI').hidden=page!=='ai';$('menuGarage').hidden=page!=='garage';$('menuChampionship').hidden=page!=='championship';$('menuOptions').hidden=page!=='options';
+    $('menuHome').hidden=page!=='home';$('menuTools').hidden=page!=='tools';$('menuRace').hidden=page!=='race';$('menuTracks').hidden=page!=='tracks';$('menuPacks').hidden=page!=='packs';$('menuAI').hidden=page!=='ai';$('menuGarage').hidden=page!=='garage';$('menuChampionship').hidden=page!=='championship';$('menuOptions').hidden=page!=='options';
     const championship=championshipState?.active;$('menuContinueChampionship').hidden=!championship || championship.results.length>=championship.pack.tracks.length;
     if(page==='garage'){clearMenuPreview();garage.open();}
     if(page==='race'){refreshPackChoices('menuRacePack');refreshRaceChoices();showTrackPreview($('menuRaceTrack').value,'menuRaceStatus');}
@@ -862,7 +862,7 @@
     if(page==='packs'){refreshPackManager();previewPackTrackOrAvailable();}
     if(page==='championship')refreshChampionship();
     const champFocus=!$('menuChampSetup').hidden?($('menuChampStart').disabled?'menuChampPack':'menuChampStart'):(!$('menuChampContinue').hidden?'menuChampContinue':!$('menuChampNew').hidden?'menuChampNew':'menuChampBack');
-    $(page==='race'?'menuRival':page==='ai'?'menuAIBack':page==='tracks'?'menuLibraryPack':page==='packs'?'menuPacksBack':page==='garage'?'garagePreset':page==='championship'?champFocus:page==='options'?'optionsCheckpointSound':'menuQuick').focus?.();
+    $(page==='race'?'menuRival':page==='tools'?'menuGarageButton':page==='ai'?'menuAIBack':page==='tracks'?'menuLibraryPack':page==='packs'?'menuPacksBack':page==='garage'?'garagePreset':page==='championship'?champFocus:page==='options'?'optionsCheckpointSound':'menuQuick').focus?.();
   }
   function hideMenu(){menuControls?.reset();closeRaceChoice(false);garage.close();clearMenuPreview();document.body.classList.remove('menu-mode');document.body.classList.remove('garage-mode');document.body.classList.remove('race-setup');$('mainMenu').hidden=true;updateGapVisibility();}
   function option(value,label){const item=document.createElement('option');item.value=value;item.textContent=label;return item;}
@@ -1085,11 +1085,12 @@
   $('menuGarageButton').addEventListener('click',()=>showMenu('garage'));
   $('menuOptionsButton').addEventListener('click',()=>showMenu('options'));
   $('menuOptionsBack').addEventListener('click',()=>showMenu());
+  $('menuToolsButton').addEventListener('click',()=>showMenu('tools'));$('menuToolsBack').addEventListener('click',()=>showMenu());
   $('menuWorkshop').addEventListener('click',()=>showMenu('ai'));
   $('menuBuilder').addEventListener('click',()=>{builderPacks.refresh();hideMenu();$('exitDrive').textContent='Back to editor \u00b7 Y / Esc';});
   $('menuLibrary').addEventListener('click',()=>showMenu('tracks'));
   $('menuEditPacks').addEventListener('click',()=>showMenu('packs'));$('menuPacksBack').addEventListener('click',()=>showMenu('tracks'));
-  $('menuRaceBack').addEventListener('click',()=>showMenu());$('menuTracksBack').addEventListener('click',()=>showMenu());$('menuAIBack').addEventListener('click',()=>showMenu());
+  $('menuRaceBack').addEventListener('click',()=>showMenu());$('menuTracksBack').addEventListener('click',()=>showMenu('tools'));$('menuAIBack').addEventListener('click',()=>showMenu('tools'));
   $('menuRacePack').addEventListener('change',()=>{quickRaceChoiceChanged=true;refreshRaceChoices();showTrackPreview($('menuRaceTrack').value,'menuRaceStatus');});
   $('menuAIPack').addEventListener('change',()=>{refreshRaceChoices('menuAITrack');showTrackPreview($('menuAITrack').value,'menuAIStatus');});
   $('menuRaceTrack').addEventListener('change',()=>{quickRaceChoiceChanged=true;showTrackPreview($('menuRaceTrack').value,'menuRaceStatus');});
@@ -1191,7 +1192,7 @@
     setHint:value=>{if($('menuSetHint').textContent!==value)$('menuSetHint').textContent=value;},
     inputMethod:raceInputMethod,openSelect:openRaceChoice,selectionOpen:()=>!!raceChoice,selectionMove:moveRaceChoice,selectionConfirm:confirmRaceChoice,closeSelect:()=>closeRaceChoice(),
     fileHint:()=>{$($('menuPacks').hidden?'menuLibraryStatus':'menuPackStatus').textContent='Use the mouse or keyboard to open the file picker; browsers require a direct click or key press.';},
-    back:()=>{if(!$('menuHome').hidden)return;showMenu(!$('menuPacks').hidden?'tracks':'home');}
+    back:()=>{if(!$('menuHome').hidden)return;showMenu(!$('menuPacks').hidden?'tracks':!$('menuGarage').hidden || !$('menuAI').hidden || !$('menuTracks').hidden?'tools':'home');}
   });
   function syncFullscreen(){
     const active=!!(document.fullscreenElement || document.webkitFullscreenElement);

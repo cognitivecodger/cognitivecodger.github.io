@@ -11,7 +11,7 @@
     function status(value){host.status(value);}
     function reset(){armed=false;padIndex=null;buttons=[];direction='';held=0;nextRepeat=0;sampleTime=0;reader.reset();}
     function controls(){
-      return Array.from(root.querySelectorAll?.('button, select, summary, input[type="file"], input[type="text"], input[type="range"], input[type="checkbox"]')??[])
+      return Array.from(root.querySelectorAll?.('button, a[href], select, summary, textarea, input[type="file"], input[type="text"], input[type="range"], input[type="checkbox"]')??[])
         .filter(el=>!el.disabled && el.getAttribute?.('tabindex')!=='-1' && !el.closest?.('[hidden]') && (el.getClientRects?.().length??1)>0);
     }
     function focus(el){el?.focus?.();el?.scrollIntoView?.({block:'nearest'});}
@@ -57,7 +57,7 @@
       const key=event.key||event.code;
       if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Enter','Escape',' ','Space'].includes(key))host.inputMethod?.('keyboard');
       if(key==='Tab' && host.selectionOpen?.()){host.closeSelect();return;}
-      if(document.activeElement?.tagName==='INPUT' && document.activeElement.type==='text' && key!=='Escape')return;
+      if((document.activeElement?.tagName==='TEXTAREA' || document.activeElement?.tagName==='INPUT' && document.activeElement.type==='text') && key!=='Escape')return;
       if(key==='Escape'){event.preventDefault();if(!event.repeat)back();return;}
       if(key==='ArrowUp' || key==='ArrowDown'){event.preventDefault();move(key==='ArrowUp'?-1:1);return;}
       if(key==='ArrowLeft' || key==='ArrowRight'){event.preventDefault();adjust(key==='ArrowLeft'?-1:1);return;}
