@@ -604,8 +604,9 @@
       try{checkDraft();if(Object.keys(staged).length)throw Error('Apply or discard staged changes before inserting a template.');
         const item=templates.find(entry=>entry.name===$('templateList').value);if(!item)throw Error('Choose a saved template.');
         const indices=multiActive()?[...multiSelected]:[selected],result=insertTemplate(runtime.code,indices,item.sections,before,runtime);
+        const nextSelection=before?selected+item.sections.length:result.index+item.sections.length-1;
         const oldMode=multiMode,oldSelection=multiSelected;multiMode=false;multiSelected=new Set();$('multiSelectMode').checked=false;bulkCommitting=true;
-        try{if(!commit(result.code,result.index)){multiMode=oldMode;multiSelected=oldSelection;$('multiSelectMode').checked=oldMode;fill();return;}}finally{bulkCommitting=false;}
+        try{if(!commit(result.code,nextSelection)){multiMode=oldMode;multiSelected=oldSelection;$('multiSelectMode').checked=oldMode;fill();return;}}finally{bulkCommitting=false;}
         multiStatus();$('templateStatus').textContent=`Added “${item.name}”. Use Undo to remove it.`;host.message(`Inserted template “${item.name}”.`);
       }catch(error){$('templateStatus').textContent=error.message;host.message(error.message,true);}
     }

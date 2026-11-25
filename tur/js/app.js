@@ -132,7 +132,7 @@
   $('slopeContrast').addEventListener('input',updateSlopeContrast);updateSlopeContrast();
   let world=new THREE.Group();scene.add(world);
   let runtime=null, road=null, kerbs=null,walls=null,fences=null,ground=null,sceneryLayer=null,debug=null,raceMarkers=null,checkpointMarkers=null,crossingArrows=null;
-  let editor=null,selection=null,gapMarkers=null,drive=null,garage=null,driveBuffers=null,library=null,quickSession=null,menuControls=null,menuPreview=null,previewDayLighting=null,defaultPacksLoading=false;
+  let editor=null,selection=null,gapMarkers=null,drive=null,garage=null,driveBuffers=null,library=null,quickSession=null,menuControls=null,menuPreview=null,previewDayLighting=null,defaultPacksLoading=false,editorAITest=null;
   let editorPreviewEnvironment='default';$('editorEnvironment').value='default';
   const editorEnvironmentFor=track=>editorPreviewEnvironment==='default'?track.settings.environment:editorPreviewEnvironment;
   function updateGapVisibility() {
@@ -457,6 +457,11 @@
     raceMarkers=lines;checkpointMarkers=checkpoints;crossingArrows=arrows;crossingArrows.visible=$('showRoad').checked;updateRaceVisibility();
     $('raceSetupSummary').textContent=TrackRace.plan(runtime,driveBuffers.road,direction).message;
   }
+  function restoreEditorAITest(){
+    const previous=editorAITest;editorAITest=null;if(!previous || runtime!==previous.runtime)return;
+    if(previous.hadMarkers)runtime.temporaryRaceMarkers=previous.markers;else delete runtime.temporaryRaceMarkers;
+    if(previous.changedMarkers)try{setRaceDirection(drive?.direction??1);}catch(error){message('Could not restore editor race markings: '+error.message,true);}
+  }
   function updateGroundPreview() {
     if(!ground || !runtime)return;
     ground.position.y=drive?.active || $('groundLevel').value!=='lowered'?0:
@@ -642,9 +647,25 @@
     sceneryPlacements:()=>sceneryLayer?.userData?.placements??[]});
   drive=TrackDrive.create({scene,canvas,performance:performanceDisplay,getTrack:()=>({runtime,buffers:driveBuffers}),raceTrackName:()=>quickSession?.trackName,nightRace:()=>quickSession?.night===true,selected:()=>editor.selectedIndex,message,setDirection:setRaceDirection,buildChanged:build=>garage?.externalChange(build),compactRace:()=>['race','championship'].includes(quickSession?.returnPage),
     championshipRace:()=>quickSession?.returnPage==='championship',championshipResult:recordChampionshipResult,championshipNext:nextChampionshipRace,
-    mode:active=>{performanceDisplay.setActive(active);if(active){editor.cancelPendingDeletion();library?.cancelPendingDeletion();road.visible=true;kerbs.visible=true;walls.visible=true;fences.visible=true;ground.visible=true;if(sceneryLayer)sceneryLayer.visible=true;debug.visible=false;updateGroundPreview();}else updateLayersVisibility();
+    mode:active=>{performanceDisplay.setActive(active);if(active){editor.cancelPendingDeletion();library?.cancelPendingDeletion();road.visible=true;kerbs.visible=true;walls.visible=true;fences.visible=true;ground.visible=true;if(sceneryLayer)sceneryLayer.visible=true;debug.visible=false;updateGroundPreview();}else {restoreEditorAITest();updateLayersVisibility();}
       if(selection)selection.visible=!active && !$('editorPanel').hidden;updateGapVisibility();drag=null;updateEditorOrientation();
       if(!active && quickSession?.started){const page=quickSession.returnPage??'race';restoreQuickSession();showMenu(page);return 'menu';}}});
+  $('startEditorAI').addEventListener('click',()=>{
+    if(drive.active)return;$('editorAIStatus').textContent='';
+    try{
+      if(!runtime)throw Error('Generate a track before starting an AI test.');
+      if($('code').value.trim()!==runtime.code.trim())throw Error('Generate your edited track code before starting an AI test.');
+      const count=Number($('editorAICount').value)||3;if(!Number.isInteger(count) || count<1 || count>7)throw Error('Choose between one and seven AI cars.');
+      const temporary=!TrackRace.plan(runtime,driveBuffers.road,drive.direction).valid?TrackRace.temporaryMarkers(runtime):null;
+      editorAITest={runtime,hadMarkers:Object.hasOwn(runtime,'temporaryRaceMarkers'),markers:runtime.temporaryRaceMarkers,changedMarkers:!!temporary};
+      if(temporary){runtime.temporaryRaceMarkers=temporary;setRaceDirection(drive.direction);}
+      const player=$('editorAIIncludePlayer').checked;
+      $('aiWorkshopExit').textContent='← Back to editor';$('exitDrive').textContent='Back to editor · Y / Esc';
+      const started=player?drive.start(true,true,3,'normal',count):drive.startWorkshop(count,3,'normal',drive.direction===-1?'reverse':'normal');
+      if(!started){const reason=$('message').textContent;restoreEditorAITest();throw Error(reason||'Could not start the AI test.');}
+      if(temporary)message('Temporary race markers are in use for this test. The track code is unchanged.');
+    }catch(error){restoreEditorAITest();$('editorAIStatus').textContent=error.message;message('Could not start AI test: '+error.message,true);}
+  });
   garage=TrackGarage.create({build:()=>drive.build,colour:()=>drive.colour,body:()=>drive.body,setBuild:value=>drive.setBuild(value),setColour:value=>drive.setColour(value),setBody:value=>drive.setBody(value),back:()=>showMenu('tools'),testDrive:()=>showMenu('race')});
   const raycaster=new THREE.Raycaster();
   function pickSection(event) {
@@ -905,6 +926,8 @@
     $('menuPackTracks').value=pack?.tracks.length?String(Math.min(Math.max(0,Number.isFinite(oldTrack)?oldTrack:0),pack.tracks.length-1)):'';
     if(pack)$('menuPackName').value=pack.name;
     for(const id of ['menuPackRename','menuPackAdd','menuPackExport','menuPackDelete','menuPackCopyId'])$(id).disabled=!pack;
+    $('menuPackCreateTrack').disabled=!pack || pack.tracks.length>=100;
+    $('menuPackCreateTrack').title=!pack?'Choose a pack first.':pack.tracks.length>=100?'This pack already has 100 tracks.':'Create a track linked to this pack in the track builder.';
     for(const id of ['menuPackUp','menuPackDown','menuPackRemove'])$(id).disabled=!pack?.tracks.length;
     pendingPackDelete=null;$('menuPackDelete').textContent='Delete selected pack...';
   }
@@ -1049,6 +1072,7 @@
       if(!workshop){const direction=championship?plan.direction:($('menuRaceDirection').value||'normal');drive.setRaceDirection(direction);if(drive.direction!==(direction==='reverse'?-1:1))throw Error('Could not set the race direction.');}
       // Free drive starts on the first road, not on a saved editor selection or gap.
       editor.select(Math.max(0,runtime.pieces.findIndex(piece=>!piece.isGap)));
+      if(workshop)$('aiWorkshopExit').textContent='← AI workshop';
       const started=workshop?drive.startWorkshop(Number($('menuAICount').value)||2,Number($('menuAILaps').value)||1,$('menuAIDifficulty').value||'normal',$('menuAIDirection').value||'normal'):
         drive.start(timed,versus,championship?active.settings.laps:Number($('menuRaceLaps').value)||3,championship?active.settings.difficulty:$('menuRivalDifficulty').value||'normal',championship?active.settings.opponents:Number($('menuOpponentCount').value)||1);
       if(!started){
@@ -1141,6 +1165,14 @@
   $('menuPackTracks').addEventListener('click',previewPackTrack);
   $('menuPackAvailable').addEventListener('change',previewPackAvailable);
   $('menuPackNew').addEventListener('click',()=>{try{const pack=packStore.create($('menuPackName').value);refreshPackManager(pack.id);previewPackTrackOrAvailable();$('menuPackStatus').textContent='Pack created. Add tracks to it below.';}catch(error){$('menuPackStatus').textContent='Could not create pack: '+error.message;}});
+  $('menuPackCreateTrack').addEventListener('click',()=>{
+    try{
+      const id=$('menuPackManage').value,pack=id?packStore.read(id):null;
+      if(!pack)throw Error('Choose a pack first.');if(pack.tracks.length>=100)throw Error('This pack already has 100 tracks.');
+      if(!builderPacks.selectContext('local:'+id))throw Error($('builderPackStatus').textContent||'Could not select the pack.');
+      if(library.newDocument())enterBuilder();else $('menuPackStatus').textContent=$('saveStatus').textContent;
+    }catch(error){$('menuPackStatus').textContent='Could not create a track in this pack: '+error.message;}
+  });
   $('menuPackRename').addEventListener('click',()=>updatePack(pack=>{pack.name=$('menuPackName').value;}));
   $('menuPackAdd').addEventListener('click',()=>updatePack(pack=>{const choice=$('menuPackAvailable').value,doc=trackDocument(choice);
     const item=Array.from($('menuPackAvailable').children??[]).find(o=>o.value===choice),name=(item?.textContent??'Track').replace(/^(My tracks|Example) - /,'');
