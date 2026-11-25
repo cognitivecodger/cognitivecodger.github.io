@@ -18,7 +18,7 @@
   <script defer src="js/geometry.js"></script>
   <script defer src="js/terrain.js"></script>
   <script defer src="js/scenery.js"></script>
-  <script defer src="js/editor.js"></script>
+  <script defer src="js/editor.js?v=templates2"></script>
   <script defer src="js/vehicle.js"></script>
   <script defer src="js/controller.js"></script>
   <script defer src="js/touch-controls.js?v=touch3"></script>
@@ -187,6 +187,7 @@
           <button id="menuPackNew" type="button">New track pack</button>
           <label class="menu-field">My packs <select id="menuPackManage" aria-label="Choose a pack to edit or delete"></select></label>
           <button id="menuPackRename" type="button">Save pack name</button>
+          <button id="menuPackCreateTrack" type="button">Create new track in this pack</button>
           <label class="menu-field">Add a track <select id="menuPackAvailable" aria-label="Choose a track to add to the pack"></select></label>
           <button id="menuPackAdd" type="button">Add track to pack</button>
           <label class="menu-field">Tracks in this pack <select id="menuPackTracks" size="5" aria-label="Tracks in selected pack"></select></label>
@@ -502,6 +503,10 @@
       <label class="field">Race direction <select id="raceDirection"><option value="normal">Normal · track order</option><option value="reverse">Reverse · opposite direction</option></select></label>
       <label class="field">Starting grid position <select id="gridPosition"><option value="1">1 · Front row · left</option><option value="2">2 · Front row · right</option><option value="3">3 · Row 2 · left</option><option value="4">4 · Row 2 · right</option><option value="5">5 · Row 3 · left</option><option value="6">6 · Row 3 · right</option><option value="7">7 · Row 4 · left</option><option value="8">8 · Row 4 · right</option></select></label>
       <button id="startTimedRun" class="editor-apply" type="button">▶ Start timed run</button>
+      <label class="field">AI cars <select id="editorAICount" aria-label="Number of AI cars for the editor test"><option value="1">1 AI car</option><option value="2">2 AI cars</option><option value="3" selected>3 AI cars</option><option value="4">4 AI cars</option><option value="5">5 AI cars</option><option value="6">6 AI cars</option><option value="7">7 AI cars</option></select></label>
+      <label class="field"><input id="editorAIIncludePlayer" type="checkbox"> Include me as a driver</label>
+      <button id="startEditorAI" class="editor-apply" type="button">▶ Test drive with AI drivers</button>
+      <p class="help">Watch the AI or join the race. Uses the selected race direction and temporary markers when needed; up to eight cars including you.</p><p id="editorAIStatus" class="help" role="status" aria-live="polite"></p>
       <p class="help">Racing starts behind the line, two cars across and up to four rows deep. Rows have more space where the approach allows. Reverse uses the same circuit line, or swaps sprint start/finish, and reverses checkpoint order. Left/right follow the driver's view. Place each start on a wide straight with enough approach road.</p>
       <p class="help">Drive with W/A/S/D or arrows. Select a road section with room for all four wheels. Try the driving examples on the left for a wide loop or jump.</p>
 </section></aside>
