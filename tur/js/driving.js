@@ -530,7 +530,7 @@
           }});
         driver=TrackAI.createDriver(nav,index,opponent.state,opponent.size);
         if(personalities?.[index])driver.setPersonality(personalities[index]);
-        entry={sim:opponent,trial,nav,driver,personality:{id:`default:${index}`,name:defaultPersonalityName(index),modified:false},slot:position.slot,name:`AI ${index+1} (${rivalColourNames[index]})`,colour:rivalColours[index],done:false,finishRank:null,stuck:0,offRoute:0,lastRecovery:null,recoveryEvents:[],samples:[],recovering:false};
+        entry={sim:opponent,trial,nav,driver,personality:{id:`default:${index}`,name:defaultPersonalityName(index),modified:false},slot:position.slot,name:`AI ${index+1} (${rivalColourNames[index]})`,colour:rivalColours[index],done:false,finishRank:null,stuck:0,stuckDemand:0,stuckAnchor:null,lastThrottle:0,offRoute:0,lastRecovery:null,recoveryEvents:[],samples:[],recovering:false};
         return entry;
       });
       return {opponents,spectator,difficulty:level,laps:[1,3,5].includes(Number(laps))?Number(laps):3,
@@ -547,7 +547,7 @@
         route:s.routePiece,contact:s.trackPiece,valid:s.routeValid,grounded:s.grounded,surfaces,
         recovery:opponent.sim.recoverySection,recoveries:s.recoveries,resets:s.resets,stuck:opponent.stuck,offRoute:opponent.offRoute,
         yaw:s.yaw,mode:i.mode,traffic:i.target,nearby:i.nearby??0,targetSpeed:(i.targetSpeed??0)*3.6,
-        throttle:i.throttle??0,steer:i.steer??0,handbrake:!!i.handbrake,brakeReason:i.brakeReason??null,headingError:i.headingError??null,
+        throttle:i.throttle??0,steer:i.steer??0,handbrake:!!i.handbrake,airborneCoasting:!!i.airborneCoasting,brakeReason:i.brakeReason??null,headingError:i.headingError??null,
         routeDistance:i.routeDistance??null,routeOffset:i.routeOffset??null,aim:i.aim?{...i.aim}:null,aimSection:i.aimSection??null,aimKind:i.aimKind??null};
     }
     let diagnosticGuide=null;
@@ -586,7 +586,7 @@
         `Heading error ${sample.headingError===null?'—':diagNumber(sample.headingError/rad)+'°'} · centre offset ${diagNumber(sample.routeOffset)} m`,
         `Surface ${sample.surfaces.join(' / ')||'airborne'} · wheels ${sample.grounded}/4`,
         `Recovery section ${diagSection(sample.recovery)} · recoveries ${sample.recoveries} · falls ${sample.resets}`,
-        `Stuck ${diagNumber(sample.stuck)} / 7 s · off route ${diagNumber(sample.offRoute)} / 4 s`,
+        `Low movement ${diagNumber(sample.stuck)} / ${TrackAI.STUCK_SECONDS} s · off route ${diagNumber(sample.offRoute)} / 4 s`,
         `Position x ${diagNumber(sample.x)} · y ${diagNumber(sample.y)} · z ${diagNumber(sample.z)}`];
       if(sample.aim)lines.push(`Steering target x ${diagNumber(sample.aim.x)} · y ${diagNumber(sample.aim.y)} · z ${diagNumber(sample.aim.z)}`);
       lines.push('', 'Recent recoveries:');
@@ -765,6 +765,7 @@
           // Finished rivals keep moving on a cool-down lap so they do not
           // stop across the line and block the remaining field.
           const aiInput=opponent.driver.input(snapshots[index+(workshop?0:1)],snapshots,step);
+          opponent.lastThrottle=aiInput.throttle;
           opponent.sim.advance(step,aiInput);
         });
         for(let i=0;i<field.length;i++)for(let j=i+1;j<field.length;j++){
@@ -799,17 +800,16 @@
         // The AI workshop continues its cooldown laps for observation.
         if(compactRace && !workshop && rival.playerDone && rival.opponents.every(opponent=>opponent.done)){rival.complete=true;break;}
         for(const opponent of rival.opponents){
-          const state=opponent.sim.state,speed=Math.hypot(state.vx,state.vz);
-          opponent.stuck=!opponent.done && speed<.7?opponent.stuck+step:0;
+          const state=opponent.sim.state,stuck=TrackAI.updateStuck(opponent,state,opponent.lastThrottle,step);
           opponent.offRoute=!opponent.done && state.grounded>0 && !state.routeValid?opponent.offRoute+step:0;
-          if(opponent.stuck>7 || opponent.offRoute>4){
+          if(stuck || opponent.offRoute>4){
             const point=opponent.sim.recoveryPoint,previous=opponent.lastRecovery;
             const repeated=point && previous && Math.hypot(point.x-previous.x,point.y-previous.y,point.z-previous.z)<3;
-            const before=diagnosticSample(opponent),reason=opponent.stuck>7?'stuck':'off route';
+            const before=diagnosticSample(opponent),reason=stuck?'stuck':'off route';
             opponent.recovering=true;
             try{opponent.sim.recover({earlier:!!repeated});}finally{opponent.recovering=false;}
             recordRecovery(opponent,{time:rival.elapsed,reason,to:opponent.sim.recoverySection,earlier:!!repeated,before});
-            opponent.lastRecovery={x:state.x,y:state.y,z:state.z};opponent.stuck=0;opponent.offRoute=0;
+            opponent.lastRecovery={x:state.x,y:state.y,z:state.z};opponent.stuck=0;opponent.stuckDemand=0;opponent.stuckAnchor=null;opponent.offRoute=0;
           }
         }
         if(rival.elapsed+1e-9>=rival.nextDiagnosticSample){

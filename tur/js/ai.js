@@ -120,11 +120,12 @@
   // Each car remembers its own chosen line, avoiding rapid left/right flips.
   // Other vehicles are sampled together before physics advances, so decisions
   // do not depend on which AI happened to be updated first.
-  function createDriver(nav,index,initial,dimensions){
+  function createDriver(nav,index,initial,dimensions,options={}){
     let style=defaultPersonality(index);
+    const random=typeof options.random==='function'?options.random:Math.random;
     const init=nav.locate(initial),origin=nav.point(init.distance);
     let lane=(initial.x-origin.x)*Math.cos(origin.yaw)-(initial.z-origin.z)*Math.sin(origin.yaw),hold=0,passing=null,handbrakeTime=0,handbrakeCooldown=0;
-    let intent={mode:'line',lane,targetSpeed:0,target:null};
+    let intent={mode:'line',lane,targetSpeed:0,target:null},seenGround=(initial.grounded??0)>0,airTime=0,landingTime=0,jumpPower=null;
     function input(self,field,dt=1/60){
       dt=clamp(Number.isFinite(dt)?dt:0,0,.1);
       const position=self.path??nav.locate(self.state),s=self.state,speed=Math.hypot(s.vx,s.vz);
@@ -217,19 +218,38 @@
       }
       const handbrake=handbrakeTime>0;
       if(handbrake){handbrakeTime=Math.max(0,handbrakeTime-dt);throttle=Math.min(throttle,.35);}
+      // Decide once per sustained jump, not on every frame. A brief lost
+      // wheel contact or a momentary touchdown does not reroll the choice.
+      let airborneCoasting=false;
+      if(s.grounded>0){seenGround=true;airTime=0;landingTime+=dt;if(landingTime>=.15)jumpPower=null;}
+      else if(seenGround){landingTime=0;airTime+=dt;if(airTime>=.1){if(jumpPower===null)jumpPower=random()>=.9;throttle=jumpPower?1:0;airborneCoasting=!jumpPower;}}
       const aim=tangentFallback?{x:s.x+Math.sin(desiredYaw)*look,y:s.y+.25,z:s.z+Math.cos(desiredYaw)*look}:
         {x:tx,y:window.TS2.heightAcross(target,window.TS2.lateralU(target,lane*nav.direction))+.3,z:tz};
       intent={mode,lane,targetSpeed,target:targetId,nearby:nearby.length,brakeReason,
-        throttle,steer,handbrake,headingError:error,curvature:bend,nearCurvature:closeBend,lateral,lookAhead:look,routeDistance:position.distance,routeOffset:Math.sqrt(position.score??0),
+        throttle,steer,handbrake,airborneCoasting,headingError:error,curvature:bend,nearCurvature:closeBend,lateral,lookAhead:look,routeDistance:position.distance,routeOffset:Math.sqrt(position.score??0),
         aim,aimSection:target.index,aimKind:tangentFallback?'track tangent':'look-ahead point'};
       return {throttle,steer,handbrake};
     }
     function reset(state){
       const position=nav.locate(state),centre=nav.point(position.distance);
       lane=(state.x-centre.x)*Math.cos(centre.yaw)-(state.z-centre.z)*Math.sin(centre.yaw);hold=0;passing=null;handbrakeTime=0;handbrakeCooldown=0;
-      intent={mode:'line',lane,targetSpeed:0,target:null};
+      intent={mode:'line',lane,targetSpeed:0,target:null};seenGround=(state.grounded??0)>0;airTime=0;landingTime=0;jumpPower=null;
     }
     return {input,reset,setPersonality(values){style=personality(values,index);},get style(){return style;},get intent(){return intent;}};
+  }
+  // A rolling six-second movement window ignores collision jitter and needs
+  // sustained acceleration, so cars waiting without throttle are left alone.
+  const STUCK_SECONDS=6;
+  function updateStuck(car,state,throttle,dt){
+    const reset=()=>{car.stuck=0;car.stuckDemand=0;car.stuckAnchor=null;};
+    if(car.done){reset();return false;}
+    if(!(state.grounded>0)){if((state.airTime??0)>.3)reset();return false;}
+    const anchor=car.stuckAnchor,limit=Math.max(1,car.sim.size.length*.65);
+    if(!anchor || Math.hypot(state.x-anchor.x,state.z-anchor.z)>limit){reset();car.stuckAnchor={x:state.x,z:state.z};}
+    car.stuck+=dt;if(throttle>.2)car.stuckDemand+=dt;
+    if(car.stuck+1e-8<STUCK_SECONDS)return false;
+    if(car.stuckDemand>=STUCK_SECONDS*.5 && Math.hypot(state.vx,state.vz)<1.5)return true;
+    reset();return false;
   }
   // A bounded, symmetric oriented-box contact; vertical separation prevents
   // cars on stacked bridges from colliding. No damage or full physics engine.
@@ -252,5 +272,5 @@
     if(closing<0){const impulse=-closing*.55;a.vx-=normal.x*impulse;a.vz-=normal.z*impulse;b.vx+=normal.x*impulse;b.vz+=normal.z*impulse;}
     return true;
   }
-  window.TrackAI={create,createDriver,collide,DIFFICULTIES,STYLES,PERSONALITY_FIELDS,defaultPersonality,personality};
+  window.TrackAI={create,createDriver,updateStuck,collide,DIFFICULTIES,STYLES,PERSONALITY_FIELDS,defaultPersonality,personality,STUCK_SECONDS};
 })();
