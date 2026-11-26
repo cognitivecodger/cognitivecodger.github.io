@@ -573,7 +573,7 @@
       const traffic=workshop?(Number.isInteger(sample.traffic)?rival.opponents[sample.traffic]?.name??'another car':'none'):sample.traffic===0?'player':Number.isInteger(sample.traffic)?rival.opponents[sample.traffic-1]?.name??'another car':'none';
       const action=sample.throttle<0?`brake ${Math.round(-sample.throttle*100)}%`:sample.throttle>0?`accelerator ${Math.round(sample.throttle*100)}%`:'coasting';
       const turn=Math.abs(sample.steer)<.02?'straight':`${sample.steer>0?'right':'left'} ${Math.round(Math.abs(sample.steer)*100)}%`;
-      const lines=[`${opponent.name} · ${TrackAI.DIFFICULTIES[rival.difficulty].label} · ${race.course.direction===-1?'reverse':'normal'} direction${paused?' · paused':''}`,
+      const lines=[`${opponent.name} · ${TrackAI.DIFFICULTIES[rival.difficulty].label} · ${race.course.direction===-1?'reverse':'normal'} direction${opponent.done?' · finished (cool-down)':''}${paused?' · paused':''}`,
         `Race ${diagNumber(rival.elapsed)}s · laps ${opponent.trial.state.completed} · checkpoints ${opponent.trial.state.checkpoint}/${race.course.checkpoints.length}`,
         `Engine ${opponent.sim.build.engine.label} · AI pull boost ${Math.round((opponent.nav.accelerationMultiplier-1)*100)}% · tyres ${opponent.sim.build.tyres.label}`,
         `Personality ${personalityLabel(opponent)}`,
@@ -801,7 +801,9 @@
         if(compactRace && !workshop && rival.playerDone && rival.opponents.every(opponent=>opponent.done)){rival.complete=true;break;}
         for(const opponent of rival.opponents){
           const state=opponent.sim.state,stuck=TrackAI.updateStuck(opponent,state,opponent.lastThrottle,step);
-          opponent.offRoute=!opponent.done && state.grounded>0 && !state.routeValid?opponent.offRoute+step:0;
+          // Finished cars still drive cool-down laps while the session runs.
+          // Keep recovery active until the race actually stops the field.
+          opponent.offRoute=state.grounded>0 && !state.routeValid?opponent.offRoute+step:0;
           if(stuck || opponent.offRoute>4){
             const point=opponent.sim.recoveryPoint,previous=opponent.lastRecovery;
             const repeated=point && previous && Math.hypot(point.x-previous.x,point.y-previous.y,point.z-previous.z)<3;

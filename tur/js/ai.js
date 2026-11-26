@@ -242,7 +242,6 @@
   const STUCK_SECONDS=6;
   function updateStuck(car,state,throttle,dt){
     const reset=()=>{car.stuck=0;car.stuckDemand=0;car.stuckAnchor=null;};
-    if(car.done){reset();return false;}
     if(!(state.grounded>0)){if((state.airTime??0)>.3)reset();return false;}
     const anchor=car.stuckAnchor,limit=Math.max(1,car.sim.size.length*.65);
     if(!anchor || Math.hypot(state.x-anchor.x,state.z-anchor.z)>limit){reset();car.stuckAnchor={x:state.x,z:state.z};}
