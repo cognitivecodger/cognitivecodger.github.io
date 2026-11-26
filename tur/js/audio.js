@@ -233,13 +233,15 @@
       }
     }
     // Brief synthesized impacts go through the same master volume as the car.
-    // A low thump suggests suspension landing; brighter inharmonic tones give
-    // wall and vehicle contacts a short metallic character.
+    // Strength is the actual downward or closing speed in metres per second.
+    // Every audible hit is at least three times its previous signal level,
+    // with extra headroom for harder hits even above the old maximum.
     function impact(kind,strength,level){
       if(!context || !voice || level<=0)return;
       try{
-        const now=context.currentTime,amount=clamp((strength-.8)/8,.14,1),metal=kind==='metal',duration=metal?.19:.23;
-        for(const [frequency,weight] of (metal?[[170,.28],[620,.13],[1040,.07]]:[[95,.42],[48,.18]])){
+        const now=context.currentTime,base=clamp((strength-.8)/8,.14,1),severity=clamp((strength-.8)/18,0,1);
+        const amount=3*base*(1+severity*.35),metal=kind==='metal',duration=.23;
+        for(const [frequency,weight] of (metal?[[110,.28],[310,.13],[520,.07]]:[[95,.42],[48,.18]])){
           const osc=context.createOscillator(),gain=context.createGain();osc.type=metal?'triangle':'sine';osc.frequency.value=frequency;
           gain.gain.setValueAtTime(weight*amount*level,now);gain.gain.setTargetAtTime(0,now,metal?.035:.055);
           osc.connect(gain);gain.connect(voice.master);osc.onended=()=>{try{osc.disconnect();gain.disconnect();}catch(error){}};
