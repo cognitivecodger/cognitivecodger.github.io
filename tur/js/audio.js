@@ -82,7 +82,7 @@
     let context=null,voice=null,playing=false,enabled=options.enabled!==false,volume=.35,lastStatus='',countdownVoice=null,countdownGeneration=0;
     let checkpointMode=options.checkpointMode==='beep'?'beep':'speech',checkpointVoice=null,checkpointGeneration=0;
     let tyresEnabled=options.tyresEnabled!==false,tyreVolume=.65,rivalsEnabled=options.rivalsEnabled!==false,rivalAudioFailed=false;
-    const rivals=[],samples={};let announcementQueue=[],announcementCurrent=null,announcementGeneration=0;
+    const rivals=[],samples={},impactTimes=new WeakMap();let announcementQueue=[],announcementCurrent=null,announcementGeneration=0;
     // HTML audio can load local files when the game is opened via file://.
     // Start preloading after page load so media cannot delay the application.
     const AudioElement=options.Audio??window.Audio;
@@ -232,10 +232,38 @@
         ramp(item.tyres.rumble.gain.gain,tyresEnabled?rumble.gain*tyreVolume:0,rumble.gain>0?.06:.09);
       }
     }
+    // Brief synthesized impacts go through the same master volume as the car.
+    // A low thump suggests suspension landing; brighter inharmonic tones give
+    // wall and vehicle contacts a short metallic character.
+    function impact(kind,strength,level){
+      if(!context || !voice || level<=0)return;
+      try{
+        const now=context.currentTime,amount=clamp((strength-.8)/8,.14,1),metal=kind==='metal',duration=metal?.19:.23;
+        for(const [frequency,weight] of (metal?[[170,.28],[620,.13],[1040,.07]]:[[95,.42],[48,.18]])){
+          const osc=context.createOscillator(),gain=context.createGain();osc.type=metal?'triangle':'sine';osc.frequency.value=frequency;
+          gain.gain.setValueAtTime(weight*amount*level,now);gain.gain.setTargetAtTime(0,now,metal?.035:.055);
+          osc.connect(gain);gain.connect(voice.master);osc.onended=()=>{try{osc.disconnect();gain.disconnect();}catch(error){}};
+          osc.start(now);osc.stop(now+duration);
+        }
+      }catch(error){/* Optional effects must not interrupt driving. */}
+    }
     function update(state,engine='standard',opponents=[]) {
-      if(!playing || !enabled || !voice || context.state!=='running')return;
-      updateVoice(voice,state,engine);ramp(voice.master.gain,volume,.03);
       const field=Array.isArray(opponents)?opponents.slice(0,7):[];
+      const ready=playing && enabled && voice && context.state==='running' && volume>0;
+      // Consume telemetry even when muted or paused, so old contacts cannot
+      // play after audio is re-enabled. Each kind has a short per-car cooldown.
+      for(const [source,level] of [[state,1],...field.map(entry=>[entry?.state,rivalsEnabled?distanceGain(state,entry?.state):0])]){
+        if(!source?.soundImpacts)continue;
+        const events=source.soundImpacts;source.soundImpacts={};
+        if(!ready || level<=0)continue;
+        const last=impactTimes.get(source)??{};
+        for(const kind of ['landing','metal'])if(events[kind]>.8 && context.currentTime-(last[kind]??-Infinity)>(kind==='metal'?.3:.4)){
+          impact(kind,events[kind],level);last[kind]=context.currentTime;
+        }
+        impactTimes.set(source,last);
+      }
+      if(!ready)return;
+      updateVoice(voice,state,engine);ramp(voice.master.gain,volume,.03);
       const gains=field.map(entry=>rivalsEnabled && entry?distanceGain(state,entry.state):0);
       const total=gains.reduce((sum,gain)=>sum+gain,0),mix=total>2.2?2.2/total:1;
       for(let i=0;i<Math.max(field.length,rivals.length);i++){

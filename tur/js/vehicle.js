@@ -258,7 +258,7 @@
   function resolveWalls(world,state,previous,dt) {
     let from={...previous},to={x:state.x,y:state.y,z:state.z},hits=0;
     const radius=Math.hypot(CONFIG.halfWidth,CONFIG.halfLength,.72)*(state.scale??1)+.06,shape=bodyShape(state);
-    const response=(nx,nz)=>{const into=state.vx*nx+state.vz*nz;if(into<0){state.vx-=into*nx;state.vz-=into*nz;state.vx*=.985;state.vz*=.985;}hits++;};
+    const response=(nx,nz)=>{const into=state.vx*nx+state.vz*nz;if(into<0){if(into<-.8){const events=state.soundImpacts??(state.soundImpacts={});events.metal=Math.max(events.metal??0,-into);}state.vx-=into*nx;state.vz-=into*nz;state.vx*=.985;state.vz*=.985;}hits++;};
     for(let iteration=0;iteration<3;iteration++) {
       let first=null;
       for(const wall of world.nearbyWalls(from,to,radius)) {const hit=sweep(state,from,to,wall,shape);if(hit && (!first || hit.time<first.time))first=hit;}
@@ -725,6 +725,7 @@
       return [];
     }
     function reset() {
+      state.soundImpacts={};
       Object.assign(state,seed,wheelFeedback(),{vx:0,vy:0,vz:0,pitch:0,roll:0,pitchRate:0,rollRate:0,steering:0,airTime:0,wheelSpin:0,frontWheelSpin:0,rearWheelSpin:0,slideYawRate:0,handbrakeActive:false,handbrakeDirection:0,wheelSlip:0,brakeDemand:0,engineRPM:1000,engineLoad:0,collisions:0,recoveries:0});
       const floor=world.support(seed.x,seed.z,seed.y+runtime.settings.tarmacDepth*.5+.15,seed.y+runtime.settings.tarmacDepth*.5-.15,index);
       if(floor && world.ceiling(seed.x,seed.z,floor.y+.25*scale,floor.y+1.6*scale))throw Error('Not enough headroom for this car size here. Choose a smaller car or another section.');
@@ -738,6 +739,7 @@
       options.onReset?.(state);
     }
     function recover(recoveryOptions) {
+      state.soundImpacts={};
       if(!lastRoad){reset();return false;}
       recoveryReason=null;let rewind=null;
       const jump=nextJump(lastRoad);
@@ -784,7 +786,7 @@
       return best;
     }
     function tick(dt,input) {
-      const previous={x:state.x,y:state.y,z:state.z},previousYaw=state.yaw,onRoad=state.grounded>0;
+      const previous={x:state.x,y:state.y,z:state.z},previousYaw=state.yaw,onRoad=state.grounded>0,previousAirTime=state.airTime,previousVy=state.vy;
       const f={x:Math.sin(state.yaw),z:Math.cos(state.yaw)},r={x:-Math.cos(state.yaw),z:Math.sin(state.yaw)};
       let speed=state.vx*f.x+state.vz*f.z,lateral=state.vx*r.x+state.vz*r.z;
       const throttle=clamp(input.throttle??0,-1,1),steer=clamp(input.steer??0,-1,1);
@@ -1030,6 +1032,9 @@
         }
         if(correction>0){state.y-=correction;state.vy=0;}
       }
+      // Only a sustained flight followed by a real downward landing produces
+      // a thud; ordinary kerb/suspension contact is handled by road rumble.
+      if(grounded && previousAirTime>=.12 && previousVy<-.8){const events=state.soundImpacts??(state.soundImpacts={});events.landing=Math.max(events.landing??0,-previousVy);}
       state.grounded=grounded;state.airTime=grounded?0:state.airTime+dt;
       const wallHits=resolveWalls(world,state,previous,dt);state.collisions+=wallHits;
       updateRoute(previous,dt);

@@ -268,7 +268,7 @@
     const correction=Math.min(depth+.001,.25*Math.min(a.scale,b.scale));
     a.x-=normal.x*correction*.5;a.z-=normal.z*correction*.5;b.x+=normal.x*correction*.5;b.z+=normal.z*correction*.5;
     const closing=(b.vx-a.vx)*normal.x+(b.vz-a.vz)*normal.z;
-    if(closing<0){const impulse=-closing*.55;a.vx-=normal.x*impulse;a.vz-=normal.z*impulse;b.vx+=normal.x*impulse;b.vz+=normal.z*impulse;}
+    if(closing<0){if(closing<-.8){const events=a.soundImpacts??(a.soundImpacts={});events.metal=Math.max(events.metal??0,-closing);}const impulse=-closing*.55;a.vx-=normal.x*impulse;a.vz-=normal.z*impulse;b.vx+=normal.x*impulse;b.vz+=normal.z*impulse;}
     return true;
   }
   window.TrackAI={create,createDriver,updateStuck,collide,DIFFICULTIES,STYLES,PERSONALITY_FIELDS,defaultPersonality,personality,STUCK_SECONDS};
