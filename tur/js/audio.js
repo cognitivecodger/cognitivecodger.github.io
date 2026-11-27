@@ -82,7 +82,7 @@
     let context=null,voice=null,playing=false,enabled=options.enabled!==false,volume=.35,lastStatus='',countdownVoice=null,countdownGeneration=0;
     let checkpointMode=options.checkpointMode==='beep'?'beep':'speech',checkpointVoice=null,checkpointGeneration=0;
     let tyresEnabled=options.tyresEnabled!==false,tyreVolume=.65,rivalsEnabled=options.rivalsEnabled!==false,rivalAudioFailed=false;
-    const rivals=[],samples={},impactTimes=new WeakMap();let announcementQueue=[],announcementCurrent=null,announcementGeneration=0;
+    const rivals=[],samples={},boostVoices=[],impactTimes=new WeakMap();let announcementQueue=[],announcementCurrent=null,announcementGeneration=0;
     // HTML audio can load local files when the game is opened via file://.
     // Start preloading after page load so media cannot delay the application.
     const AudioElement=options.Audio??window.Audio;
@@ -95,6 +95,25 @@
     function playSample(key,onFailure){
       const sound=samples[key];if(!sound || !playing || !enabled || volume<=0 || sound.error)return false;
       try{sound.pause();sound.currentTime=0;sound.volume=volume;const pending=sound.play();pending?.catch?.(()=>onFailure?.());return true;}catch(error){return false;}
+    }
+    function stopBoosts(onlyRivals=false){for(const item of boostVoices){if(onlyRivals && !item.rival)continue;try{item.sound.pause();item.sound.currentTime=0;}catch(error){}item.busy=false;}}
+    function boost(source,listener){
+      if(!playing || !enabled || volume<=0 || !AudioElement || !source || !listener)return false;
+      const rival=source!==listener,attenuation=rival?(rivalsEnabled?distanceGain(listener,source):0):1;
+      if(attenuation<=0)return false;
+      try{
+        let item=boostVoices.find(voice=>!voice.busy);
+        if(!item && boostVoices.length<8){
+          const sound=new AudioElement();sound.preload='auto';sound.src='assets/sfx/TUR_Speed_Boost.mp3';sound.load?.();
+          item={sound,busy:false,rival:false,attenuation:1};sound.onended=()=>{item.busy=false;};sound.onerror=()=>{item.busy=false;};boostVoices.push(item);
+        }
+        // Prefer an audible player cue over an occupied distant-rival voice.
+        if(!item && !rival)item=boostVoices.find(voice=>voice.rival);
+        if(!item || item.sound.error)return false;
+        const sound=item.sound;if(item.busy){sound.pause();sound.currentTime=0;}
+        item.busy=true;item.rival=rival;item.attenuation=attenuation;sound.volume=volume*attenuation;sound.currentTime=0;
+        const pending=sound.play();pending?.catch?.(()=>{item.busy=false;});return true;
+      }catch(error){return false;}
     }
     function cancelAnnouncements(){
       announcementGeneration++;announcementQueue=[];
@@ -177,7 +196,7 @@
     }
     // Finishing takes priority over any queued checkpoint or lap voice.
     function finished(){cancelCheckpointBeep();cancelAnnouncements();announce('finished');}
-    function suspend() {cancelCountdown();cancelCheckpointBeep();cancelAnnouncements();mute();try{const pending=context?.suspend();pending?.catch?.(()=>{});}catch(error){}}
+    function suspend() {cancelCountdown();cancelCheckpointBeep();cancelAnnouncements();stopBoosts();mute();try{const pending=context?.suspend();pending?.catch?.(()=>{});}catch(error){}}
     function unlock() {
       if(!enabled || !playing)return false;
       try {
@@ -204,11 +223,11 @@
       if(!playing)suspend();else if(context && enabled)unlock();
     }
     function setEnabled(value) {enabled=!!value;if(!enabled){suspend();status('Driving sound off.');}else if(playing)unlock();else status('Driving sound ready for Test Drive.');}
-    function setVolume(value) {if(Number.isFinite(value))volume=clamp(value,0,1);for(const sound of Object.values(samples))try{sound.volume=volume;}catch(error){}if(volume===0){mute();cancelCheckpointBeep();cancelAnnouncements();for(const key of Object.keys(samples))stopSample(key);}}
+    function setVolume(value) {if(Number.isFinite(value))volume=clamp(value,0,1);for(const sound of Object.values(samples))try{sound.volume=volume;}catch(error){}for(const item of boostVoices)try{item.sound.volume=volume*item.attenuation;}catch(error){}if(volume===0){stopBoosts();mute();cancelCheckpointBeep();cancelAnnouncements();for(const key of Object.keys(samples))stopSample(key);}}
     function muteTyres(){for(const item of [voice,...rivals])if(item?.tyres)for(const v of [item.tyres.high,item.tyres.low,item.tyres.rumble])ramp(v.gain.gain,0,.025);}
     function setTyresEnabled(value){tyresEnabled=!!value;if(!tyresEnabled)muteTyres();}
     function setTyreVolume(value){if(Number.isFinite(value))tyreVolume=clamp(value,0,1);if(tyreVolume===0)muteTyres();}
-    function setRivalsEnabled(value){rivalsEnabled=!!value;if(!rivalsEnabled && context)for(const rival of rivals)if(rival)ramp(rival.fader.gain,0,.025);}
+    function setRivalsEnabled(value){rivalsEnabled=!!value;if(!rivalsEnabled){stopBoosts(true);if(context)for(const rival of rivals)if(rival)ramp(rival.fader.gain,0,.025);}}
     function makeRivalVoice() {
       const motor=context.createOscillator(),bass=context.createOscillator(),motorGain=context.createGain(),bassGain=context.createGain(),filter=context.createBiquadFilter(),limiter=context.createDynamicsCompressor(),engineGain=context.createGain(),fader=context.createGain();
       motor.type='sawtooth';bass.type='triangle';motor.frequency.value=34;bass.frequency.value=17;
@@ -279,7 +298,7 @@
       }
     }
     function dispose() {
-      playing=false;cancelCountdown();cancelCheckpointBeep();cancelAnnouncements();mute();
+      playing=false;cancelCountdown();cancelCheckpointBeep();cancelAnnouncements();stopBoosts();mute();
       if(voice){try{voice.motor.stop();voice.bass.stop();}catch(error){}}
       if(voice?.tyres){try{voice.tyres.noise.stop();voice.tyres.high.squeal.stop();voice.tyres.low.squeal.stop();}catch(error){}}
       for(const item of rivals){if(!item)continue;try{item.motor.stop();item.bass.stop();}catch(error){}if(item.tyres)try{item.tyres.noise.stop();item.tyres.high.squeal.stop();item.tyres.low.squeal.stop();}catch(error){}}
@@ -287,7 +306,7 @@
       try{context?.close()?.catch?.(()=>{});}catch(error){}voice=null;context=null;rivalAudioFailed=false;
     }
     status(enabled?'Driving sound ready for Test Drive.':'Driving sound off.');
-    return {unlock,setPlaying,setEnabled,setVolume,setTyresEnabled,setTyreVolume,setRivalsEnabled,setCheckpointMode,update,silenceEngine:mute,countdown,checkpoint,lapCompleted,finished,cancelCountdown,cancelCheckpointBeep,cancelAnnouncements,dispose,get enabled(){return enabled;},get volume(){return volume;},get tyresEnabled(){return tyresEnabled;},get tyreVolume(){return tyreVolume;},get rivalsEnabled(){return rivalsEnabled;},get checkpointMode(){return checkpointMode;},get status(){return lastStatus;}};
+    return {unlock,setPlaying,setEnabled,setVolume,setTyresEnabled,setTyreVolume,setRivalsEnabled,setCheckpointMode,update,boost,silenceEngine:mute,countdown,checkpoint,lapCompleted,finished,cancelCountdown,cancelCheckpointBeep,cancelAnnouncements,dispose,get enabled(){return enabled;},get volume(){return volume;},get tyresEnabled(){return tyresEnabled;},get tyreVolume(){return tyreVolume;},get rivalsEnabled(){return rivalsEnabled;},get checkpointMode(){return checkpointMode;},get status(){return lastStatus;}};
   }
   window.TrackAudio={engineTone,tyreTone,surfaceRumble,woodRumble:surfaceRumble,distanceGain,create};
 })();

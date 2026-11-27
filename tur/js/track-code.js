@@ -9,7 +9,7 @@
     tarmacDepth: 0.5, levelHeight: 4, groundY: 0, turnSegments: 12 });
   // The side-feature footprint is shared by geometry and race gates.
   const EDGE_WIDTH=.85;
-  const SCALES = new Set(['TL', 'TW', 'TD', 'LH', 'SC', 'SS', 'SE', 'BC', 'BS', 'WS', 'LS', 'CSW', 'SN', 'ES', 'GY', 'GC', 'GG', 'GD', 'OC', 'WG', 'BD', 'SD', 'TI', 'TO', 'TR', 'PQ', 'PM', 'PZ', 'RD', 'BU', 'ENV']);
+  const SCALES = new Set(['TL', 'TW', 'TD', 'LH', 'SC', 'SS', 'SE', 'BC', 'BS', 'WS', 'LS', 'CSW', 'SN', 'ES', 'GY', 'GC', 'GG', 'GD', 'OC', 'WG', 'BD', 'SD', 'TI', 'TO', 'TR', 'PQ', 'PM', 'PZ', 'RD', 'BU', 'ENV','BPD']);
   const ENVIRONMENTS=Object.freeze(['grasslands','desert','snow','autumn','volcanic','city']);
   // Shared menu/render catalogue. New edge profiles can add a style here and
   // a generator mode without duplicating global and section UI options.
@@ -40,11 +40,11 @@
   // Authored ST applies to the whole piece, although its shared start pose
   // retains the previous ST. AC ends on the first pose, so use its incoming ST.
   function pieceSurface(piece) {return piece.source?.ST??(piece.isClose?piece.start.surface:piece.end.surface)??'road';}
-  const KEYS = new Set(['AA', 'AH', 'FL', 'GL', 'DA', 'DH', 'TW', 'DW', 'WA', 'WI', 'ST', 'ES', 'EC', 'SS', 'SE', 'SC', 'SI', 'SO', 'BL', 'BR', 'BC', 'BF', 'BS', 'WS', 'LS', 'SN', 'SF', 'RS', 'RF', 'CP', 'RP', 'OC', 'SR', 'FQ', 'WG', 'S0', 'S1', 'B0', 'B1', 'OA', 'O0', 'O1', 'TBL', 'TBR', 'SCL', 'SCR', 'CG']);
-  const NUMERIC = new Set(['AA', 'AH', 'FL', 'GL', 'DA', 'DH', 'TW', 'DW', 'WI', 'SC', 'SI', 'SO', 'BL', 'BR', 'BC', 'BF', 'BS', 'WS', 'LS', 'CP', 'RP', 'OC', 'SR', 'FQ', 'S0', 'S1', 'B0', 'B1', 'OA', 'O0', 'O1', 'TBL', 'TBR']);
+  const KEYS = new Set(['AA', 'AH', 'FL', 'GL', 'DA', 'DH', 'TW', 'DW', 'WA', 'WI', 'ST', 'ES', 'EC', 'SS', 'SE', 'SC', 'SI', 'SO', 'BL', 'BR', 'BC', 'BF', 'BS', 'WS', 'LS', 'SN', 'SF', 'RS', 'RF', 'CP', 'RP', 'OC', 'SR', 'FQ', 'WG', 'S0', 'S1', 'B0', 'B1', 'OA', 'O0', 'O1', 'TBL', 'TBR', 'SCL', 'SCR', 'CG','BP','BPP','BPW','BPO']);
+  const NUMERIC = new Set(['AA', 'AH', 'FL', 'GL', 'DA', 'DH', 'TW', 'DW', 'WI', 'SC', 'SI', 'SO', 'BL', 'BR', 'BC', 'BF', 'BS', 'WS', 'LS', 'CP', 'RP', 'OC', 'SR', 'FQ', 'S0', 'S1', 'B0', 'B1', 'OA', 'O0', 'O1', 'TBL', 'TBR','BPP','BPW','BPO']);
   const INTEGER = new Set(['WS', 'LS', 'CSW', 'CP']);
-  const FLAGS = new Set(['SS', 'SE', 'SN', 'EC', 'SF', 'RS', 'RF', 'WG', 'CG']);
-  const FRACTIONS = new Set(['SC', 'BC', 'BS', 'RP', 'OC', 'SR', 'FQ', 'O0', 'O1', 'SD', 'TI', 'TO', 'TBL', 'TBR', 'TR', 'PQ', 'PM', 'RD', 'BU']);
+  const FLAGS = new Set(['SS', 'SE', 'SN', 'EC', 'SF', 'RS', 'RF', 'WG', 'CG','BP']);
+  const FRACTIONS = new Set(['SC', 'BC', 'BS', 'RP', 'OC', 'SR', 'FQ', 'O0', 'O1', 'SD', 'TI', 'TO', 'TBL', 'TBR', 'TR', 'PQ', 'PM', 'RD', 'BU','BPD','BPP','BPW']);
   const EXAMPLE_CODE = 'TS2|(TL=10,TW=8,TD=0.25,LH=4)|(AA=0,AH=0)|(FL=2)|(DA=90)|(FL=3)|(DA=-90)|(FL=2)|(DA=-90)|(FL=3)|(DA=90,DH=1)|(FL=1)|(DA=90,DH=-1)|(FL=1)|(DA=90)|(FL=1,DH=1)|(FL=1)|(FL=1,DH=-1,SE=0)|(FL=1,DH=-1,SS=0)|(FL=2.5)|(FL=1,DH=1)|(FL=3)|(DA=90,DH=-1)|(FL=2)|(DA=70,DH=1)|(FL=1)|AC';
 
   function readPairs(token, index) {
@@ -100,6 +100,7 @@
     if(key==='PZ' && (n<2 || n>100))throw Error('PZ maximum pond diameter must be between 2 and 100 metres.');
     if (FRACTIONS.has(key) && (n<0 || n>1)) throw Error(`Token ${index}: ${key} must be between 0 and 1.`);
     if (['SI','SO'].includes(key) && (n< -1 || n>1)) throw Error(`Token ${index}: ${key} must be between -1 and 1.`);
+    if (key==='BPO' && (n< -1 || n>1)) throw Error(`Token ${index}: BPO must be between -1 and 1.`);
     if (key==='BF' && (n<0 || n>.9)) throw Error(`Token ${index}: BF must be between 0 and 0.9.`);
     if (['WS','CSW'].includes(key) && (n<2 || n>32 || n%2!==0)) throw Error(`Token ${index}: ${key} must be an even subdivision count from 2 to 32.`);
     if (key==='LS' && (n<1 || n>128)) throw Error(`Token ${index}: LS must be a subdivision count from 1 to 128.`);
@@ -126,7 +127,7 @@
       defaultTrackWidth: scale.TW ?? DEFAULTS.defaultTrackWidth, tarmacDepth: scale.TD ?? DEFAULTS.tarmacDepth,
       levelHeight: scale.LH ?? DEFAULTS.levelHeight,defaultEdgeStyle:scale.ES??'auto',environment:scale.ENV??'grasslands',
       groundY:scale.GY??0,groundCutouts:scale.GC??true,grassGrip:scale.GG??.55,grassDrag:scale.GD??3,outerCorner:scale.OC??0,
-      groundSupports:scale.WG??false,sceneryDensity:scale.SD??(scale.BD ? .5 : 0),scenery:(scale.SD??(scale.BD ? .5 : 0))>0,
+      groundSupports:scale.WG??false,boostDensity:scale.BPD??0,sceneryDensity:scale.SD??(scale.BD ? .5 : 0),scenery:(scale.SD??(scale.BD ? .5 : 0))>0,
       tyreInside:scale.TI??0,tyreOutside:scale.TO??0,treeDensity:scale.TR??0,pondQuantity:scale.PQ??0,pondMaxSize:scale.PM??.35,pondMaxMetres:scale.PZ??(2+28*(scale.PM??.35)),rockDensity:scale.RD??0,bushDensity:scale.BU??0 };
     const instructions = [];
     let autoClose = false,closeParams={};
@@ -136,7 +137,7 @@
         if (autoClose || i !== parts.length - 1) throw Error('AC can occur only once, at the very end.');
         closeParams=token.length===2?{}:readPairs(token.slice(2),i);
         for(const key of Object.keys(closeParams)){
-          if(!['ST','ES','SF','RS','RF','CP','RP','SR','FQ','WG','TBL','TBR','SCL','SCR','CG'].includes(key))throw Error(`Auto-close cannot set ${key}; only appearance, scenery, ground supports and race markers are editable.`);
+          if(!['ST','ES','SF','RS','RF','CP','RP','SR','FQ','WG','TBL','TBR','SCL','SCR','CG','BP','BPP','BPW','BPO'].includes(key))throw Error(`Auto-close cannot set ${key}; only appearance, scenery, ground supports and race markers are editable.`);
           if(NUMERIC.has(key)||FLAGS.has(key)||key==='SCL'||key==='SCR')closeParams[key]=parameter(closeParams[key],key,i);
         }
         raceMarker(closeParams);
@@ -163,12 +164,14 @@
         if(params.TBL!==undefined || params.TBR!==undefined)throw Error('Put tyre-barrier overrides on a movement section, not the starting position.');
         if(params.SCL!==undefined || params.SCR!==undefined)throw Error('Put trackside scenery choices on a movement section, not the starting position.');
         if(params.CG!==undefined)throw Error('Put CG grass coverage on a movement section, not the starting position.');
+        if(['BP','BPP','BPW','BPO'].some(key=>params[key]!==undefined))throw Error('Put boost pads on a road section, not the starting position.');
         if(params.OC!==undefined)throw Error('Put OC in the global settings or on a movement section, not the start token.');
         if(['SF','RS','RF','CP','RP'].some(key=>params[key]!==undefined))throw Error('Place race markers on movement sections, for example (FL=6,SF=1).');
         if (!Object.hasOwn(params, 'AA') || !Object.hasOwn(params,'AH'))
           throw Error('Start token must contain AA (starting yaw) and AH (starting height).');
         if (Object.hasOwn(params,'FL') || Object.hasOwn(params,'GL')) throw Error('Start token must not contain movement.');
       } else {
+        if(params.GL!==undefined && params.BP)throw Error('A boost pad needs a road section, not a gap.');
         // Standalone DA/DH instructions create one-unit movement sections.
         if ((params.FL ?? params.GL ?? 1) <= 0) throw Error(`Token ${i}: FL / GL must be positive.`);
       }

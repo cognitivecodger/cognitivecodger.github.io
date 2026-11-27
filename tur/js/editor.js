@@ -74,6 +74,11 @@
       for(const key of ['SF','RS','RF','CP','RP'])delete (left?second:first)[key];
       (left?first:second).RP=left?position/boundary:(position-boundary)/(1-boundary);
     }else delete second.RP;
+    if(source.BP){
+      const boundary=markerSplitFraction(piece),position=source.BPP??.5,left=position<=boundary;
+      for(const key of ['BP','BPP','BPW','BPO'])delete (left?second:first)[key];
+      (left?first:second).BPP=left?position/boundary:(position-boundary)/(1-boundary);
+    }
     return [first,second];
   }
   function change(code,index,action,changes={},runtime=null) {
@@ -81,7 +86,7 @@
     if(doc.autoClose && index===doc.sections.length && action==='update') {
       const params={...doc.closeParams};
       for(const [key,value] of Object.entries(changes)){
-        if(!['ST','ES','SF','RS','RF','CP','RP','SR','FQ','WG','TBL','TBR','SCL','SCR','CG'].includes(key))throw Error(`Auto-close ${key} is calculated automatically.`);
+        if(!['ST','ES','SF','RS','RF','CP','RP','SR','FQ','WG','TBL','TBR','SCL','SCR','CG','BP','BPP','BPW','BPO'].includes(key))throw Error(`Auto-close ${key} is calculated automatically.`);
         if(value===null || value==='')delete params[key];else params[key]=value;
       }
       doc.parts[doc.parts.length-1]=closeToken(params);const result=doc.parts.join('|');window.TS2.parse(result);return result;
@@ -115,6 +120,7 @@
         if(value===null || value==='')delete params[key];else params[key]=value;
       }
       if(params.GL!==undefined || Math.abs(params.DA??0)>1e-8)delete params.CG;
+      if(params.GL!==undefined)for(const key of ['BP','BPP','BPW','BPO'])delete params[key];
       parts[section.at]=action==='delete'?null:token(params);
       // Consume modifier-only tokens into this section, so clearing an override
       // really returns to its default and deleting a section cannot leak metadata.
@@ -334,6 +340,7 @@
       $('sceneryOrderHelp').textContent=city?'Trackside facilities and tyre barriers are placed first, followed by city buildings, trees, rocks and bushes. Objects need clear ground.':'Buildings and tyre barriers are placed first, then ponds, trees, rocks and bushes. Objects need clear grass and may be omitted if there is not enough space. Ponds currently use grass driving behaviour.';
       $('globalGroundHeight').value=String(s.groundY);$('globalGrassGrip').value=String(s.grassGrip);$('globalGrassDrag').value=String(s.grassDrag);$('globalGroundCutouts').checked=s.groundCutouts;
       $('globalWallToGround').checked=s.groundSupports;
+      $('globalBoostDensity').value=String(s.boostDensity);$('globalBoostDensityValue').textContent=s.boostDensity.toFixed(2);
       densityPending=false;$('globalSceneryDensity').value=String(s.sceneryDensity);$('globalSceneryDensityValue').textContent=s.sceneryDensity.toFixed(2);
       for(const [id,value] of [['globalPondQuantity',s.pondQuantity],['globalPondSize',(s.pondMaxMetres-2)/98],['globalTreeDensity',s.treeDensity],['globalRockDensity',s.rockDensity],['globalBushDensity',s.bushDensity]]){
         $(id).value=String(value);$(id+'Value').textContent=id==='globalPondSize'?`${value.toFixed(2)} · ${city?'maximum ':'2 to '}${(city?Math.max(2,s.pondMaxMetres*.3):s.pondMaxMetres).toFixed(1)} m`:value.toFixed(2);
@@ -407,6 +414,10 @@
       if(!p){host.select(selected);return;}
       $('editKind').value=q.GL!==undefined?'gap':'road';$('editLength').value=String(q.FL??q.GL);
       $('editWallToGround').checked=p.WG??runtime.settings.groundSupports;
+      $('editBoostEnabled').checked=!!p.BP;$('editBoostEnabled').disabled=!!piece.isGap;
+      for(const [id,key,fallback] of [['editBoostPosition','BPP',.5],['editBoostWidth','BPW',0],['editBoostOffset','BPO',0]]){
+        $(id).value=String(p[key]??fallback);$(id+'Value').textContent=Number(p[key]??fallback).toFixed(2);$(id).disabled=!!piece.isGap || !p.BP;
+      }
       $('sectionGroundSupportStatus').textContent=`${p.WG===undefined?'Follows track default':p.WG?'Enabled for this section':'Disabled for this section'}. Openings are cut for roads underneath; raised ends beside a jump form a solid landing face.`;
       materialOptions('editSurface',p.ST??'',isClose?'Continue incoming material':'Continue previous material');
       $('editRoughness').value=String(p.SR??0);$('editRoughnessValue').textContent=Number(p.SR??0).toFixed(2);
@@ -649,6 +660,13 @@
     $('applyGlobals').addEventListener('click',applyGlobals);
     $('globalGroundCutouts').addEventListener('change',applyGlobals);
     $('globalWallToGround').addEventListener('change',applyGlobals);
+    $('globalBoostDensity').addEventListener('input',()=>{$('globalBoostDensityValue').textContent=Number($('globalBoostDensity').value).toFixed(2);});
+    $('globalBoostDensity').addEventListener('change',()=>{try{checkDraft();if(!commit(globals(runtime.code,{BPD:number('globalBoostDensity')})))fillGlobals();}catch(error){host.message(error.message,true);fillGlobals();}});
+    $('editBoostEnabled').addEventListener('change',()=>{try{checkDraft();if(!appearanceEditable() || runtime.pieces[selected].isGap)return;const patch={BP:$('editBoostEnabled').checked?true:null};if(multiActive()){stage(patch);return;}if(!commit(change(runtime.code,selected,'update',patch)))fill();}catch(error){host.message(error.message,true);fill();}});
+    for(const [id,key] of [['editBoostPosition','BPP'],['editBoostWidth','BPW'],['editBoostOffset','BPO']]){
+      $(id).addEventListener('input',()=>{$(id+'Value').textContent=Number($(id).value).toFixed(2);});
+      $(id).addEventListener('change',()=>{try{checkDraft();if(!appearanceEditable() || runtime.pieces[selected].isGap)return;const patch={[key]:number(id)};if(multiActive()){stage(patch);return;}if(!commit(change(runtime.code,selected,'update',patch)))fill();}catch(error){host.message(error.message,true);fill();}});
+    }
     $('globalEnvironment').addEventListener('change',()=>{try{checkDraft();if(!commit(globals(runtime.code,{ENV:$('globalEnvironment').value})))fillGlobals();}catch(error){if(runtime)fillGlobals();host.message(error.message,true);}});
     $('globalSceneryDensity').addEventListener('input',()=>{densityPending=true;$('globalSceneryDensityValue').textContent=Number($('globalSceneryDensity').value).toFixed(2);});
     $('globalSceneryDensity').addEventListener('change',()=>{densityPending=true;applyGlobals();});

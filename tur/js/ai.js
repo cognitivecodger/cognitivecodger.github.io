@@ -88,28 +88,30 @@
     return {input,locate,point,total,closed,direction:dir,build,accelerationMultiplier:profile.accelerationMultiplier,cornering,driverCornerFactor,cornerBrakeBuffer,cornerDangerLook,curvatureFloor,topSpeed,hilly,slopeCornerFactor,slopeBrakeBuffer,slopeDangerLook,pieceCount:pieces.length,isGap:index=>!!runtime.pieces[index]?.isGap};
   }
   // Deterministic individual styles keep difficulty meaningful and replays
-  // reproducible. Numbers vary within a narrow band rather than changing the
-  // car physics or making every corner a drift.
+  // reproducible. The blue driver is especially bold; these settings change
+  // their speed targets, not the cars' underlying physics.
   const STYLES=Object.freeze([
-    {lane:-.42,speed:.97,corner:.97,look:16,steer:1.50,side:-1},
-    {lane:.42,speed:1.02,corner:1.03,look:12,steer:1.55,side:1},
-    {lane:-.19,speed:.94,corner:1.00,look:18,steer:1.44,side:-1},
-    {lane:.20,speed:1.04,corner:1.04,look:13,steer:1.58,side:1},
-    {lane:0,speed:.98,corner:.95,look:17,steer:1.47,side:1},
-    {lane:-.32,speed:1.01,corner:1.01,look:14,steer:1.52,side:-1},
-    {lane:.32,speed:.96,corner:1.02,look:15,steer:1.48,side:1}
+    {lane:-.42,speed:.97,corner:3.00,look:16,steer:1.50,side:-1},
+    {lane:.42,speed:1.02,corner:2.08,look:12,steer:1.55,side:1},
+    {lane:-.19,speed:.94,corner:2.00,look:18,steer:1.44,side:-1},
+    {lane:.20,speed:1.04,corner:2.10,look:13,steer:1.58,side:1},
+    {lane:0,speed:.98,corner:2.02,look:17,steer:1.47,side:1},
+    {lane:-.32,speed:1.01,corner:2.04,look:14,steer:1.52,side:-1},
+    {lane:.32,speed:.96,corner:2.06,look:15,steer:1.48,side:1},
+    {lane:-.42,speed:.97,corner:2.00,look:16,steer:1.50,side:-1}
   ].map(Object.freeze));
   const PERSONALITY_FIELDS=Object.freeze({
     lane:{label:'Preferred line',min:-1,max:1,step:.05},
     speed:{label:'Straight speed',min:.7,max:1.2,step:.01},
-    corner:{label:'Corner speed',min:.6,max:1.6,step:.01},
+    corner:{label:'Corner speed',min:.6,max:3,step:.01},
     brake:{label:'Brake lateness',min:.4,max:2,step:.05},
     look:{label:'Corner look-ahead',min:8,max:25,step:1},
+    steerLook:{label:'Steering look-ahead',min:3,max:30,step:1},
     steer:{label:'Steering response',min:.8,max:2.2,step:.05},
     overtake:{label:'Overtaking',min:0,max:1,step:.05},
     handbrake:{label:'Handbrake use',min:0,max:1,step:.05}
   });
-  function defaultPersonality(index=0){return {...STYLES[((index%STYLES.length)+STYLES.length)%STYLES.length],brake:1,overtake:.5,handbrake:index%3!==2?.5:0,handbrakeCadence:7+(index%3)*.7};}
+  function defaultPersonality(index=0){return {...STYLES[((index%STYLES.length)+STYLES.length)%STYLES.length],brake:1,steerLook:10,overtake:.5,handbrake:index%3!==2?.5:0,handbrakeCadence:7+(index%3)*.7};}
   function personality(values={},index=0){
     const base=defaultPersonality(index),result={...base};
     for(const [key,range] of Object.entries(PERSONALITY_FIELDS))if(Number.isFinite(values[key]))result[key]=clamp(values[key],range.min,range.max);
@@ -129,7 +131,9 @@
     function input(self,field,dt=1/60){
       dt=clamp(Number.isFinite(dt)?dt:0,0,.1);
       const position=self.path??nav.locate(self.state),s=self.state,speed=Math.hypot(s.vx,s.vz);
-      const look=clamp(3+speed*.38,3,9),here=nav.point(position.distance),target=nav.point(position.distance+nav.direction*look);
+      // Steering looks a chosen distance along the ordered centreline, not at
+      // each mesh subdivision. Corner anticipation remains independent.
+      let look=style.steerLook,target=nav.point(position.distance+nav.direction*look);const here=nav.point(position.distance);
       const near=nav.point(position.distance+nav.direction*2),far=nav.point(position.distance+nav.direction*style.look);
       const bend=Math.abs(angle(far.yaw-near.yaw))/Math.max(1,style.look-2);
       const margin=dimensions.width*.5+.48*Math.max(.5,s.scale),room=Math.max(0,Math.min(here.width,target.width)*.5-margin);
@@ -171,6 +175,11 @@
         }
       }else if(hold>0 && passing!==null){desired=clamp(passing,-room,room);hold=Math.max(0,hold-dt);mode='passing';}
       else {hold=0;passing=null;}
+      // Close traffic needs a more immediate target for lane changes; a long
+      // racing-line look-ahead would otherwise make overtakes unresponsive.
+      if(mode==='passing' || mode==='following'){
+        look=Math.min(look,clamp(3+speed*.38,3,9));target=nav.point(position.distance+nav.direction*look);
+      }
       // Smooth lateral movement and obey the road edge at the look-ahead point.
       lane=clamp(lane+clamp(desired-lane,-dt*.85,dt*.85),-room,room);
       const tx=target.x+Math.cos(target.yaw)*lane,tz=target.z-Math.sin(target.yaw)*lane;
@@ -188,7 +197,10 @@
         Math.abs(angle(nav.point(position.distance+nav.direction*distance).yaw-here.yaw))<.04));
       const steepApproach=nav.hilly && Math.max(Math.abs(here.y-near.y),Math.abs(here.y-far.y),Math.abs(here.y-target.y))>.35;
       const cornerFactor=steepApproach?nav.slopeCornerFactor:nav.driverCornerFactor;
-      const cap=clearStraight?nav.topSpeed*style.speed:
+      // A boost raises the car's physical speed limit, so let the driver use
+      // it on a clear straight. Keep corner targets and traffic limits intact.
+      const boost=clamp(Number.isFinite(s.boostLevel)?s.boostLevel:0,0,1);
+      const cap=clearStraight?nav.topSpeed*style.speed*(1+.35*boost):
         clamp(Math.sqrt(nav.cornering*cornerFactor*style.corner/Math.max(nav.curvatureFloor,bend)),5,nav.topSpeed*style.speed);
       const targetSpeed=Math.min(cap,limit),steer=-clamp(error*style.steer,-1,1);
       const dangerLook=steepApproach?nav.slopeDangerLook:nav.cornerDangerLook;

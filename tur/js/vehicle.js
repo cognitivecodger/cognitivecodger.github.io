@@ -726,6 +726,7 @@
     }
     function reset() {
       state.soundImpacts={};
+      window.TrackBoost?.reset(state);state.boostLevel=0;
       Object.assign(state,seed,wheelFeedback(),{vx:0,vy:0,vz:0,pitch:0,roll:0,pitchRate:0,rollRate:0,steering:0,airTime:0,wheelSpin:0,frontWheelSpin:0,rearWheelSpin:0,slideYawRate:0,handbrakeActive:false,handbrakeDirection:0,wheelSlip:0,brakeDemand:0,engineRPM:1000,engineLoad:0,collisions:0,recoveries:0});
       const floor=world.support(seed.x,seed.z,seed.y+runtime.settings.tarmacDepth*.5+.15,seed.y+runtime.settings.tarmacDepth*.5-.15,index);
       if(floor && world.ceiling(seed.x,seed.z,floor.y+.25*scale,floor.y+1.6*scale))throw Error('Not enough headroom for this car size here. Choose a smaller car or another section.');
@@ -740,6 +741,7 @@
     }
     function recover(recoveryOptions) {
       state.soundImpacts={};
+      window.TrackBoost?.reset(state);state.boostLevel=0;
       if(!lastRoad){reset();return false;}
       recoveryReason=null;let rewind=null;
       const jump=nextJump(lastRoad);
@@ -789,6 +791,9 @@
       const previous={x:state.x,y:state.y,z:state.z},previousYaw=state.yaw,onRoad=state.grounded>0,previousAirTime=state.airTime,previousVy=state.vy;
       const f={x:Math.sin(state.yaw),z:Math.cos(state.yaw)},r={x:-Math.cos(state.yaw),z:Math.sin(state.yaw)};
       let speed=state.vx*f.x+state.vz*f.z,lateral=state.vx*r.x+state.vz*r.z;
+      state.boostTime=Math.max(0,(state.boostTime??0)-dt);
+      if(!state.boostTime)state.boostLevel=Math.max(0,(state.boostLevel??0)-dt*.5);
+      const boostLevel=state.boostLevel??0,boostSpeedCap=build.engine.maxSpeed*(1+.35*boostLevel);
       const throttle=clamp(input.throttle??0,-1,1),steer=clamp(input.steer??0,-1,1);
       const handbrake=input.handbrake===true,serviceBrake=!!input.brake,power=Math.abs(throttle);
       // An opposing pedal applies the service brakes until the car is moving
@@ -890,11 +895,11 @@
             pull+=direction*clamp(desired-natural,0,build.engine.acceleration*power*drivenMud);
           }
         }
-        speed+=(pull+hillAcceleration)*dt;
+        speed+=(pull+hillAcceleration+(directionBrake || serviceBrake || handbrake?0:8*boostLevel))*dt;
         const handbrakeForce=turning?(poweredTurn?1+9*clamp((Math.abs(speed)-donutSpeed)/3,0,1):10):24;
         const pedalBrake=directionBrake?(throttle<0?19:16)*power*brakeGrip:0;
         const brake=(serviceBrake?24*brakeGrip:handbrake?handbrakeForce*rearBrake/2:0)+pedalBrake+.7+drag+.012*speed*speed;speed=Math.sign(speed)*Math.max(0,Math.abs(speed)-brake*dt);
-        speed=clamp(speed,-CONFIG.reverseSpeed,build.engine.maxSpeed);
+        speed=clamp(speed,-CONFIG.reverseSpeed,boostSpeedCap);
         if(handbrake || powerSlide>0){
           const lateralDamping=handbrake?5*(frontGrip+rearGrip*.08)/Math.max(1,supported):10*(frontGrip+rearGrip*(1-.7*powerSlide))/Math.max(1,supported);
           lateral*=Math.exp(-lateralDamping*dt);
@@ -984,7 +989,7 @@
       }else{
         state.frontGripLoss=state.rearGripLoss=onRoad?1:0;
       }
-      const magnitude=Math.hypot(state.vx,state.vz);if(magnitude>build.engine.maxSpeed){state.vx*=build.engine.maxSpeed/magnitude;state.vz*=build.engine.maxSpeed/magnitude;}
+      const magnitude=Math.hypot(state.vx,state.vz);if(magnitude>boostSpeedCap){state.vx*=boostSpeedCap/magnitude;state.vz*=boostSpeedCap/magnitude;}
       state.x+=state.vx*dt;state.z+=state.vz*dt;state.wheelSpin+=speed*dt/size.wheelRadius;
       let lift=0,pitchTorque=0,rollTorque=0,grounded=0;
       const cy=Math.cos(state.yaw),sy=Math.sin(state.yaw);

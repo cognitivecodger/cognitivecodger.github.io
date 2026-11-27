@@ -131,7 +131,7 @@
   }
   $('slopeContrast').addEventListener('input',updateSlopeContrast);updateSlopeContrast();
   let world=new THREE.Group();scene.add(world);
-  let runtime=null, road=null, kerbs=null,walls=null,fences=null,ground=null,sceneryLayer=null,debug=null,raceMarkers=null,checkpointMarkers=null,crossingArrows=null;
+  let runtime=null, road=null, kerbs=null,walls=null,fences=null,ground=null,sceneryLayer=null,debug=null,raceMarkers=null,checkpointMarkers=null,crossingArrows=null,boostLayer=null;
   let editor=null,selection=null,gapMarkers=null,drive=null,garage=null,driveBuffers=null,library=null,quickSession=null,menuControls=null,menuPreview=null,previewDayLighting=null,defaultPacksLoading=false,editorAITest=null;
   let editorPreviewEnvironment='default';$('editorEnvironment').value='default';
   const editorEnvironmentFor=track=>editorPreviewEnvironment==='default'?track.settings.environment:editorPreviewEnvironment;
@@ -363,7 +363,7 @@
   function rebuildLayers(nextRuntime=runtime) {
     if(!nextRuntime)return false;
     const nextWorld=new THREE.Group();
-    let nextRoad,nextKerbs,nextWalls,nextFences,nextGround,nextScenery,nextNightSceneryLights,nextDebug,nextSelection,nextGapMarkers,nextBuffers,nextRaceMarkers,nextCheckpointMarkers,nextCrossingArrows,geomStats;
+    let nextRoad,nextKerbs,nextWalls,nextFences,nextGround,nextScenery,nextNightSceneryLights,nextDebug,nextSelection,nextGapMarkers,nextBuffers,nextRaceMarkers,nextCheckpointMarkers,nextCrossingArrows,nextBoostLayer,geomStats;
     try {
       const gm=TrackGeometry.generateRoad(nextRuntime);
       nextRoad=meshFrom(gm,'Road');nextRoad.userData={pieceRanges:gm.visual?.pieceRanges??gm.pieceRanges};nextWorld.add(nextRoad);
@@ -378,6 +378,9 @@
       nextRaceMarkers=raceMeshFrom(TrackGeometry.generateRaceMarkers(nextRuntime,gm,'startFinish',drive?.direction??1),'Race markers');nextWorld.add(nextRaceMarkers);
       nextCheckpointMarkers=raceMeshFrom(TrackGeometry.generateRaceMarkers(nextRuntime,gm,'checkpoints',drive?.direction??1),'Checkpoint markings');nextWorld.add(nextCheckpointMarkers);
       nextCrossingArrows=raceMeshFrom(TrackGeometry.generateCrossingArrows(nextRuntime,gm,drive?.direction??1),'Crossroad arrows');nextWorld.add(nextCrossingArrows);
+      const boostDirection=quickSession?.boostDirection??drive?.direction??1;
+      nextBuffers.boostPads=TrackBoost.plan(nextRuntime,boostDirection);
+      nextBoostLayer=raceMeshFrom(TrackGeometry.generateBoostPads(nextRuntime,gm,boostDirection),'Boost pads');nextWorld.add(nextBoostLayer);
       nextKerbs=meshFrom(features.kerbs,'Kerbs');nextWorld.add(nextKerbs);
       nextWalls=meshFrom(features.walls,'Walls');nextWorld.add(nextWalls);
       nextFences=meshFrom(features.fences,'Fences');nextWorld.add(nextFences);
@@ -405,7 +408,7 @@
     world=nextWorld;scene.add(world);
     road=nextRoad;kerbs=nextKerbs;walls=nextWalls;fences=nextFences;ground=nextGround;sceneryLayer=nextScenery??null;debug=nextDebug;selection=nextSelection;
     gapMarkers=nextGapMarkers;updateGapVisibility();
-    raceMarkers=nextRaceMarkers;checkpointMarkers=nextCheckpointMarkers;crossingArrows=nextCrossingArrows;
+    raceMarkers=nextRaceMarkers;checkpointMarkers=nextCheckpointMarkers;crossingArrows=nextCrossingArrows;boostLayer=nextBoostLayer;
     if(quickSession)quickSession.nightSceneryLights=nextNightSceneryLights??null;
     runtime=nextRuntime;
     driveBuffers=nextBuffers;
@@ -422,6 +425,7 @@
   function updateLayersVisibility() {
     if(road)road.visible=$('showRoad').checked;
     if(crossingArrows)crossingArrows.visible=$('showRoad').checked;
+    if(boostLayer)boostLayer.visible=$('showRoad').checked && (!drive?.active || (quickSession?quickSession.specials:$('editorBoostMode').value==='specials'));
     if(kerbs)kerbs.visible=$('showKerbs').checked;
     if(walls)walls.visible=$('showWalls').checked;
     if(fences)fences.visible=$('showFences').checked;
@@ -447,14 +451,16 @@
   }
   function setRaceDirection(direction) {
     if(!runtime || !driveBuffers)return;
-    let lines,checkpoints,arrows;
+    let lines,checkpoints,arrows,boosts;
     try {
       lines=raceMeshFrom(TrackGeometry.generateRaceMarkers(runtime,driveBuffers.road,'startFinish',direction),'Race markers');
       checkpoints=raceMeshFrom(TrackGeometry.generateRaceMarkers(runtime,driveBuffers.road,'checkpoints',direction),'Checkpoint markings');
       arrows=raceMeshFrom(TrackGeometry.generateCrossingArrows(runtime,driveBuffers.road,direction),'Crossroad arrows');
-    }catch(error){if(lines)disposeLayer(lines);if(checkpoints)disposeLayer(checkpoints);if(arrows)disposeLayer(arrows);throw error;}
+      boosts=raceMeshFrom(TrackGeometry.generateBoostPads(runtime,driveBuffers.road,direction),'Boost pads');
+    }catch(error){if(lines)disposeLayer(lines);if(checkpoints)disposeLayer(checkpoints);if(arrows)disposeLayer(arrows);if(boosts)disposeLayer(boosts);throw error;}
     world.add(lines,checkpoints,arrows);disposeLayer(raceMarkers);disposeLayer(checkpointMarkers);disposeLayer(crossingArrows);
-    raceMarkers=lines;checkpointMarkers=checkpoints;crossingArrows=arrows;crossingArrows.visible=$('showRoad').checked;updateRaceVisibility();
+    world.add(boosts);disposeLayer(boostLayer);boostLayer=boosts;driveBuffers.boostPads=TrackBoost.plan(runtime,direction);
+    raceMarkers=lines;checkpointMarkers=checkpoints;crossingArrows=arrows;crossingArrows.visible=$('showRoad').checked;boostLayer.visible=$('showRoad').checked && (!drive?.active || (quickSession?quickSession.specials:$('editorBoostMode').value==='specials'));updateRaceVisibility();
     $('raceSetupSummary').textContent=TrackRace.plan(runtime,driveBuffers.road,direction).message;
   }
   function restoreEditorAITest(){
@@ -645,9 +651,9 @@
   }
   editor=TrackEditor.create({commit:(code,options)=>applyCode(false,code,options??shapeOptions()),select:highlight,message,isDriving:()=>drive?.active,
     sceneryPlacements:()=>sceneryLayer?.userData?.placements??[]});
-  drive=TrackDrive.create({scene,canvas,performance:performanceDisplay,getTrack:()=>({runtime,buffers:driveBuffers}),raceTrackName:()=>quickSession?.trackName,nightRace:()=>quickSession?.night===true,selected:()=>editor.selectedIndex,message,setDirection:setRaceDirection,buildChanged:build=>garage?.externalChange(build),compactRace:()=>['race','championship'].includes(quickSession?.returnPage),
+  drive=TrackDrive.create({scene,canvas,performance:performanceDisplay,getTrack:()=>({runtime,buffers:driveBuffers}),boostEnabled:()=>quickSession?!!quickSession.specials:$('editorBoostMode').value==='specials',raceTrackName:()=>quickSession?.trackName,nightRace:()=>quickSession?.night===true,selected:()=>editor.selectedIndex,message,setDirection:setRaceDirection,buildChanged:build=>garage?.externalChange(build),compactRace:()=>['race','championship'].includes(quickSession?.returnPage),
     championshipRace:()=>quickSession?.returnPage==='championship',championshipResult:recordChampionshipResult,championshipNext:nextChampionshipRace,
-    mode:active=>{performanceDisplay.setActive(active);if(active){editor.cancelPendingDeletion();library?.cancelPendingDeletion();road.visible=true;kerbs.visible=true;walls.visible=true;fences.visible=true;ground.visible=true;if(sceneryLayer)sceneryLayer.visible=true;debug.visible=false;updateGroundPreview();}else {restoreEditorAITest();updateLayersVisibility();}
+    mode:active=>{performanceDisplay.setActive(active);if(active){editor.cancelPendingDeletion();library?.cancelPendingDeletion();road.visible=true;kerbs.visible=true;walls.visible=true;fences.visible=true;ground.visible=true;if(boostLayer)boostLayer.visible=quickSession?!!quickSession.specials:$('editorBoostMode').value==='specials';if(sceneryLayer)sceneryLayer.visible=true;debug.visible=false;updateGroundPreview();}else {restoreEditorAITest();updateLayersVisibility();}
       if(selection)selection.visible=!active && !$('editorPanel').hidden;updateGapVisibility();drag=null;updateEditorOrientation();
       if(!active && quickSession?.started){const page=quickSession.returnPage??'race';restoreQuickSession();showMenu(page);return 'menu';}}});
   $('startEditorAI').addEventListener('click',()=>{
@@ -749,7 +755,7 @@
     restoreDayLighting(saved.dayLighting);
     if(saved.staged){
       disposeLayer(world);world=saved.world;scene.add(world);
-      ({runtime,road,kerbs,walls,fences,ground,sceneryLayer,debug,raceMarkers,checkpointMarkers,crossingArrows,selection,gapMarkers,driveBuffers}=saved);
+      ({runtime,road,kerbs,walls,fences,ground,sceneryLayer,debug,raceMarkers,checkpointMarkers,crossingArrows,boostLayer,selection,gapMarkers,driveBuffers}=saved);
       frameShadows(driveBuffers);updateLayersVisibility();updateSceneryStatus(editorEnvironmentFor(runtime));$('geomStats').textContent=saved.stats;
       updateTrackInformation();syncShapeControls();$('code').value=saved.draft;editor.restoreState(saved.editorState);
     }
@@ -808,6 +814,7 @@
       const grass=meshFrom(terrain.ground,'Grass');grass.castShadow=false;group.add(grass);addLavaSurface(group,terrain);addGrassCoverShadow(group,terrain);group.add(meshFrom(terrain.cuttings,'Soil cuttings'));
       if(terrain.portalkerb.triangles)group.add(meshFrom(terrain.portalkerb,'Grass cover kerbs'));
       const previewDirection=statusId==='menuRaceStatus' && $('menuRaceDirection').value==='reverse'?-1:1;
+      if(statusId==='menuRaceStatus' && $('menuRaceSpecials').value==='specials')group.add(raceMeshFrom(TrackGeometry.generateBoostPads(track,gm,previewDirection),'Preview boost pads',night));
       group.add(raceMeshFrom(TrackGeometry.generateRaceMarkers(track,gm,'startFinish',previewDirection),'Preview start / finish',night));
       group.add(raceMeshFrom(TrackGeometry.generateRaceMarkers(track,gm,'checkpoints',previewDirection),'Preview checkpoints',night));
       group.add(raceMeshFrom(TrackGeometry.generateCrossingArrows(track,gm,previewDirection),'Preview crossroad arrows',night));
@@ -818,7 +825,7 @@
       $(statusId).textContent='';
     }catch(error){if(group)disposeLayer(group);$(statusId).textContent=`Could not preview the selected track: ${error.message}`;}
   }
-  const raceSelectIds=['menuRacePack','menuRaceTrack','menuRaceDirection','menuRaceLighting','menuRaceEnvironment','menuOpponentCount','menuRivalDifficulty','menuRaceLaps'];
+  const raceSelectIds=['menuRacePack','menuRaceTrack','menuRaceSpecials','menuRaceDirection','menuRaceLighting','menuRaceEnvironment','menuOpponentCount','menuRivalDifficulty','menuRaceLaps'];
   const championshipSelectIds=['menuChampPack','menuChampOpponents','menuChampDifficulty','menuChampLaps','menuChampDirection','menuChampLighting','menuChampEnvironment'];
   let raceChoice=null,pendingOfficialRefresh=false,quickRaceChoiceChanged=false;
   function raceInputMethod(method){for(const prefix of ['race','champ']){$(prefix+'HelpKeyboard').hidden=method==='controller';$(prefix+'HelpController').hidden=method!=='controller';}}
@@ -1057,9 +1064,9 @@
       const chosenEnvironment=plan?.environment??(!workshop && raceEnvironment && raceEnvironment!=='default'?raceEnvironment:built.settings.environment);
       const chosenNight=championship?plan.lighting==='night':!workshop && $('menuRaceLighting').value==='night';
       clearMenuPreview();
-      quickSession={world,runtime,road,kerbs,walls,fences,ground,sceneryLayer,debug,raceMarkers,checkpointMarkers,crossingArrows,selection,gapMarkers,driveBuffers,
+      quickSession={world,runtime,road,kerbs,walls,fences,ground,sceneryLayer,debug,raceMarkers,checkpointMarkers,crossingArrows,boostLayer,selection,gapMarkers,driveBuffers,
         draft:$('code').value,stats:$('geomStats').textContent,editorState:editor.snapshotState(),
-        libraryDocument:{code:runtime.code,draft:$('code').value,options:TrackLibrary.options(runtime.settings),selection:editor.selectedIndex},trackName:doc.name??'Unnamed track',returnPage:championship?'championship':workshop?'ai':'race',night:chosenNight,environment:chosenEnvironment,previousDirection:drive.direction,staged:false,started:false};
+        libraryDocument:{code:runtime.code,draft:$('code').value,options:TrackLibrary.options(runtime.settings),selection:editor.selectedIndex},trackName:doc.name??'Unnamed track',returnPage:championship?'championship':workshop?'ai':'race',night:chosenNight,environment:chosenEnvironment,specials:!workshop && !championship && $('menuRaceSpecials').value==='specials',boostDirection:(!workshop && (championship?plan.direction:$('menuRaceDirection').value)==='reverse')?-1:1,previousDirection:drive.direction,staged:false,started:false};
       // Incomplete/unmarked race setups receive temporary in-memory gates.
       // The selected code and editor document remain byte-for-byte unchanged.
       let temporaryMarkers=null;
@@ -1119,6 +1126,7 @@
   $('menuAIPack').addEventListener('change',()=>{refreshRaceChoices('menuAITrack');showTrackPreview($('menuAITrack').value,'menuAIStatus');});
   $('menuRaceTrack').addEventListener('change',()=>{quickRaceChoiceChanged=true;showTrackPreview($('menuRaceTrack').value,'menuRaceStatus');});
   $('menuRaceDirection').addEventListener('change',()=>showTrackPreview($('menuRaceTrack').value,'menuRaceStatus'));
+  $('menuRaceSpecials').addEventListener('change',()=>showTrackPreview($('menuRaceTrack').value,'menuRaceStatus'));
   $('menuRaceLighting').addEventListener('change',()=>showTrackPreview($('menuRaceTrack').value,'menuRaceStatus'));
   $('menuRaceEnvironment').addEventListener('change',()=>showTrackPreview($('menuRaceTrack').value,'menuRaceStatus'));
   $('menuAITrack').addEventListener('change',()=>showTrackPreview($('menuAITrack').value,'menuAIStatus'));

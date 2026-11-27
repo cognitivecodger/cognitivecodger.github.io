@@ -1,4 +1,4 @@
-/* Versioned, self-contained track collections; imported data is never executed. */
+﻿/* Versioned, self-contained track collections; imported data is never executed. */
 (function(){
   'use strict';
   const PREFIX='trackshift.pack.v1.',FORMAT='TUR Pack',LEGACY_FORMAT='TrackShift Pack',MAX_TEXT=2000000,MAX_TRACKS=100,MAX_CODE=100000;

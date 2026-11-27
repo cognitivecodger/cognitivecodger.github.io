@@ -504,10 +504,15 @@
         }
       });return trial;
     }
+    function boostContact(previous,state){
+      if(!host.boostEnabled?.() || !TrackBoost.step(state,previous,host.getTrack().buffers.boostPads))return;
+      const listener=workshop?(selectedDiagnostic()?.sim.state??sim?.state):sim?.state;
+      engineSound.boost(state,listener);
+    }
     function simulation(world,runtime,position,scale,trial,build=vehicleBuild) {
       const discontinuity=state=>tyreMarks.breakTrails(state);
       return TrackVehicle.create(world,runtime,position.index,{scale,build:build.selection,direction:trial.course.direction,spawnFraction:position.fraction,spawnPose:position.pose,allowSurfaceRejoin:true,
-        onStep:(previous,state,dt)=>{trial.step(previous,state,dt);tyreMarks.step(state,dt,world.support);},
+        onStep:(previous,state,dt)=>{trial.step(previous,state,dt);boostContact(previous,state);tyreMarks.step(state,dt,world.support);},
         onReset:state=>{trial.reset();discontinuity(state);},onRecover:(state,info)=>{trial.recover(info);discontinuity(state);}});
     }
     const rivalColours=[0x28a6dd,0xe65555,0xb67be3,0x6bbf59,0xe879b1,0xe6e8ed,0x37c7ad,0xf6ad42];
@@ -523,7 +528,7 @@
         const trial=TrackRace.create(course);let driver=null,entry=null;
         const opponent=TrackVehicle.create(world,runtime,position.index,{scale,build:nav.build,accelerationMultiplier:nav.accelerationMultiplier,direction:course.direction,
           spawnFraction:position.fraction,spawnPose:position.pose,
-          onStep:(previous,state,dt)=>{trial.step(previous,state,dt);tyreMarks.step(state,dt,world.support,spectator && index===0);},
+          onStep:(previous,state,dt)=>{trial.step(previous,state,dt);boostContact(previous,state);tyreMarks.step(state,dt,world.support,spectator && index===0);},
           onReset:state=>{trial.reset();tyreMarks.breakTrails(state);driver?.reset(state);},onRecover:(state,info)=>{
             trial.recover(info);tyreMarks.breakTrails(state);driver?.reset(state);
             if(entry && !entry.recovering)recordRecovery(entry,{time:rival?.elapsed??0,reason:'automatic fall recovery',to:entry.sim.recoverySection,earlier:false});
@@ -548,7 +553,7 @@
         recovery:opponent.sim.recoverySection,recoveries:s.recoveries,resets:s.resets,stuck:opponent.stuck,offRoute:opponent.offRoute,
         yaw:s.yaw,mode:i.mode,traffic:i.target,nearby:i.nearby??0,targetSpeed:(i.targetSpeed??0)*3.6,
         throttle:i.throttle??0,steer:i.steer??0,handbrake:!!i.handbrake,airborneCoasting:!!i.airborneCoasting,brakeReason:i.brakeReason??null,headingError:i.headingError??null,
-        routeDistance:i.routeDistance??null,routeOffset:i.routeOffset??null,aim:i.aim?{...i.aim}:null,aimSection:i.aimSection??null,aimKind:i.aimKind??null};
+        routeDistance:i.routeDistance??null,routeOffset:i.routeOffset??null,steeringLook:i.lookAhead??null,aim:i.aim?{...i.aim}:null,aimSection:i.aimSection??null,aimKind:i.aimKind??null};
     }
     let diagnosticGuide=null;
     const diagNumber=(value,places=1)=>Number.isFinite(value)?value.toFixed(places):'—';
@@ -582,7 +587,7 @@
         `Decision: ${sample.mode??'waiting'}${sample.brakeReason?' · braking: '+sample.brakeReason:''} · traffic: ${traffic}`,
         `Expected section ${diagSection(sample.route)} · next ${diagSection(nextSection)}`,
         `Wheels on section ${diagSection(sample.contact)} · ${sample.valid?'in sequence':'off route / unverified'}`,
-        `Aim: section ${diagSection(sample.aimSection)} (${sample.aimKind??'waiting'})`,
+        `Aim: section ${diagSection(sample.aimSection)} (${sample.aimKind??'waiting'}) · steering look-ahead ${diagNumber(sample.steeringLook)} m`,
         `Heading error ${sample.headingError===null?'—':diagNumber(sample.headingError/rad)+'°'} · centre offset ${diagNumber(sample.routeOffset)} m`,
         `Surface ${sample.surfaces.join(' / ')||'airborne'} · wheels ${sample.grounded}/4`,
         `Recovery section ${diagSection(sample.recovery)} · recoveries ${sample.recoveries} · falls ${sample.resets}`,
@@ -627,7 +632,7 @@
       if($('aiDiagnosticReadout').value!==text)$('aiDiagnosticReadout').value=text;
       showDiagnosticGuide(opponent,sample);
     }
-    const workshopFields={lane:'aiLane',speed:'aiSpeed',corner:'aiCorner',brake:'aiBrake',look:'aiLook',steer:'aiSteer',overtake:'aiOvertake',handbrake:'aiHandbrake'};
+    const workshopFields={lane:'aiLane',speed:'aiSpeed',corner:'aiCorner',brake:'aiBrake',look:'aiLook',steerLook:'aiSteerLook',steer:'aiSteer',overtake:'aiOvertake',handbrake:'aiHandbrake'};
     const personalityKey='trackshift.aiPersonalities.v1';
     let personalities=[];
     function defaultPersonalityName(index){return `Default ${String(index+1).padStart(2,'0')}`;}
@@ -657,7 +662,7 @@
     }
     function validPersonality(record){
       return !!record && typeof record.name==='string' && record.name.trim().length>0 && record.name.length<=60 && record.settings &&
-        Object.entries(TrackAI.PERSONALITY_FIELDS).every(([key,range])=>Number.isFinite(record.settings[key]) && record.settings[key]>=range.min && record.settings[key]<=range.max) &&
+        Object.entries(TrackAI.PERSONALITY_FIELDS).every(([key,range])=>key==='steerLook' && record.settings[key]===undefined || Number.isFinite(record.settings[key]) && record.settings[key]>=range.min && record.settings[key]<=range.max) &&
         (record.settings.side===undefined || record.settings.side===-1 || record.settings.side===1) &&
         (record.settings.handbrakeCadence===undefined || Number.isFinite(record.settings.handbrakeCadence) && record.settings.handbrakeCadence>=7 && record.settings.handbrakeCadence<=8.4);
     }
@@ -665,7 +670,7 @@
     function selectedWorkshop(){const index=Number($('aiWorkshopCar').value);return rival?.opponents[Number.isInteger(index)?index:0]??null;}
     function syncWorkshopFields(){
       const opponent=selectedWorkshop();if(!opponent)return;
-      for(const [key,id] of Object.entries(workshopFields)){$(id).value=String(opponent.driver.style[key]);$(id+'Value').textContent=key==='look'?`${opponent.driver.style[key]} m`:Number(opponent.driver.style[key]).toFixed(2);}
+      for(const [key,id] of Object.entries(workshopFields)){$(id).value=String(opponent.driver.style[key]);$(id+'Value').textContent=key==='look' || key==='steerLook'?`${opponent.driver.style[key]} m`:Number(opponent.driver.style[key]).toFixed(2);}
       $('aiCurrentPersonality').textContent=`Current: ${personalityLabel(opponent)}`;refreshPersonalities(opponent.personality?.id??'');
     }
     function syncWorkshopCars(){

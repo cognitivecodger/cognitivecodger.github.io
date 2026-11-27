@@ -1601,5 +1601,55 @@
     }
     return buffer;
   }
-  window.TrackGeometry = {material,generateRoad,generateSideFeatures,generateRaceMarkers,generateCrossingArrows,debugGroup,surfacePoint,selectionGroup,gapMarkerGroup};
+  function generateBoostPads(runtime,road,direction=1){
+    const buffer=new MeshBuffer(),pads=window.TrackBoost.plan(runtime,direction);
+    for(const pad of pads){
+      const piece=pad.piece,from=pad.fraction-pad.length/(2*piece.length),to=pad.fraction+pad.length/(2*piece.length);
+      const clearance=.07,rough=(piece.source?.SR??0)>0 || window.TS2.pieceSurface(piece)==='wood';
+      const point=(t,across,lift=0)=>{const pose=window.TrackRace.at(piece,from+(to-from)*t),distance=pad.centre+across*pad.width/2;
+        const p=window.TS2.roadPoint(pose,Math.max(-1,Math.min(1,window.TS2.lateralU(pose,distance))),runtime.settings.tarmacDepth*.5+clearance);
+        p.y=(window.TrackRace.roadHeight(road,pad.index,p)??p.y-clearance)+clearance+lift;return p;};
+      // Subdivide each visual triangle where the real road differs from its
+      // interpolated height. This follows sloped, banked and rough meshes;
+      // the decoration never enters the vehicle's collision world.
+      function paint(a,b,c,colour,lift,depth=0){
+        const vertices=[a,b,c],midpoints=[],errors=[],lengths=[];
+        for(let i=0;i<3;i++){
+          const u=vertices[i],v=vertices[(i+1)%3],p={x:(u.x+v.x)/2,y:(u.y+v.y)/2,z:(u.z+v.z)/2};
+          const height=window.TrackRace.roadHeight(road,pad.index,p),expected=p.y;
+          if(height!==null)p.y=height+clearance+lift;
+          midpoints.push(p);errors.push(Math.abs(p.y-expected));lengths.push(Math.hypot(u.x-v.x,u.z-v.z));
+        }
+        const centre={x:(a.x+b.x+c.x)/3,y:(a.y+b.y+c.y)/3,z:(a.z+b.z+c.z)/3};
+        const height=window.TrackRace.roadHeight(road,pad.index,centre),centreError=height===null?0:Math.abs(height+clearance+lift-centre.y);
+        const longest=lengths.indexOf(Math.max(...lengths)),worst=errors.indexOf(Math.max(...errors));
+        if(depth<12 && (Math.max(...errors,centreError)>.012 || rough && lengths[longest]>.4)){
+          const edge=rough && lengths[longest]>.4 || centreError>=errors[worst]?longest:worst;
+          const u=vertices[edge],v=vertices[(edge+1)%3],opposite=vertices[(edge+2)%3],mid=midpoints[edge];
+          paint(u,mid,opposite,colour,lift,depth+1);paint(mid,v,opposite,colour,lift,depth+1);return;
+        }
+        buffer.tri(a,b,c,colour);
+      }
+      // A chamfered cyan outline and inset dark face approximate the rounded
+      // frame in the reference without textures or extra collision geometry.
+      function rounded(t0,t1,x0,x1,rt,rx,colour,lift){
+        const ring=[[t0+rt,x0],[t0+rt*.28,x0+rx*.28],[t0,x0+rx],[t0,x1-rx],
+          [t0+rt*.28,x1-rx*.28],[t0+rt,x1],[t1-rt,x1],[t1-rt*.28,x1-rx*.28],
+          [t1,x1-rx],[t1,x0+rx],[t1-rt*.28,x0+rx*.28],[t1-rt,x0]];
+        const centre=point((t0+t1)/2,(x0+x1)/2,lift);
+        for(let i=0;i<ring.length;i++)paint(centre,point(...ring[i],lift),point(...ring[(i+1)%ring.length],lift),colour,lift);
+      }
+      rounded(0,1,-1,1,.10,.18,0x00e8e8,0);
+      rounded(.045,.955,-.90,.90,.075,.14,0x101c23,.008);
+      // Thick, filled yellow chevrons point in the direction of the race.
+      for(const peak of [.33,.56,.79]){
+        const v=[[peak-.08,-.62],[peak+.075,0],[peak-.08,.62],[peak-.19,.62],[peak-.035,0],[peak-.19,-.62]];
+        const p=v.map(([t,x])=>point(direction===-1?1-t:t,x,.016));
+        paint(p[0],p[1],p[4],0xffd400,.016);paint(p[0],p[4],p[5],0xffd400,.016);
+        paint(p[1],p[2],p[3],0xffd400,.016);paint(p[1],p[3],p[4],0xffd400,.016);
+      }
+    }
+    return buffer;
+  }
+  window.TrackGeometry = {material,generateRoad,generateSideFeatures,generateRaceMarkers,generateBoostPads,generateCrossingArrows,debugGroup,surfacePoint,selectionGroup,gapMarkerGroup};
 })();
