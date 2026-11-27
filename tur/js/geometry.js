@@ -1051,7 +1051,8 @@
         const a=piece.poses[i],b=piece.poses[i+1];
         const length=Math.hypot(b.x-a.x,b.y-a.y,b.z-a.z);
         const style=modeFor(piece,a,b,options);
-        if(length>.00001)segments.push({piece,a,b,style,length,travel,stone:styleFor(piece,b)?.crown==='stone',groundFence:styleFor(piece,b)?.groundLevel===true});
+        const edgeStyle=styleFor(piece,b);
+        if(length>.00001)segments.push({piece,a,b,style,length,travel,edgeMode:edgeStyle?.mode??'auto',stone:edgeStyle?.crown==='stone',groundFence:edgeStyle?.groundLevel===true});
         travel+=length;
       }
     }
@@ -1207,7 +1208,11 @@
           if(j===0 && !hasPrevious){capCross(kerbs,base0,C.kerbSide);kerbCaps++;}
           if(j===steps-1 && !hasNext){capCross(kerbs,base1,C.kerbSide);kerbCaps++;}
 
-          if(style==='wall') {
+          // Kerbs in a cutting sit at the terrain height, with a retaining
+          // face underneath. Explicit walls keep their normal full height.
+          const groundRise=pose=>Math.max(0,options.groundY-edgeAt(pose,side).y);
+          const raisedKerb=style==='kerb' && (groundRise(p)>1e-8 || groundRise(q)>1e-8);
+          if(style==='wall' || raisedKerb) {
             if(clip){clip.openStart=j===0 && segment.isRunStart;clip.openEnd=j===steps-1 && segment.isRunEnd;}
             const scaleAt=d=>{
               if(segment.closedWall)return 1;
@@ -1223,24 +1228,27 @@
             // Height grows upward from the kerb, never changes its width.
             // At tapered ground-level boundaries (rise=0), it meets the kerb.
             const height0=heightFor(p,side),height1=heightFor(q,side);
-            const rise0=Math.max(height0.minimumRise,height0.rise*scaleAt(dist0));
-            const rise1=Math.max(height1.minimumRise,height1.rise*scaleAt(dist1));
+            const autoGround=segment.edgeMode==='auto' && options.sideMode!=='walls' && !flatten;
+            const riseAt=(pose,height,distance)=>raisedKerb || autoGround && edgeAt(pose,side).y<=options.groundY+1e-8
+              ?groundRise(pose):Math.max(height.minimumRise,height.rise*scaleAt(distance));
+            const rise0=riseAt(p,height0,dist0),rise1=riseAt(q,height1,dist1);
             const u=wallCross(p,side,depth,rise0);
             const v=wallCross(q,side,depth,rise1);
             // Draw upper faces only. The existing kerb provides the bottom;
             // duplicating its top faces here would produce z-fighting.
-            const colours=[C.wallFace,C.wallBevel,C.wallTop,C.wallBevel,C.wallOuter];
+            const target=raisedKerb?kerbs:walls,kerbColour=striped?(stripe?C.kerbRed:C.kerbWhite):C.kerbGrey;
+            const colours=raisedKerb?[C.wallFace,kerbColour,kerbColour,kerbColour,C.wallOuter]:[C.wallFace,C.wallBevel,C.wallTop,C.wallBevel,C.wallOuter];
             for(let k=0;k<5;k++) {
               if(rise0<.00001 && rise1<.00001)continue;
-              if(k>=1 && k<=3)crownQuad(walls,u[k],u[k+1],v[k],v[k+1],colours[k],segment,dist0,dist1,stripeLen,Math.min(.045,rise0*.5),Math.min(.045,rise1*.5),k);
-              else walls.quad(u[k],u[k+1],v[k],v[k+1],colours[k]);
+              if(k>=1 && k<=3)crownQuad(target,u[k],u[k+1],v[k],v[k+1],colours[k],segment,dist0,dist1,stripeLen,Math.min(.045,rise0*.5),Math.min(.045,rise1*.5),k);
+              else target.quad(u[k],u[k+1],v[k],v[k+1],colours[k]);
             }
             // Seal full-height ends beside fences and underground openings
             // that cannot contract to the kerb.
-            if(j===0 && segment.isRunStart && rise0>.00001)capCross(walls,u,C.wallFace);
-            if(j===steps-1 && segment.isRunEnd && rise1>.00001)capCross(walls,v,C.wallFace);
-            if(j===0 && segment.isRunStart)wallTransitions++;
-            if(j===steps-1 && segment.isRunEnd)wallTransitions++;
+            if(j===0 && segment.isRunStart && rise0>.00001)capCross(target,u,C.wallFace);
+            if(j===steps-1 && segment.isRunEnd && rise1>.00001)capCross(target,v,C.wallFace);
+            if(style==='wall' && j===0 && segment.isRunStart)wallTransitions++;
+            if(style==='wall' && j===steps-1 && segment.isRunEnd)wallTransitions++;
           }
           if(style==='fence') {
             const rise0=segment.groundFence?fenceRise(p,side):0,rise1=segment.groundFence?fenceRise(q,side):0,raised=Math.max(rise0,rise1)>1e-8;
