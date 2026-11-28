@@ -1,5 +1,5 @@
 {
-  "format": "TrackShift Pack",
+  "format": "TUR Pack",
   "version": 1,
   "id": "48b46b44-63da-4a70-90da-bcb72ff098c1",
   "name": "TUR Championship",

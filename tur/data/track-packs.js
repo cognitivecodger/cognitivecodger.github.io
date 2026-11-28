@@ -1,4 +1,4 @@
-/* Starter fallback for file:// use and unavailable manifests. Hosted builds
+﻿/* Starter fallback for file:// use and unavailable manifests. Hosted builds
    load data/TrackPacks/Default Packs.txt instead; edit that manifest to
    choose the published packs. The fallback reuses the built-in examples. */
 window.TRACKSHIFT_OFFICIAL_PACKS = [

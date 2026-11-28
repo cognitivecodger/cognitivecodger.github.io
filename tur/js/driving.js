@@ -526,7 +526,7 @@
       const level=TrackAI.DIFFICULTIES[difficulty]?difficulty:'normal',nav=TrackAI.create(runtime,course.direction,level);
       const opponents=positions.map((position,index)=>{
         const trial=TrackRace.create(course);let driver=null,entry=null;
-        const opponent=TrackVehicle.create(world,runtime,position.index,{scale,build:nav.build,accelerationMultiplier:nav.accelerationMultiplier,direction:course.direction,
+        const opponent=TrackVehicle.create(world,runtime,position.index,{scale,build:nav.build,speedMultiplier:nav.speedMultiplier,accelerationMultiplier:nav.accelerationMultiplier,direction:course.direction,
           spawnFraction:position.fraction,spawnPose:position.pose,
           onStep:(previous,state,dt)=>{trial.step(previous,state,dt);boostContact(previous,state);tyreMarks.step(state,dt,world.support,spectator && index===0);},
           onReset:state=>{trial.reset();tyreMarks.breakTrails(state);driver?.reset(state);},onRecover:(state,info)=>{
@@ -553,9 +553,9 @@
         recovery:opponent.sim.recoverySection,recoveries:s.recoveries,resets:s.resets,stuck:opponent.stuck,offRoute:opponent.offRoute,
         yaw:s.yaw,mode:i.mode,traffic:i.target,nearby:i.nearby??0,targetSpeed:(i.targetSpeed??0)*3.6,
         throttle:i.throttle??0,steer:i.steer??0,handbrake:!!i.handbrake,airborneCoasting:!!i.airborneCoasting,brakeReason:i.brakeReason??null,headingError:i.headingError??null,
-        routeDistance:i.routeDistance??null,routeOffset:i.routeOffset??null,steeringLook:i.lookAhead??null,aim:i.aim?{...i.aim}:null,aimSection:i.aimSection??null,aimKind:i.aimKind??null};
+        routeDistance:i.routeDistance??null,routeOffset:i.routeOffset??null,steeringLook:i.lookAhead??null,cornerLook:opponent.driver.style.look,cornerHorizon:i.cornerHorizon??null,brakingPlan:i.brakingPlan?{...i.brakingPlan}:null,jumpPlan:i.jumpPlan?{...i.jumpPlan}:null,aim:i.aim?{...i.aim}:null,aimSection:i.aimSection??null,aimKind:i.aimKind??null};
     }
-    let diagnosticGuide=null;
+    let diagnosticGuide=null,diagnosticCornerGuide=null,diagnosticBrakingGuide=null;
     const diagNumber=(value,places=1)=>Number.isFinite(value)?value.toFixed(places):'—';
     const diagSection=value=>Number.isInteger(value)?String(value+1):'none';
     function selectedDiagnostic(){
@@ -583,11 +583,14 @@
         `Engine ${opponent.sim.build.engine.label} · AI pull boost ${Math.round((opponent.nav.accelerationMultiplier-1)*100)}% · tyres ${opponent.sim.build.tyres.label}`,
         `Personality ${personalityLabel(opponent)}`,
         `Speed ${diagNumber(sample.speed)} km/h · target ${diagNumber(sample.targetSpeed)} km/h`,
-        `Controls: ${action}; steer ${turn}${sample.handbrake?'; handbrake on':''}`,
+        `Controls: ${action}; steer ${turn}${sample.handbrake?'; handbrake on':''} (last physics step)`,
         `Decision: ${sample.mode??'waiting'}${sample.brakeReason?' · braking: '+sample.brakeReason:''} · traffic: ${traffic}`,
         `Expected section ${diagSection(sample.route)} · next ${diagSection(nextSection)}`,
         `Wheels on section ${diagSection(sample.contact)} · ${sample.valid?'in sequence':'off route / unverified'}`,
         `Aim: section ${diagSection(sample.aimSection)} (${sample.aimKind??'waiting'}) · steering look-ahead ${diagNumber(sample.steeringLook)} m`,
+        `Corner look-ahead ${diagNumber(sample.cornerLook)} m · braking scan up to ${diagNumber(sample.cornerHorizon)} m`,
+        sample.brakingPlan?`Corner braking point ${sample.brakingPlan.startAhead<=0?'due now':diagNumber(sample.brakingPlan.startAhead)+' m ahead'} · bend ${diagNumber(sample.brakingPlan.cornerDistance)} m ahead (section ${diagSection(sample.brakingPlan.cornerSection)}) · target ${diagNumber(sample.brakingPlan.cornerSpeed*3.6)} km/h`:'Corner braking point: none currently needed in scan',
+        sample.jumpPlan?`Jump: ${diagNumber(sample.jumpPlan.distance)} m ahead · target ${diagNumber(sample.jumpPlan.target*3.6)} km/h · minimum ${diagNumber(sample.jumpPlan.minimum*3.6)} km/h${sample.jumpPlan.active?' · approach active':''}`:'Jump: no estimated approach in range',
         `Heading error ${sample.headingError===null?'—':diagNumber(sample.headingError/rad)+'°'} · centre offset ${diagNumber(sample.routeOffset)} m`,
         `Surface ${sample.surfaces.join(' / ')||'airborne'} · wheels ${sample.grounded}/4`,
         `Recovery section ${diagSection(sample.recovery)} · recoveries ${sample.recoveries} · falls ${sample.resets}`,
@@ -625,12 +628,48 @@
       const s=opponent.sim.state,a=sample.aim,p=diagnosticGuide.line.geometry.attributes.position;
       p.array.set([s.x,s.y+.35,s.z,a.x,a.y,a.z]);p.needsUpdate=true;diagnosticGuide.marker.position.set(a.x,a.y,a.z);
     }
+    function showCornerGuide(opponent){
+      const show=!!(opponent && $('aiDiagnostics').open && $('aiDiagnosticCornerGuide').checked);
+      if(show && !diagnosticCornerGuide){
+        const group=new THREE.Group(),geometry=new THREE.BufferGeometry();
+        geometry.setAttribute('position',new THREE.Float32BufferAttribute(new Float32Array(6),3));
+        const line=new THREE.Line(geometry,new THREE.LineBasicMaterial({color:0xffd329,depthTest:false}));
+        const marker=new THREE.Mesh(new THREE.SphereGeometry(.34,12,8),new THREE.MeshBasicMaterial({color:0xffd329,depthTest:false}));
+        line.frustumCulled=false;line.renderOrder=40;marker.renderOrder=41;group.name='AI corner look-ahead guide';group.add(line,marker);host.scene.add(group);
+        diagnosticCornerGuide={group,line,marker};
+      }
+      if(!diagnosticCornerGuide)return;diagnosticCornerGuide.group.visible=show;if(!show)return;
+      const s=opponent.sim.state,nav=opponent.nav,location=nav.locate(s),point=nav.point(location.distance+nav.direction*opponent.driver.style.look);
+      const height=TrackRace.roadHeight(host.getTrack().buffers.road,point.index,point)??TS2.heightAcross(point,0);
+      const p=diagnosticCornerGuide.line.geometry.attributes.position;
+      p.array.set([s.x,s.y+.35,s.z,point.x,height+.35,point.z]);p.needsUpdate=true;diagnosticCornerGuide.marker.position.set(point.x,height+.35,point.z);
+    }
+    function showBrakingGuide(opponent,plan){
+      const show=!!(opponent && plan && $('aiDiagnostics').open && $('aiDiagnosticBrakingGuide').checked);
+      if(show && !diagnosticBrakingGuide){
+        const group=new THREE.Group(),geometry=new THREE.BufferGeometry();
+        geometry.setAttribute('position',new THREE.Float32BufferAttribute(new Float32Array(6),3));
+        const line=new THREE.Line(geometry,new THREE.LineBasicMaterial({color:0xff5049,depthTest:false}));
+        const marker=new THREE.Mesh(new THREE.SphereGeometry(.4,12,8),new THREE.MeshBasicMaterial({color:0xff5049,depthTest:false}));
+        line.frustumCulled=false;line.renderOrder=40;marker.renderOrder=42;group.name='AI corner braking guide';group.add(line,marker);host.scene.add(group);
+        diagnosticBrakingGuide={group,line,marker};
+      }
+      if(!diagnosticBrakingGuide)return;diagnosticBrakingGuide.group.visible=show;if(!show)return;
+      const s=opponent.sim.state,nav=opponent.nav,here=nav.point(plan.routeDistance),point=nav.point(plan.routeDistance+nav.direction*Math.max(0,plan.startAhead));
+      const lateral=clamp((s.x-here.x)*Math.cos(here.yaw)-(s.z-here.z)*Math.sin(here.yaw),-point.width*.5+.15,point.width*.5-.15);
+      const marker={x:point.x+Math.cos(point.yaw)*lateral,z:point.z-Math.sin(point.yaw)*lateral};
+      const height=TrackRace.roadHeight(host.getTrack().buffers.road,point.index,marker)??TS2.heightAcross(point,TS2.lateralU(point,lateral*nav.direction));
+      const p=diagnosticBrakingGuide.line.geometry.attributes.position;
+      p.array.set([s.x,s.y+.35,s.z,marker.x,height+.4,marker.z]);p.needsUpdate=true;diagnosticBrakingGuide.marker.position.set(marker.x,height+.4,marker.z);
+    }
     function renderDiagnostics(){
       const opponent=selectedDiagnostic();
-      if(!opponent || !$('aiDiagnostics').open){showDiagnosticGuide(null,null);return;}
+      if(!opponent || !$('aiDiagnostics').open){showDiagnosticGuide(null,null);showCornerGuide(null);showBrakingGuide(null,null);return;}
       const sample=diagnosticSample(opponent),text=describeDiagnostic(opponent,sample);
-      if($('aiDiagnosticReadout').value!==text)$('aiDiagnosticReadout').value=text;
-      showDiagnosticGuide(opponent,sample);
+      if($('aiDiagnosticBrakingGuide').checked){const plan=opponent.driver.planCorners(opponent.sim.state);sample.brakingPlan=plan.brakingPlan;sample.cornerHorizon=plan.horizon;}
+      const report=$('aiDiagnosticBrakingGuide').checked?describeDiagnostic(opponent,sample):text;
+      if($('aiDiagnosticReadout').value!==report)$('aiDiagnosticReadout').value=report;
+      showDiagnosticGuide(opponent,sample);showCornerGuide(opponent);showBrakingGuide(opponent,sample.brakingPlan);
     }
     const workshopFields={lane:'aiLane',speed:'aiSpeed',corner:'aiCorner',brake:'aiBrake',look:'aiLook',steerLook:'aiSteerLook',steer:'aiSteer',overtake:'aiOvertake',handbrake:'aiHandbrake'};
     const personalityKey='trackshift.aiPersonalities.v1';
@@ -660,13 +699,23 @@
       const select=$('aiDiagnosticPersonality'),opponent=selectedDiagnostic();select.replaceChildren(...profileOptions());
       select.value=opponent?.personality?.id??'';$('aiDiagnosticPersonalityStatus').textContent=opponent?`Current: ${personalityLabel(opponent)}`:'';
     }
-    function validPersonality(record){
+    function validPersonality(record,legacy=false){
       return !!record && typeof record.name==='string' && record.name.trim().length>0 && record.name.length<=60 && record.settings &&
-        Object.entries(TrackAI.PERSONALITY_FIELDS).every(([key,range])=>key==='steerLook' && record.settings[key]===undefined || Number.isFinite(record.settings[key]) && record.settings[key]>=range.min && record.settings[key]<=range.max) &&
+        Object.entries(TrackAI.PERSONALITY_FIELDS).every(([key,range])=>{
+          const limits=legacy && key==='speed'?{min:.7,max:1.2}:legacy && key==='corner'?{min:.6,max:3}:range;
+          return key==='steerLook' && record.settings[key]===undefined || Number.isFinite(record.settings[key]) && record.settings[key]>=limits.min && record.settings[key]<=limits.max;
+        }) &&
         (record.settings.side===undefined || record.settings.side===-1 || record.settings.side===1) &&
         (record.settings.handbrakeCadence===undefined || Number.isFinite(record.settings.handbrakeCadence) && record.settings.handbrakeCadence>=7 && record.settings.handbrakeCadence<=8.4);
     }
-    try{const saved=JSON.parse(window.localStorage.getItem(personalityKey));if(saved?.version===1 && Array.isArray(saved.items))personalities=saved.items.filter(validPersonality).slice(0,100);}catch(error){}
+    function convertPersonality(record,version){
+      if(!validPersonality(record,version===1))return null;
+      if(version===2)return record;
+      // Old corner values were aggressiveness multipliers (up to 3), not
+      // fractions of top speed. Convert them without deleting saved profiles.
+      return {...record,settings:{...record.settings,speed:Math.min(1,record.settings.speed),corner:Math.max(.1,Math.round(record.settings.corner/3*100)/100)}};
+    }
+    try{const saved=JSON.parse(window.localStorage.getItem(personalityKey));if([1,2].includes(saved?.version) && Array.isArray(saved.items))personalities=saved.items.map(item=>convertPersonality(item,saved.version)).filter(Boolean).slice(0,100);}catch(error){}
     function selectedWorkshop(){const index=Number($('aiWorkshopCar').value);return rival?.opponents[Number.isInteger(index)?index:0]??null;}
     function syncWorkshopFields(){
       const opponent=selectedWorkshop();if(!opponent)return;
@@ -683,6 +732,7 @@
       const opponent=selectedWorkshop();if(!opponent)return;
       $('aiWorkshopRace').textContent=`${paused?'Paused · ':''}${rival.countdown>0?'Starting in '+Math.ceil(rival.countdown)+' · ':''}${TrackRace.format(rival.elapsed)} · ${rival.opponents.filter(o=>o.done).length}/${rival.opponents.length} finished · ${standings().map((entry,index)=>`${entry.finishRank??index+1}. ${entry.name}`).join('  ·  ')}`;
       const sample=diagnosticSample(opponent);
+      if($('aiDiagnosticBrakingGuide').checked){const plan=opponent.driver.planCorners(opponent.sim.state);sample.brakingPlan=plan.brakingPlan;sample.cornerHorizon=plan.horizon;}
       $('aiWorkshopSummary').textContent=`${opponent.name} · ${diagNumber(sample.speed)} / ${diagNumber(sample.targetSpeed)} km/h · ${sample.mode}${sample.handbrake?' · handbrake':''} · ${sample.recoveries} recoveries`;
       $('aiWorkshopInfo').textContent=describeDiagnostic(opponent,sample).split('\n').slice(0,14).join('\n');
     }
@@ -692,14 +742,14 @@
     }
     function persistPersonalities(next){
       if(next.length>100)throw Error('A maximum of 100 personalities can be saved.');
-      window.localStorage.setItem(personalityKey,JSON.stringify({version:1,items:next}));personalities=next;
+      window.localStorage.setItem(personalityKey,JSON.stringify({version:2,items:next}));personalities=next;
     }
     function currentPersonality(){const style=selectedWorkshop()?.driver.style;if(!style)throw Error('Select an AI car first.');return Object.fromEntries([...Object.keys(workshopFields),'side','handbrakeCadence'].map(key=>[key,style[key]]));}
     function usePersonality(profile){const opponent=selectedWorkshop();if(!applyPersonality(opponent,profile))return;syncWorkshopFields();syncDiagnosticPersonality();}
     $('aiWorkshopCar').addEventListener('change',()=>{$('aiDiagnosticCar').value=$('aiWorkshopCar').value;syncWorkshopFields();const profile=profileById(selectedWorkshop()?.personality?.id);$('aiPersonalityName').value=profile && !profile.builtin?profile.name:'';$('aiPersonalityStatus').textContent='';clearCamera();renderCar(0,true);});
     for(const [key,id] of Object.entries(workshopFields))$(id).addEventListener('input',()=>{
       const opponent=selectedWorkshop(),value=Number($(id).value);if(!opponent || !Number.isFinite(value))return;
-      opponent.driver.setPersonality({...opponent.driver.style,[key]:value});opponent.personality.modified=!personalityMatches(opponent,profileById(opponent.personality.id));syncWorkshopFields();syncDiagnosticPersonality();$('aiPersonalityStatus').textContent=opponent.personality.modified?'Unsaved changes on this car.':'Personality matches its saved settings.';
+      opponent.driver.setPersonality({...opponent.driver.style,[key]:value});opponent.personality.modified=!personalityMatches(opponent,profileById(opponent.personality.id));syncWorkshopFields();syncDiagnosticPersonality();renderDiagnostics();if(workshop)renderWorkshop();$('aiPersonalityStatus').textContent=opponent.personality.modified?'Unsaved changes on this car.':'Personality matches its saved settings.';
     });
     $('aiDefault').addEventListener('click',()=>{const index=Number($('aiWorkshopCar').value)||0;usePersonality(profileById(`default:${index}`));$('aiPersonalityStatus').textContent='Driver defaults restored.';});
     $('aiApplyAll').addEventListener('click',()=>{try{const settings=currentPersonality(),source=selectedWorkshop().personality;for(const opponent of rival.opponents){opponent.driver.setPersonality(settings);opponent.personality={...source};}syncWorkshopFields();syncDiagnosticPersonality();$('aiPersonalityStatus').textContent='Applied to every car in this race.';}catch(error){$('aiPersonalityStatus').textContent=error.message;}});
@@ -714,14 +764,17 @@
     $('aiPersonalityList').addEventListener('change',()=>{const profile=profileById($('aiPersonalityList').value);if(profile){$('aiPersonalityName').value=profile.builtin?'':profile.name;$('aiPersonalityStatus').textContent=`Choose Apply to assign ${profile.name} to this car.`;}});
     $('aiPersonalityLoad').addEventListener('click',()=>{const profile=profileById($('aiPersonalityList').value);if(!profile){$('aiPersonalityStatus').textContent='Choose a personality.';return;}usePersonality(profile);$('aiPersonalityName').value=profile.builtin?'':profile.name;$('aiPersonalityStatus').textContent=`${profile.name} applied to the selected car.`;});
     $('aiPersonalityDelete').addEventListener('click',()=>{try{const profile=profileById($('aiPersonalityList').value);if(!profile)throw Error('Choose a saved personality.');if(profile.builtin)throw Error('Default personalities cannot be deleted.');if(typeof window.confirm==='function' && !window.confirm(`Delete personality “${profile.name}”?`))return;persistPersonalities(personalities.filter(item=>item.name!==profile.name));for(const opponent of rival.opponents)if(opponent.personality.id===profile.id)opponent.personality={id:'',name:profile.name,modified:true};syncWorkshopFields();syncDiagnosticPersonality();$('aiPersonalityStatus').textContent='Personality deleted; cars keep their current settings.';}catch(error){$('aiPersonalityStatus').textContent=`Could not delete: ${error.message}`;}});
-    $('aiPersonalityExport').addEventListener('click',()=>{try{if(!personalities.length)throw Error('Save a personality first.');const link=document.createElement('a');link.href=URL.createObjectURL(new Blob([JSON.stringify({format:'TrackShift AI personalities',version:1,items:personalities},null,2)+'\n'],{type:'application/json'}));link.download='trackshift-ai-personalities.json';link.click();setTimeout(()=>URL.revokeObjectURL(link.href),1000);$('aiPersonalityStatus').textContent='Personalities exported.';}catch(error){$('aiPersonalityStatus').textContent=error.message;}});
+    $('aiPersonalityExport').addEventListener('click',()=>{try{if(!personalities.length)throw Error('Save a personality first.');const link=document.createElement('a');link.href=URL.createObjectURL(new Blob([JSON.stringify({format:'TrackShift AI personalities',version:2,items:personalities},null,2)+'\n'],{type:'application/json'}));link.download='trackshift-ai-personalities.json';link.click();setTimeout(()=>URL.revokeObjectURL(link.href),1000);$('aiPersonalityStatus').textContent='Personalities exported.';}catch(error){$('aiPersonalityStatus').textContent=error.message;}});
     $('aiPersonalityImportButton').addEventListener('click',()=>$('aiPersonalityImport').click());
     $('aiPersonalityImport').addEventListener('change',event=>{const file=event.target.files?.[0];if(!file)return;if(file.size>262144){$('aiPersonalityStatus').textContent='Personality file is too large.';event.target.value='';return;}const reader=new FileReader();reader.onload=()=>{try{
-      const data=JSON.parse(String(reader.result));if(data?.format!=='TrackShift AI personalities' || data.version!==1 || !Array.isArray(data.items) || !data.items.length || !data.items.every(validPersonality))throw Error('Not a valid TUR personality file.');
-      const next=personalities.slice();for(const record of data.items){let name=record.name.trim(),n=2;while(next.some(item=>item.name.toLowerCase()===name.toLowerCase()) || Array.from({length:8},(_,index)=>defaultPersonalityName(index).toLowerCase()).includes(name.toLowerCase())){const suffix=` (${n++})`;name=record.name.trim().slice(0,60-suffix.length)+suffix;}next.push({name,settings:record.settings});}persistPersonalities(next);refreshPersonalities();syncDiagnosticPersonality();$('aiPersonalityStatus').textContent=`Imported ${data.items.length} personality(s) as copies.`;
+      const data=JSON.parse(String(reader.result));if(data?.format!=='TrackShift AI personalities' || ![1,2].includes(data.version) || !Array.isArray(data.items) || !data.items.length)throw Error('Not a valid TUR personality file.');
+      const converted=data.items.map(item=>convertPersonality(item,data.version));if(converted.some(item=>!item))throw Error('Not a valid TUR personality file.');
+      const next=personalities.slice();for(const record of converted){let name=record.name.trim(),n=2;while(next.some(item=>item.name.toLowerCase()===name.toLowerCase()) || Array.from({length:8},(_,index)=>defaultPersonalityName(index).toLowerCase()).includes(name.toLowerCase())){const suffix=` (${n++})`;name=record.name.trim().slice(0,60-suffix.length)+suffix;}next.push({name,settings:record.settings});}persistPersonalities(next);refreshPersonalities();syncDiagnosticPersonality();$('aiPersonalityStatus').textContent=`Imported ${data.items.length} personality(s) as copies.`;
     }catch(error){$('aiPersonalityStatus').textContent=`Could not import: ${error.message}`;}};reader.onerror=()=>{$('aiPersonalityStatus').textContent='Could not read the personality file.';};reader.readAsText(file);event.target.value='';});
     $('aiWorkshopExit').addEventListener('click',stop);$('aiWorkshopPause').addEventListener('click',pause);$('aiWorkshopRestart').addEventListener('click',()=>restartRace());
     $('aiWorkshopGuide').addEventListener('change',()=>{$('aiDiagnosticGuide').checked=$('aiWorkshopGuide').checked;renderDiagnostics();});
+    $('aiWorkshopCornerGuide').addEventListener('change',()=>{$('aiDiagnosticCornerGuide').checked=$('aiWorkshopCornerGuide').checked;renderDiagnostics();});
+    $('aiWorkshopBrakingGuide').addEventListener('change',()=>{$('aiDiagnosticBrakingGuide').checked=$('aiWorkshopBrakingGuide').checked;renderDiagnostics();if(workshop)renderWorkshop();});
     function workshopCameraButtons(){ $('aiFollow').setAttribute('aria-pressed',String(!freeCamera));$('aiFree').setAttribute('aria-pressed',String(freeCamera)); }
     $('aiFollow').addEventListener('click',()=>{freeCamera=false;freeFocus=null;workshopCameraButtons();clearCamera();updateCamera(0,true);});
     $('aiFree').addEventListener('click',()=>{const state=selectedWorkshop()?.sim.state;if(!state)return;freeFocus={x:state.x,y:state.y,z:state.z};freeCamera=true;workshopCameraButtons();clearCamera();updateCamera(0,true);});
@@ -758,7 +811,7 @@
         const field=workshop?rival.opponents:[{sim,trial:race},...rival.opponents],nav=rival.nav;
         const snapshots=field.map((entry,id)=>{
           const source=entry.sim.state,state={x:source.x,y:source.y,z:source.z,vx:source.vx,vy:source.vy,vz:source.vz,
-            yaw:source.yaw,scale:source.scale,grounded:source.grounded,routePiece:source.routePiece,trackPiece:source.trackPiece,routeValid:source.routeValid};
+            yaw:source.yaw,scale:source.scale,grounded:source.grounded,boostLevel:source.boostLevel,aiBrakeGrip:source.aiBrakeGrip,aiSurfaceDrag:source.aiSurfaceDrag,routePiece:source.routePiece,trackPiece:source.trackPiece,routeValid:source.routeValid};
           const path=nav.locate(state),centre=nav.point(path.distance);
           const lateral=((state.x-centre.x)*Math.cos(centre.yaw)-(state.z-centre.z)*Math.sin(centre.yaw))*nav.direction;
           const roadY=TS2.heightAcross(centre,TS2.lateralU(centre,lateral));
@@ -885,11 +938,11 @@
         host.setDirection?.(nextDirection);
         models=next.opponents.map((opponent,index)=>makeCar(opponent.colour,['basic','wedge','compact'][index%3]));nextProbes=makeProbes();
         next.opponents.forEach((opponent,index)=>{opponent.car=models[index].group;opponent.wheels=models[index].wheels;opponent.car.name=`AI rival ${index+1}`;opponent.car.scale.set(carScale,carScale,carScale);host.scene.add(opponent.car);});
-        workshopPrevious={camera:setup(),preset:$('drivePreset').value,diagnostics:$('aiDiagnostics').open,watch:$('aiDiagnosticWatch').checked,guide:$('aiDiagnosticGuide').checked};
+        workshopPrevious={camera:setup(),preset:$('drivePreset').value,diagnostics:$('aiDiagnostics').open,watch:$('aiDiagnosticWatch').checked,guide:$('aiDiagnosticGuide').checked,cornerGuide:$('aiDiagnosticCornerGuide').checked,brakingGuide:$('aiDiagnosticBrakingGuide').checked};
         rival=next;workshop=true;workshopDirection=raceDirection;raceDirection=nextDirection;syncDirection();sim=next.opponents[0].sim;race=next.opponents[0].trial;
         car=next.opponents[0].car;wheelViews=next.opponents[0].wheels;spawnPosition={slot:1};probes=nextProbes;host.scene.add(probes);
         active=true;paused=false;freeCamera=false;freeFocus=null;workshopCameraButtons();keys.clear();padIndex=null;disarmPad();padReader.reset();clearCamera();lastResets=0;
-        syncGrid();syncDiagnostics();$('aiDiagnostics').open=true;$('aiDiagnosticWatch').checked=true;syncWorkshopCars();
+        syncGrid();syncDiagnostics();$('aiDiagnostics').open=true;$('aiDiagnosticWatch').checked=true;$('aiWorkshopCornerGuide').checked=$('aiDiagnosticCornerGuide').checked;$('aiWorkshopBrakingGuide').checked=$('aiDiagnosticBrakingGuide').checked;syncWorkshopCars();
         document.body.classList.add('driving');document.body.classList.add('ai-workshop');$('driveHud').hidden=true;$('aiWorkshopHud').hidden=false;
         $('pauseCar').textContent='Pause';$('aiWorkshopPause').textContent='Pause';host.mode(true);ensureCamera();renderCar(0,true);
         engineSound.setPlaying(focused && !document.hidden);engineSound.unlock();host.message('AI workshop ready. Select a car to watch and tune.');return true;
@@ -903,10 +956,10 @@
       tyreMarks.breakTrails();
       const wasWorkshop=workshop;
       if(!active)return;active=false;touch.setEnabled(false);document.body.classList.remove('touch-drive-paused');engineSound.setPlaying(false);keys.clear();if(!workshop)dispose(car);dispose(probes);if(rival)for(const opponent of rival.opponents)dispose(opponent.car);rival=null;$('raceRival').hidden=true;$('raceStandings').hidden=true;car=null;probes=null;sim=null;race=null;driveCamera=null;
-      if(workshop){raceDirection=workshopDirection;syncDirection();if(workshopPrevious){applySetup(workshopPrevious.camera);fixedHeading=workshopPrevious.camera.heading;$('drivePreset').value=workshopPrevious.preset;$('aiDiagnostics').open=workshopPrevious.diagnostics;$('aiDiagnosticWatch').checked=workshopPrevious.watch;$('aiDiagnosticGuide').checked=workshopPrevious.guide;}workshopPrevious=null;}
+      if(workshop){raceDirection=workshopDirection;syncDirection();if(workshopPrevious){applySetup(workshopPrevious.camera);fixedHeading=workshopPrevious.camera.heading;$('drivePreset').value=workshopPrevious.preset;$('aiDiagnostics').open=workshopPrevious.diagnostics;$('aiDiagnosticWatch').checked=workshopPrevious.watch;$('aiDiagnosticGuide').checked=workshopPrevious.guide;$('aiDiagnosticCornerGuide').checked=workshopPrevious.cornerGuide;$('aiDiagnosticBrakingGuide').checked=workshopPrevious.brakingGuide;}workshopPrevious=null;}
       workshop=false;freeCamera=false;freeFocus=null;$('aiWorkshopHud').hidden=true;document.body.classList.remove('ai-workshop');
       compactRace=false;soloTimed=false;soloCountdown=0;soloElapsed=0;soloFinishTime=null;soloStartLap=0;sessionBestLap=null;sessionBestRace=null;quickTimingShape='';quickTimingRows=[];resetRaceEnd();$('quickRaceHud').hidden=true;$('quickPauseOverlay').hidden=true;$('driveRaceDirection').disabled=false;document.body.classList.remove('quick-race');document.body.classList.remove('race-settings');
-      if(diagnosticGuide){dispose(diagnosticGuide.group);diagnosticGuide=null;}if(!wasWorkshop)$('aiDiagnosticWatch').checked=false;syncDiagnostics();syncGrid();document.body.classList.remove('driving');$('driveHud').hidden=true;$('carLocator').hidden=true;padIndex=null;disarmPad();padReader.reset();const destination=host.mode(false);host.message(destination==='menu'?(wasWorkshop?'Back at AI workshop.':'Back at Quick Race.'):'Back in the section editor. Track code is unchanged by driving.');
+      if(diagnosticGuide){dispose(diagnosticGuide.group);diagnosticGuide=null;}if(diagnosticCornerGuide){dispose(diagnosticCornerGuide.group);diagnosticCornerGuide=null;}if(diagnosticBrakingGuide){dispose(diagnosticBrakingGuide.group);diagnosticBrakingGuide=null;}if(!wasWorkshop)$('aiDiagnosticWatch').checked=false;syncDiagnostics();syncGrid();document.body.classList.remove('driving');$('driveHud').hidden=true;$('carLocator').hidden=true;padIndex=null;disarmPad();padReader.reset();const destination=host.mode(false);host.message(destination==='menu'?(wasWorkshop?'Back at AI workshop.':'Back at Quick Race.'):'Back in the section editor. Track code is unchanged by driving.');
     }
     function reset() {if(!sim || raceOver() && host.championshipRace?.())return;touch.reset();if(rival){restartRace();return;}sim.reset();if(soloTimed){soloCountdown=3;soloElapsed=0;soloFinishTime=null;soloStartLap=race.state.completed;}resetRaceEnd();keys.clear();disarmPad();clearCamera();renderCar(0,true);}
     function recover() {if(!sim || workshop)return;touch.reset();const restored=sim.recover();keys.clear();disarmPad();clearCamera();renderCar(0,true);host.canvas.focus?.();host.message(restored?(sim.recoveryReason==='jump-runup'?'Recovered before the jump with room for a run-up.':sim.recoveryReason==='jump-short'?'No safe run-up available · recovered to the last safe road position.':'Recovered stationary, facing forward along the track.'):'No safe road contact yet · returned to the starting position.');}
@@ -998,6 +1051,8 @@
     for(const id of ['aiDiagnosticCar','aiDiagnosticWatch'])$(id).addEventListener('change',()=>{syncDiagnosticPersonality();clearCamera();if(active)updateCamera(0,true);renderDiagnostics();});
     $('aiDiagnosticPersonality').addEventListener('change',()=>{const opponent=selectedDiagnostic(),profile=profileById($('aiDiagnosticPersonality').value);if(!applyPersonality(opponent,profile))return;syncDiagnosticPersonality();if(workshop)syncWorkshopFields();renderDiagnostics();});
     $('aiDiagnosticGuide').addEventListener('change',renderDiagnostics);
+    $('aiDiagnosticCornerGuide').addEventListener('change',()=>{$('aiWorkshopCornerGuide').checked=$('aiDiagnosticCornerGuide').checked;renderDiagnostics();});
+    $('aiDiagnosticBrakingGuide').addEventListener('change',()=>{$('aiWorkshopBrakingGuide').checked=$('aiDiagnosticBrakingGuide').checked;renderDiagnostics();if(workshop)renderWorkshop();});
     $('aiDiagnostics').addEventListener('toggle',()=>{clearCamera();if(active)updateCamera(0,true);renderDiagnostics();});
     $('aiDiagnosticCopy').addEventListener('click',async()=>{
       const opponent=selectedDiagnostic();if(!opponent)return;

@@ -4,19 +4,19 @@
   const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
   const angle=v=>Math.atan2(Math.sin(v),Math.cos(v));
   const DIFFICULTIES=Object.freeze({
-    easy:{label:'Easy',cornering:6,topSpeed:20.5,accelerationMultiplier:1,build:'balanced'},
-    normal:{label:'Normal',cornering:8.8,topSpeed:24,hillCornering:7.3,hillTopSpeed:24,accelerationMultiplier:1.05,build:{engine:'sport',tyres:'allround',suspension:'standard',drivetrain:'awd',steering:'standard',assist:'off'}},
-    hard:{label:'Hard',cornering:10,topSpeed:30,hillCornering:8,hillTopSpeed:30,accelerationMultiplier:1.1,build:{engine:'sport',tyres:'allround',suspension:'standard',drivetrain:'awd',steering:'sport',assist:'basic'}}
+    easy:{label:'Easy',cornering:6,speedMultiplier:1,accelerationMultiplier:1,build:'balanced'},
+    normal:{label:'Normal',cornering:8.8,hillCornering:7.3,speedMultiplier:1.25,accelerationMultiplier:1.05,build:{engine:'sport',tyres:'allround',suspension:'standard',drivetrain:'awd',steering:'standard',assist:'off'}},
+    hard:{label:'Hard',cornering:10,hillCornering:8,speedMultiplier:1.5,accelerationMultiplier:1.1,build:{engine:'sport',tyres:'allround',suspension:'standard',drivetrain:'awd',steering:'sport',assist:'basic'}}
   });
   function create(runtime,direction=1,difficulty='normal'){
     const profile=DIFFICULTIES[difficulty]??DIFFICULTIES.normal;
     const hilly=runtime.pieces.some(piece=>Math.abs(piece.end.y-piece.start.y)>.25);
     const reverseHills=hilly && direction===-1 && (difficulty==='normal' || difficulty==='hard');
     const cornering=reverseHills?7:hilly?(profile.hillCornering??profile.cornering):profile.cornering;
-    const topSpeed=hilly?(profile.hillTopSpeed??profile.topSpeed):profile.topSpeed;
     // Keep the stronger engine on hills, while using predictable steering on
     // the more difficult elevation changes and close bridge approaches.
     const build=hilly && difficulty==='hard'?{...profile.build,steering:'standard',assist:'off'}:profile.build;
+    const topSpeed=window.TrackVehicle.resolveBuild(build).engine.maxSpeed*profile.speedMultiplier;
     const segments=[],pieces=runtime.pieces.map(()=>[]);let total=0;
     for(let index=0;index<runtime.pieces.length;index++){
       const poses=runtime.pieces[index].poses;
@@ -29,6 +29,26 @@
     const first=segments[0].a,last=segments.at(-1).b;
     const closed=runtime.autoClose || Math.hypot(first.x-last.x,first.y-last.y,first.z-last.z)<.1;
     const dir=direction===-1?-1:1;
+    // Gather contiguous authored gap sections once. Boundaries refer to
+    // distance along the same ordered route used by steering and recovery.
+    const jumps=[];
+    for(let i=0;i<runtime.pieces.length;i++){
+      if(!runtime.pieces[i]?.isGap || !pieces[i]?.length)continue;
+      const previous=i-1;if(previous>=0 && runtime.pieces[previous].isGap)continue;
+      if(i===0 && (!closed || runtime.pieces.at(-1)?.isGap))continue;
+      let last=i,length=0,straight=true;
+      while(last<runtime.pieces.length && runtime.pieces[last]?.isGap && pieces[last]?.length){
+        const list=pieces[last];length+=list.at(-1).start+list.at(-1).length-list[0].start;
+        if(runtime.pieces[last].isCurve)straight=false;
+        last++;
+      }
+      if(last===runtime.pieces.length && (!closed || runtime.pieces[0]?.isGap))continue;
+      const before=(i-1+runtime.pieces.length)%runtime.pieces.length,after=last%runtime.pieces.length;
+      if(runtime.pieces[before]?.isGap || runtime.pieces[after]?.isGap)continue;
+      const firstGap=pieces[i][0],lastGap=pieces[last-1].at(-1);
+      jumps.push({launch:dir===1?firstGap.start:lastGap.start+lastGap.length,gapLength:length,straight,
+        takeoffIndex:dir===1?before:after,landingIndex:dir===1?after:before});
+    }
     function point(distance){
       if(closed)distance=((distance%total)+total)%total;else distance=clamp(distance,0,total);
       let lo=0,hi=segments.length-1;
@@ -41,6 +61,15 @@
         bankCurve:(part.a.bankCurve??0)+((part.b.bankCurve??0)-(part.a.bankCurve??0))*t,
         bankFlat:(part.a.bankFlat??0)+((part.b.bankFlat??0)-(part.a.bankFlat??0))*t,
         yaw:Math.atan2((part.b.x-part.a.x)*dir,(part.b.z-part.a.z)*dir),index:part.index};
+    }
+    function nextJump(distance,limit=200){
+      let best=null;for(const jump of jumps){
+        let ahead=(jump.launch-distance)*dir;
+        if(closed)ahead=((ahead%total)+total)%total;
+        if(ahead<-.001 || ahead>limit || best && ahead>=best.distance)continue;
+        best={...jump,distance:Math.max(0,ahead)};
+      }
+      return best;
     }
     function locate(state){
       const index=Number.isInteger(state.routePiece)?state.routePiece:0,contact=state.trackPiece;let best=null;
@@ -85,27 +114,27 @@
     const slopeCornerFactor=reverseHills?(difficulty==='hard'?1.02:driverCornerFactor):hilly?(difficulty==='hard'||difficulty==='normal'?1:1.15):driverCornerFactor;
     const slopeBrakeBuffer=reverseHills?(difficulty==='hard'?1.8:cornerBrakeBuffer):hilly?1.2:cornerBrakeBuffer;
     const slopeDangerLook=hilly && !reverseHills?12:cornerDangerLook;
-    return {input,locate,point,total,closed,direction:dir,build,accelerationMultiplier:profile.accelerationMultiplier,cornering,driverCornerFactor,cornerBrakeBuffer,cornerDangerLook,curvatureFloor,topSpeed,hilly,slopeCornerFactor,slopeBrakeBuffer,slopeDangerLook,pieceCount:pieces.length,isGap:index=>!!runtime.pieces[index]?.isGap};
+    return {input,locate,point,nextJump,total,closed,direction:dir,build,speedMultiplier:profile.speedMultiplier,accelerationMultiplier:profile.accelerationMultiplier,cornering,driverCornerFactor,cornerBrakeBuffer,cornerDangerLook,curvatureFloor,topSpeed,hilly,slopeCornerFactor,slopeBrakeBuffer,slopeDangerLook,pieceCount:pieces.length,isGap:index=>!!runtime.pieces[index]?.isGap};
   }
   // Deterministic individual styles keep difficulty meaningful and replays
   // reproducible. The blue driver is especially bold; these settings change
   // their speed targets, not the cars' underlying physics.
   const STYLES=Object.freeze([
-    {lane:-.42,speed:.97,corner:3.00,look:16,steer:1.50,side:-1},
-    {lane:.42,speed:1.02,corner:2.08,look:12,steer:1.55,side:1},
-    {lane:-.19,speed:.94,corner:2.00,look:18,steer:1.44,side:-1},
-    {lane:.20,speed:1.04,corner:2.10,look:13,steer:1.58,side:1},
-    {lane:0,speed:.98,corner:2.02,look:17,steer:1.47,side:1},
-    {lane:-.32,speed:1.01,corner:2.04,look:14,steer:1.52,side:-1},
-    {lane:.32,speed:.96,corner:2.06,look:15,steer:1.48,side:1},
-    {lane:-.42,speed:.97,corner:2.00,look:16,steer:1.50,side:-1}
+    {lane:-.42,speed:.97,corner:1.00,look:16,steer:1.50,side:-1},
+    {lane:.42,speed:1.00,corner:.69,look:12,steer:1.55,side:1},
+    {lane:-.19,speed:.94,corner:.67,look:18,steer:1.44,side:-1},
+    {lane:.20,speed:1.00,corner:.70,look:13,steer:1.58,side:1},
+    {lane:0,speed:.98,corner:.67,look:17,steer:1.47,side:1},
+    {lane:-.32,speed:1.00,corner:.68,look:14,steer:1.52,side:-1},
+    {lane:.32,speed:.96,corner:.69,look:15,steer:1.48,side:1},
+    {lane:-.42,speed:.97,corner:.67,look:16,steer:1.50,side:-1}
   ].map(Object.freeze));
   const PERSONALITY_FIELDS=Object.freeze({
     lane:{label:'Preferred line',min:-1,max:1,step:.05},
-    speed:{label:'Straight speed',min:.7,max:1.2,step:.01},
-    corner:{label:'Corner speed',min:.6,max:3,step:.01},
+    speed:{label:'Straight speed',min:.1,max:1,step:.01},
+    corner:{label:'Corner speed',min:.1,max:2,step:.01},
     brake:{label:'Brake lateness',min:.4,max:2,step:.05},
-    look:{label:'Corner look-ahead',min:8,max:25,step:1},
+    look:{label:'Corner look-ahead',min:2,max:25,step:1},
     steerLook:{label:'Steering look-ahead',min:3,max:30,step:1},
     steer:{label:'Steering response',min:.8,max:2.2,step:.05},
     overtake:{label:'Overtaking',min:0,max:1,step:.05},
@@ -128,14 +157,89 @@
     const init=nav.locate(initial),origin=nav.point(init.distance);
     let lane=(initial.x-origin.x)*Math.cos(origin.yaw)-(initial.z-origin.z)*Math.sin(origin.yaw),hold=0,passing=null,handbrakeTime=0,handbrakeCooldown=0;
     let intent={mode:'line',lane,targetSpeed:0,target:null},seenGround=(initial.grounded??0)>0,airTime=0,landingTime=0,jumpPower=null;
+    function planCorners(s,position=nav.locate(s)){
+      const speed=Math.hypot(s.vx,s.vz),boost=clamp(Number.isFinite(s.boostLevel)?s.boostLevel:0,0,1);
+      const straightCap=nav.topSpeed*style.speed*(1+(window.TrackBoost?.SPEED_GAIN??.5)*boost);
+      let cornerCap=Infinity,insideCorner=false,cornerBrake=false,brakingPlan=null;
+      const brakeMargin=2+dimensions.length*.5,grip=clamp(Number.isFinite(s.aiBrakeGrip)?s.aiBrakeGrip:1,.05,2),surfaceDrag=Math.max(0,Number.isFinite(s.aiSurfaceDrag)?s.aiSurfaceDrag:0);
+      // Scan conservatively, then calculate each braking point using the
+      // supported surface and the actual downhill grades on the approach.
+      const minimumDeceleration=nav.hilly?Math.max(2,9.5*grip-6):Math.max(2,9.5*grip);
+      const horizon=Math.min(nav.closed?nav.total:Infinity,Math.max(style.look,speed*speed/(2*minimumDeceleration*style.brake)+brakeMargin+2));
+      let worstDownhill=0;
+      for(let distance=0;distance<=horizon;distance+=2){
+        const start=nav.point(position.distance+nav.direction*distance),end=nav.point(position.distance+nav.direction*(distance+2));
+        // Do not plan braking for a bend beyond a jump.
+        if(nav.isGap(start.index) || nav.isGap(end.index))break;
+        worstDownhill=Math.min(worstDownhill,(end.y-start.y)/2);
+        const curvature=Math.abs(angle(end.yaw-start.yaw))/2;if(curvature<.005)continue;
+        if(distance===0)insideCorner=true;
+        const steep=nav.hilly && Math.abs(end.y-start.y)>.08;
+        const factor=steep?nav.slopeCornerFactor:nav.driverCornerFactor;
+        const cornerSpeed=Math.min(nav.topSpeed,nav.topSpeed*style.corner,Math.sqrt(nav.cornering*factor*3*style.corner/curvature));
+        const gravity=window.TrackVehicle?.CONFIG.gravity??16,downhillAcceleration=-gravity*worstDownhill/(1+worstDownhill*worstDownhill);
+        const speedMultiplier=nav.speedMultiplier??1,quadraticDrag=.012/(speedMultiplier*speedMultiplier);
+        // Use drag at the target speed rather than the faster current speed:
+        // this stays conservative without ignoring the car's real brakes.
+        const brakingDeceleration=Math.max(2,9.5*grip+.7+surfaceDrag+quadraticDrag*cornerSpeed*cornerSpeed-downhillAcceleration);
+        const brakingDistance=Math.max(0,(speed*speed-cornerSpeed*cornerSpeed)/(2*brakingDeceleration));
+        const brakingPoint=brakingDistance/style.brake+brakeMargin;
+        if(distance<=Math.max(style.look,brakingPoint))cornerCap=Math.min(cornerCap,cornerSpeed);
+        if(speed>cornerSpeed+.25){
+          const startAhead=distance-brakingPoint;
+          if(!brakingPlan || startAhead<brakingPlan.startAhead)brakingPlan={routeDistance:position.distance,startAhead,cornerDistance:distance,cornerSection:start.index,cornerSpeed,brakingDeceleration};
+          if(distance<=brakingPoint)cornerBrake=true;
+        }
+      }
+      return {cap:insideCorner?cornerCap:Math.min(straightCap,cornerCap),cornerBrake,horizon,brakingPlan};
+    }
+    function planJump(s,position=nav.locate(s)){
+      if(!nav.nextJump || s.routeValid===false || nav.isGap(nav.point(position.distance).index))return null;
+      const jump=nav.nextJump(position.distance);if(!jump || !jump.straight || jump.gapLength<.1)return null;
+      const dir=nav.direction,lip=nav.point(jump.launch-dir*.1),before=nav.point(jump.launch-dir*2.1);
+      const landing=nav.point(jump.launch+dir*(jump.gapLength+.2));
+      // A ballistic estimate is unsuitable for a curved gap or mismatched
+      // take-off/landing headings. Keep the existing controls in those cases.
+      if(nav.isGap(lip.index) || nav.isGap(landing.index) || Math.abs(angle(lip.yaw-landing.yaw))>.3)return null;
+      const grade=(lip.y-before.y)/2,gravity=window.TrackVehicle?.CONFIG.gravity??16;
+      let landingStraight=0;
+      for(let distance=2;distance<=40;distance+=2){
+        const p=nav.point(jump.launch+dir*(jump.gapLength+distance));
+        if(nav.isGap(p.index) || Math.abs(angle(p.yaw-landing.yaw))>.2)break;
+        landingStraight=distance;
+      }
+      const clearance=jump.gapLength+Math.max(1.2,dimensions.length*.8);
+      const desired=jump.gapLength+clamp(landingStraight*.35,3,12);
+      function requiredSpeed(distance){
+        const p=nav.point(jump.launch+dir*distance),height=p.y-lip.y,denominator=grade*distance-height;
+        if(nav.isGap(p.index) || denominator<=.02)return null;
+        return Math.sqrt(gravity*distance*distance/(2*denominator));
+      }
+      const clearSpeed=requiredSpeed(clearance),idealSpeed=requiredSpeed(Math.max(clearance,desired));
+      if(!Number.isFinite(clearSpeed) || !Number.isFinite(idealSpeed))return null;
+      // A margin allows for suspension and a less-than-perfect launch. If the
+      // car cannot reach that speed, don't restrict its run-up.
+      const minimum=clearSpeed*1.18,target=Math.max(minimum,idealSpeed*.96);
+      const boost=clamp(Number.isFinite(s.boostLevel)?s.boostLevel:0,0,1),straightCap=nav.topSpeed*style.speed*(1+(window.TrackBoost?.SPEED_GAIN??.5)*boost);
+      if(minimum>=straightCap*.98 || target>=straightCap*.99)return null;
+      const speed=Math.hypot(s.vx,s.vz),grip=clamp(Number.isFinite(s.aiBrakeGrip)?s.aiBrakeGrip:1,.05,2),drag=Math.max(0,Number.isFinite(s.aiSurfaceDrag)?s.aiSurfaceDrag:0);
+      const here=nav.point(position.distance),approachGrade=Math.min(0,(lip.y-here.y)/Math.max(1,jump.distance));
+      const downhill=-gravity*approachGrade/(1+approachGrade*approachGrade),speedMultiplier=nav.speedMultiplier??1;
+      const deceleration=Math.max(2,9.5*grip+.7+drag+.012/(speedMultiplier*speedMultiplier)*target*target-downhill);
+      const brakingDistance=Math.max(0,(speed*speed-target*target)/(2*deceleration)),brakingPoint=brakingDistance/style.brake+2+dimensions.length*.5;
+      return {...jump,target,minimum,landingStraight,brakingPoint,
+        active:jump.distance<=Math.max(style.look,brakingPoint),
+        brake:speed>target+.25 && speed>minimum*1.02 && jump.distance>dimensions.length && jump.distance<=brakingPoint};
+    }
     function input(self,field,dt=1/60){
       dt=clamp(Number.isFinite(dt)?dt:0,0,.1);
       const position=self.path??nav.locate(self.state),s=self.state,speed=Math.hypot(s.vx,s.vz);
       // Steering looks a chosen distance along the ordered centreline, not at
       // each mesh subdivision. Corner anticipation remains independent.
       let look=style.steerLook,target=nav.point(position.distance+nav.direction*look);const here=nav.point(position.distance);
-      const near=nav.point(position.distance+nav.direction*2),far=nav.point(position.distance+nav.direction*style.look);
-      const bend=Math.abs(angle(far.yaw-near.yaw))/Math.max(1,style.look-2);
+      const nearDistance=Math.min(2,style.look*.5);
+      const near=nav.point(position.distance+nav.direction*nearDistance),far=nav.point(position.distance+nav.direction*style.look);
+      const bend=Math.abs(angle(far.yaw-near.yaw))/Math.max(1,style.look-nearDistance);
       const margin=dimensions.width*.5+.48*Math.max(.5,s.scale),room=Math.max(0,Math.min(here.width,target.width)*.5-margin);
       const base=clamp(style.lane*room,-room,room),leftX=Math.cos(here.yaw),leftZ=-Math.sin(here.yaw);
       const lateral=(s.x-here.x)*leftX+(s.z-here.z)*leftZ;
@@ -190,28 +294,18 @@
       const ahead=(tx-s.x)*Math.sin(s.yaw)+(tz-s.z)*Math.cos(s.yaw);
       if(ahead<.15 && Math.abs(angle(here.yaw-s.yaw))<1.25){desiredYaw=here.yaw;tangentFallback=true;}
       const error=angle(desiredYaw-s.yaw);
-      // On a complex hilly circuit, make sure a straight continues far
-      // enough to shed the extra speed before the next turn. Heading samples
-      // also catch an S-bend whose final direction happens to match the start.
-      const clearStraight=bend<1e-4 && (nav.curvatureFloor<.01 || [10,20,30,40,50,60].every(distance=>
-        Math.abs(angle(nav.point(position.distance+nav.direction*distance).yaw-here.yaw))<.04));
       const steepApproach=nav.hilly && Math.max(Math.abs(here.y-near.y),Math.abs(here.y-far.y),Math.abs(here.y-target.y))>.35;
-      const cornerFactor=steepApproach?nav.slopeCornerFactor:nav.driverCornerFactor;
-      // A boost raises the car's physical speed limit, so let the driver use
-      // it on a clear straight. Keep corner targets and traffic limits intact.
-      const boost=clamp(Number.isFinite(s.boostLevel)?s.boostLevel:0,0,1);
-      const cap=clearStraight?nav.topSpeed*style.speed*(1+.35*boost):
-        clamp(Math.sqrt(nav.cornering*cornerFactor*style.corner/Math.max(nav.curvatureFloor,bend)),5,nav.topSpeed*style.speed);
-      const targetSpeed=Math.min(cap,limit),steer=-clamp(error*style.steer,-1,1);
+      // Share the exact calculation with the optional visual guide.
+      const plan=planCorners(s,position),{cap,cornerBrake,horizon}=plan,jumpPlan=planJump(s,position);
+      const targetSpeed=Math.min(cap,limit,jumpPlan?.active?jumpPlan.target:Infinity),steer=-clamp(error*style.steer,-1,1);
       const dangerLook=steepApproach?nav.slopeDangerLook:nav.cornerDangerLook;
       const close=nav.point(position.distance+nav.direction*dangerLook);
-      const closeBend=Math.abs(angle(close.yaw-near.yaw))/Math.max(1,dangerLook-2);
+      const closeBend=Math.abs(angle(close.yaw-near.yaw))/Math.max(1,dangerLook-nearDistance);
       const sideways=s.vx*leftX+s.vz*leftZ;
       const projectedEdge=Math.abs(lateral+sideways*.55)>room+.3 && lateral*sideways>0 && Math.abs(sideways)>1;
       const trafficBrake=Number.isFinite(limit) && speed>limit+1.2;
-      const cornerBrake=closeBend>.02 && speed>cap+(steepApproach?nav.slopeBrakeBuffer:nav.cornerBrakeBuffer)*style.brake;
       const dangerBrake=speed>5 && (projectedEdge || Math.abs(error)>.8);
-      const brakeReason=trafficBrake?'traffic':dangerBrake?'edge':cornerBrake?'corner':null;
+      const brakeReason=trafficBrake?'traffic':dangerBrake?'edge':cornerBrake?'corner':jumpPlan?.brake?'jump':null;
       let throttle=brakeReason?-.5:speed>targetSpeed?0:1;
       // A few drivers briefly rotate into a genuinely sharp bend. This uses
       // the same rear-wheel handbrake as the player, never a speed/position
@@ -238,8 +332,8 @@
       const aim=tangentFallback?{x:s.x+Math.sin(desiredYaw)*look,y:s.y+.25,z:s.z+Math.cos(desiredYaw)*look}:
         {x:tx,y:window.TS2.heightAcross(target,window.TS2.lateralU(target,lane*nav.direction))+.3,z:tz};
       intent={mode,lane,targetSpeed,target:targetId,nearby:nearby.length,brakeReason,
-        throttle,steer,handbrake,airborneCoasting,headingError:error,curvature:bend,nearCurvature:closeBend,lateral,lookAhead:look,routeDistance:position.distance,routeOffset:Math.sqrt(position.score??0),
-        aim,aimSection:target.index,aimKind:tangentFallback?'track tangent':'look-ahead point'};
+        throttle,steer,handbrake,airborneCoasting,headingError:error,curvature:bend,nearCurvature:closeBend,lateral,lookAhead:look,cornerLook:style.look,cornerHorizon:horizon,routeDistance:position.distance,routeOffset:Math.sqrt(position.score??0),
+        aim,aimSection:target.index,aimKind:tangentFallback?'track tangent':'look-ahead point',brakingPlan:plan.brakingPlan,jumpPlan};
       return {throttle,steer,handbrake};
     }
     function reset(state){
@@ -247,7 +341,7 @@
       lane=(state.x-centre.x)*Math.cos(centre.yaw)-(state.z-centre.z)*Math.sin(centre.yaw);hold=0;passing=null;handbrakeTime=0;handbrakeCooldown=0;
       intent={mode:'line',lane,targetSpeed:0,target:null};seenGround=(state.grounded??0)>0;airTime=0;landingTime=0;jumpPower=null;
     }
-    return {input,reset,setPersonality(values){style=personality(values,index);},get style(){return style;},get intent(){return intent;}};
+    return {input,reset,planCorners,planJump,setPersonality(values){style=personality(values,index);},get style(){return style;},get intent(){return intent;}};
   }
   // A rolling six-second movement window ignores collision jitter and needs
   // sustained acceleration, so cars waiting without throttle are left alone.

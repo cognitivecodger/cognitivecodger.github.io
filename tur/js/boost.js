@@ -2,6 +2,7 @@
 (function(){
   'use strict';
   const clamp=(x,a,b)=>Math.max(a,Math.min(b,x)),CAR_WIDTH=1.15;
+  const SPEED_GAIN=.5,ACCELERATION_GAIN=1;
   function randomAt(index,seed){let x=(Math.imul(index+1,0x9e3779b1)^seed)>>>0;x^=x>>>16;x=Math.imul(x,0x85ebca6b)>>>0;x^=x>>>13;return (x>>>0)/4294967296;}
   function plan(runtime,direction=1){
     const manual=runtime.pieces.some(p=>!p.isGap && p.source?.BP),density=runtime.settings.boostDensity??0,result=[];
@@ -63,5 +64,5 @@
     contacts.set(state,next);
     return activated;
   }
-  window.TrackBoost={plan,step,reset,CAR_WIDTH};
+  window.TrackBoost={plan,step,reset,CAR_WIDTH,SPEED_GAIN,ACCELERATION_GAIN};
 })();

@@ -666,8 +666,9 @@
       editorAITest={runtime,hadMarkers:Object.hasOwn(runtime,'temporaryRaceMarkers'),markers:runtime.temporaryRaceMarkers,changedMarkers:!!temporary};
       if(temporary){runtime.temporaryRaceMarkers=temporary;setRaceDirection(drive.direction);}
       const player=$('editorAIIncludePlayer').checked;
+      const difficulty=Object.hasOwn(TrackAI.DIFFICULTIES,$('editorAIDifficulty').value)?$('editorAIDifficulty').value:'normal';
       $('aiWorkshopExit').textContent='← Back to editor';$('exitDrive').textContent='Back to editor · Y / Esc';
-      const started=player?drive.start(true,true,3,'normal',count):drive.startWorkshop(count,3,'normal',drive.direction===-1?'reverse':'normal');
+      const started=player?drive.start(true,true,3,difficulty,count):drive.startWorkshop(count,3,difficulty,drive.direction===-1?'reverse':'normal');
       if(!started){const reason=$('message').textContent;restoreEditorAITest();throw Error(reason||'Could not start the AI test.');}
       if(temporary)message('Temporary race markers are in use for this test. The track code is unchanged.');
     }catch(error){restoreEditorAITest();$('editorAIStatus').textContent=error.message;message('Could not start AI test: '+error.message,true);}

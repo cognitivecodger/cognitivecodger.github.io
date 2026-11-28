@@ -307,6 +307,11 @@
     // Optional arcade difficulty tuning scales forward engine pull only;
     // braking, reverse, top speed, traction and collision stay physical.
     const accelerationMultiplier=Number.isFinite(options.accelerationMultiplier)?clamp(options.accelerationMultiplier,.5,1.25):1;
+    const speedMultiplier=Number.isFinite(options.speedMultiplier)?clamp(options.speedMultiplier,.1,3):1;
+    const maxSpeed=build.engine.maxSpeed*speedMultiplier;
+    // Keep the same drag at the same fraction of top speed so a raised AI
+    // limit remains reachable on a long straight without changing pull.
+    const speedDrag=.012/(speedMultiplier*speedMultiplier);
     let accumulator=0,lastRoad=null,routeIndex=index,recoveryReason=null,bankResponse=0;
     let surfaceExitWindow=0,grassTrip=null,flightAnchor=null,flightTrip=null;
     const roadHistory=[];
@@ -793,7 +798,7 @@
       let speed=state.vx*f.x+state.vz*f.z,lateral=state.vx*r.x+state.vz*r.z;
       state.boostTime=Math.max(0,(state.boostTime??0)-dt);
       if(!state.boostTime)state.boostLevel=Math.max(0,(state.boostLevel??0)-dt*.5);
-      const boostLevel=state.boostLevel??0,boostSpeedCap=build.engine.maxSpeed*(1+.35*boostLevel);
+      const boostLevel=state.boostLevel??0,boostSpeedCap=maxSpeed*(1+(window.TrackBoost?.SPEED_GAIN??.5)*boostLevel);
       const throttle=clamp(input.throttle??0,-1,1),steer=clamp(input.steer??0,-1,1);
       const handbrake=input.handbrake===true,serviceBrake=!!input.brake,power=Math.abs(throttle);
       // An opposing pedal applies the service brakes until the car is moving
@@ -847,6 +852,8 @@
         bankAcceleration=clamp(CONFIG.gravity*bankForce/4,-8,8);
         const hillAcceleration=-CONFIG.gravity*grade/(1+grade*grade)*supported/4;
         const drag=supported?dragSum/supported:0,lateralGrip=supported?lateralSum/supported:1,brakeGrip=supported?brakeSum/supported:1;
+        // Expose the currently supported surface to AI braking estimates.
+        state.aiBrakeGrip=brakeGrip;state.aiSurfaceDrag=drag;
         frontTraction=frontLoaded?frontPull/frontLoaded:1;rearTraction=rearLoaded?rearPull/rearLoaded:1;
         frontSide=frontLoaded?frontGrip/frontLoaded:1;rearSide=rearLoaded?rearGrip/rearLoaded:1;
         driveGrip=(frontPull*frontDrive+rearPull*rearDrive)/2;sideGrip=lateralGrip;
@@ -887,18 +894,19 @@
         const direction=Math.sign(throttle);
         if(drivenMud>0 && supported>=2 && power>0 && !directionBrake && !serviceBrake && !handbrake && (hillAcceleration*direction<=1e-6 || throttle<0)) {
           const crawl=clamp(1.2*enginePull*driveGrip/(.7+drag),.8,2.2)*power;
-          const along=speed*direction,resistance=.7+drag+.012*speed*speed;
-          const available=(pull+hillAcceleration)*direction-(.7+drag+.012*crawl*crawl);
+          const along=speed*direction,resistance=.7+drag+speedDrag*speed*speed;
+          const available=(pull+hillAcceleration)*direction-(.7+drag+speedDrag*crawl*crawl);
           if(along<crawl && available<=0) {
             const desired=Math.min(1.2*power*drivenSupport,(crawl-along)*2);
             const natural=(pull+hillAcceleration)*direction-resistance*(Math.sign(along)||1);
             pull+=direction*clamp(desired-natural,0,build.engine.acceleration*power*drivenMud);
           }
         }
-        speed+=(pull+hillAcceleration+(directionBrake || serviceBrake || handbrake?0:8*boostLevel))*dt;
+        const boostPush=build.engine.acceleration*accelerationMultiplier*(window.TrackBoost?.ACCELERATION_GAIN??.5)*boostLevel;
+        speed+=(pull+hillAcceleration+(directionBrake || serviceBrake || handbrake?0:boostPush))*dt;
         const handbrakeForce=turning?(poweredTurn?1+9*clamp((Math.abs(speed)-donutSpeed)/3,0,1):10):24;
         const pedalBrake=directionBrake?(throttle<0?19:16)*power*brakeGrip:0;
-        const brake=(serviceBrake?24*brakeGrip:handbrake?handbrakeForce*rearBrake/2:0)+pedalBrake+.7+drag+.012*speed*speed;speed=Math.sign(speed)*Math.max(0,Math.abs(speed)-brake*dt);
+        const brake=(serviceBrake?24*brakeGrip:handbrake?handbrakeForce*rearBrake/2:0)+pedalBrake+.7+drag+speedDrag*speed*speed;speed=Math.sign(speed)*Math.max(0,Math.abs(speed)-brake*dt);
         speed=clamp(speed,-CONFIG.reverseSpeed,boostSpeedCap);
         if(handbrake || powerSlide>0){
           const lateralDamping=handbrake?5*(frontGrip+rearGrip*.08)/Math.max(1,supported):10*(frontGrip+rearGrip*(1-.7*powerSlide))/Math.max(1,supported);
@@ -1050,7 +1058,7 @@
       const slipDemand=(traction,side,driven,loaded)=>{
         if(!driven)return 0;
         const loss=clamp(Math.max(0,1-traction)*1.7+Math.max(0,1-side)*.35,0,1);
-        const surfaceSpin=loss*spinPower*(.3+.7*clamp(1-velocity/(build.engine.maxSpeed*.8),0,1));
+        const surfaceSpin=loss*spinPower*(.3+.7*clamp(1-velocity/(maxSpeed*.8),0,1));
         return Math.max(surfaceSpin,handbrake && loaded?spinPower*.9:0,wallHits?spinPower*.85:0,!loaded?spinPower:0);
       };
       const frontDemand=slipDemand(frontTraction,frontSide,frontDrive,frontLoaded);
@@ -1059,7 +1067,7 @@
       state.frontWheelSlip=frontDrive?state.frontWheelSlip+(frontDemand-state.frontWheelSlip)*response:0;
       state.rearWheelSlip=rearDrive?state.rearWheelSlip+(rearDemand-state.rearWheelSlip)*response:0;
       state.wheelSlip=Math.max(state.frontWheelSlip,state.rearWheelSlip);state.engineLoad=spinPower;
-      const rpm=1000+5800*clamp(.15*spinPower+.65*velocity/(travel<-.15?CONFIG.reverseSpeed:build.engine.maxSpeed)+.85*state.wheelSlip,0,1);
+      const rpm=1000+5800*clamp(.15*spinPower+.65*velocity/(travel<-.15?CONFIG.reverseSpeed:maxSpeed)+.85*state.wheelSlip,0,1);
       state.engineRPM+=(rpm-state.engineRPM)*(1-Math.exp(-dt*7));
       for(const contact of state.contacts){
         const front=contact.name[0]==='F';if(handbrake && !front)continue;
